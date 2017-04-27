@@ -17,6 +17,7 @@ extern "C" {
 #endif
 #include <stdint.h>
 #include <stdlib.h>
+#include "conversion.h"
 
   enum mixed_error{
     MIXED_NO_ERROR,
@@ -49,23 +50,32 @@ extern "C" {
     MIXED_SEQUENTIAL
   };
 
+  enum mixed_channel_type{
+    MIXED_SOURCE,
+    MIXED_DRAIN
+  };
+
   struct mixed_channel{
+    enum mixed_channel_type type;
     void *data;
     size_t size;
     mixed_encoding encoding;
     uint8_t channels;
     mixed_layout layout;
+    size_t samplerate;
   };
 
   struct mixed_buffer{
     float *data;
     size_t size;
+    size_t samplerate;
   };
 
   struct mixed_segment{
     int (*mix)(size_t samples);
     struct mixed_buffer *inputs;
     struct mixed_buffer *outputs;
+    void *data;
   };
 
   struct mixed_connection{
@@ -75,10 +85,10 @@ extern "C" {
     uint8_t to_input;
   };
 
-  struct mixed_pipeline{
-    void *parts;
+  struct mixed_graph{
+    void **parts;
     size_t parts_size;
-    struct mixed_connection *connections;
+    struct mixed_connection **connections;
     size_t connections_size;
   };
 
@@ -87,18 +97,19 @@ extern "C" {
     struct mixed_channel *outputs;
     struct mixed_buffer *buffers;
     struct mixed_segment *segments;
+    size_t samplerate;
   };
 
-  int mixed_connect(void *source, uint8_t out, void *target, uint8_t in, struct mixed_pipeline *pipeline);
-  int mixed_disconnect(void *source, uint8_t out, void *target, uint8_t in, struct mixed_pipeline *pipeline);
-  int mixed_remove(void *segment, struct mixed_pipeline *pipeline);
-  int mixed_remove_mending(void *segment, struct mixed_pipeline *pipeline);
+  int mixed_graph_connect(void *source, uint8_t out, void *target, uint8_t in, struct mixed_graph *graph);
+  int mixed_graph_disconnect(void *source, uint8_t out, void *target, uint8_t in, struct mixed_graph *graph);
+  int mixed_graph_remove(void *segment, struct mixed_graph *graph);
+  int mixed_graph_remove_mending(void *segment, struct mixed_graph *graph);
   
   int mixed_free_mixer(struct mixed_mixer *mixer);
-  int mixed_pack(struct mixed_pipeline *pipeline, struct mixed_mixer *mixer);
-  int mixed_mix(struct mixed_mixer *mixer, size_t samples);
-
-  int mixed_to_buffer(struct mixed_channel *in, struct mixed_buffer *outs);
+  int mixed_pack_mixer(struct mixed_graph *graph, struct mixed_mixer *mixer);
+  int mixed_mix(size_t samples, struct mixed_mixer *mixer);
+  
+  int mixed_to_buffers(struct mixed_channel *in, struct mixed_buffer *outs);
   int mixed_to_channel(struct mixed_buffer *ins, struct mixed_channel *out);
 
   enum mixed_error mixed_error();
