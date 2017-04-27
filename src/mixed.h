@@ -23,10 +23,10 @@ extern "C" {
     MIXED_OUT_OF_MEMORY,
     MIXED_UNKNOWN_ENCODING,
     MIXED_UNKNOWN_LAYOUT,
+    MIXED_CANNOT_MEND,
     MIXED_INPUT_TAKEN,
     MIXED_INPUT_MISSING,
-    MIXED_GRAPH_CYCLE,
-    
+    MIXED_GRAPH_CYCLE
   };
 
   enum mixed_encoding{
@@ -69,17 +69,17 @@ extern "C" {
   };
 
   struct mixed_connection{
-    struct mixed_segment *from;
+    void *from;
     uint8_t from_output;
-    struct mixed_segment *to;
+    void *to;
     uint8_t to_input;
   };
 
   struct mixed_pipeline{
-    struct mixed_segment *segments;
-    size_t segment_size;
+    void *parts;
+    size_t parts_size;
     struct mixed_connection *connections;
-    size_t connection_size;
+    size_t connections_size;
   };
 
   struct mixed_mixer{
@@ -89,11 +89,10 @@ extern "C" {
     struct mixed_segment *segments;
   };
 
-  int mixed_connect(struct mixed_segment *source, uint8_t out, struct mixed_segment *target, uint8_t in, struct mixed_pipeline *pipeline);
-  int mixed_disconnect(struct mixed_segment *source, uint8_t out, struct mixed_segment *target, uint8_t in, struct mixed_pipeline *pipeline);
-  int mixed_connect_all(struct mixed_segment *source, struct mixed_segment *target, struct mixed_pipeline *pipeline);
-  int mixed_remove_segment(struct mixed_segment *segment, struct mixed_pipeline *pipeline);
-  int mixed_remove_segment_mending(struct mixed_segment *segment, struct mixed_pipeline *pipeline);
+  int mixed_connect(void *source, uint8_t out, void *target, uint8_t in, struct mixed_pipeline *pipeline);
+  int mixed_disconnect(void *source, uint8_t out, void *target, uint8_t in, struct mixed_pipeline *pipeline);
+  int mixed_remove(void *segment, struct mixed_pipeline *pipeline);
+  int mixed_remove_mending(void *segment, struct mixed_pipeline *pipeline);
   
   int mixed_free_mixer(struct mixed_mixer *mixer);
   int mixed_pack(struct mixed_pipeline *pipeline, struct mixed_mixer *mixer);
