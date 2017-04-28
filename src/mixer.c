@@ -14,19 +14,73 @@ void mixed_free_mixer(struct mixed_mixer *mixer){
   mixer->segments = 0;
 }
 
+int mixed_flatten_dag(){
+  
+}
+
+int mixed_color_dag(){
+  
+}
+
 int mixed_pack_mixer(struct mixed_graph *graph, struct mixed_mixer *mixer){
   struct mixed_vector elements = {0};
+  struct mixed_segment **segments = 0;
+  struct mixed_buffer *buffers = 0;
+  size_t *colors = 0;
+  
   if(!mixed_vector_make(&elements)){
     return 0;
   }
   if(!mixed_graph_elements(&elements, graph)){
-    mixed_vector_free(&elements);
-    return 0;
+    goto cleanup;
   }
 
-  // Flatten
-  // Color
-  // Allocate
+  segments = calloc(elements.count, sizeof(struct mixed_segment *));
+  if(!segments){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+
+  colors = calloc(elements.count, sizeof(size_t *));
+  if(!colors){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+  
+  if(!mixed_flatten_dag(elements->data, graph->connections, segments)){
+    goto cleanup;
+  }
+  
+  if(!mixed_color_dag(elements->data, graph->connections, colors)){
+    goto cleanup;
+  }
+
+  size_t colorc = 0;
+  for(int i=0; i<elements.count; ++i){
+    if(colorc < colors[i]) colorc = colors[i];
+  }
+
+  buffers = calloc(colorc, sizeof(struct mixed_buffer));
+  if(!buffers){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+
+  // EGHUIADWHUIADA
+  
+  mixer->buffers = buffers;
+  mixer->segments = segments;
+  return 1;
+
+ cleanup:
+  mixed_vector_free(&elements);
+  if(segments)
+    free(segments);
+  if(colors)
+    free(colors);
+  if(buffers)
+    free(buffers);
+  return 0;
 }
 
 int mixed_mix(size_t samples, struct mixed_mixer *mixer){

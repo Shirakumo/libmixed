@@ -99,6 +99,7 @@ extern "C" {
     struct mixed_buffer *buffers;
     struct mixed_segment **segments;
     size_t samplerate;
+    size_t buffersize;
   };
   
   int mixed_buffer_make(struct mixed_buffer *buffer);
