@@ -17,16 +17,13 @@ extern "C" {
 #endif
 #include <stdint.h>
 #include <stdlib.h>
-#include "conversion.h"
+#include "encoding.h"
 
   enum mixed_error{
     MIXED_NO_ERROR,
     MIXED_OUT_OF_MEMORY,
     MIXED_UNKNOWN_ENCODING,
     MIXED_UNKNOWN_LAYOUT,
-    MIXED_INPUT_TAKEN,
-    MIXED_INPUT_MISSING,
-    MIXED_GRAPH_CYCLE,
     MIXED_MIXING_FAILED
   };
 
@@ -50,13 +47,17 @@ extern "C" {
     MIXED_SEQUENTIAL
   };
 
-  enum mixed_channel_type{
-    MIXED_SOURCE,
-    MIXED_DRAIN
+  enum mixed_space_field{
+    MIXED_LISTENER_LOCATION,
+    MIXED_SOURCE_LOCATION
   };
 
+  struct mixed_buffer{
+    float *data;
+    size_t size;
+  };
+  
   struct mixed_channel{
-    enum mixed_channel_type type;
     void *data;
     size_t size;
     enum mixed_encoding encoding;
@@ -65,65 +66,62 @@ extern "C" {
     size_t samplerate;
   };
 
-  struct mixed_buffer{
-    float *data;
-    size_t size;
-    size_t samplerate;
+  struct mixed_segment_info{
+    char *name;
+    char *description;
+    size_t min_inputs;
+    size_t max_inputs;
+    size_t outputs;
   };
 
   struct mixed_segment{
-    int (*mix)(size_t samples, struct mixed_segment *segment);
-    struct mixed_buffer *inputs;
-    struct mixed_buffer *outputs;
+    // Mix samples
+    int (*start)(struct mixed_segment *segment);
+    int (*mix)(size_t samples, size_t samplerate, struct mixed_segment *segment);
+    int (*end)(struct mixed_segment *segment);
+    // Clean up
+    int (*free)(struct mixed_segment *segment);
+    // Connect input
+    int (*connect)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
+    // Disconnect input
+    int (*disconnect)(size_t location, struct mixed_segment *segment);
+    // Request info
+    struct mixed_segment_info (*info)(struct mixed_segment *segment);
+    // Opaque fields
+    int (*get)(size_t field, void **value, struct mixed_segment *segment);
+    int (*set)(size_t field, void *value, struct mixed_segment *segment);
+    // User data
     void *data;
-  };
-
-  struct mixed_connection{
-    void *from;
-    uint8_t from_output;
-    void *to;
-    uint8_t to_input;
-  };
-
-  struct mixed_vector{
-    void *data;
-    size_t count;
-    size_t size;
-  };
-
-  struct mixed_graph{
-    struct mixed_vector *connections;
   };
 
   struct mixed_mixer{
-    struct mixed_buffer **buffers;
     struct mixed_segment **segments;
     size_t samplerate;
-    size_t buffersize;
   };
   
-  int mixed_buffer_make(struct mixed_buffer *buffer);
-  void mixed_buffer_free(struct mixed_buffer *buffer);
-  int mixed_to_buffers(struct mixed_channel *in, struct mixed_buffer **outs);
-  int mixed_to_channel(struct mixed_buffer **ins, struct mixed_channel *out);
+  int mixed_make_buffer(struct mixed_buffer *buffer);
+  void mixed_free_buffer(struct mixed_buffer *buffer);
+  int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs);
+  int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out);
+  int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
 
-  int mixed_vector_make(struct mixed_vector *vector);
-  void mixed_vector_free(struct mixed_vector *vector);
-  int mixed_vector_push(void *element, struct mixed_vector *vector);
-  int mixed_vector_pushnew(void *element, struct mixed_vector *vector);
-  void *mixed_vector_pop(struct mixed_vector *vector);
-  int mixed_vector_remove(void *element, struct mixed_vector *vector);
+  // For a source channel converter
+  int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segment *segment);
+  // For a drain channel converter
+  int mixed_make_segment_drain(struct mixed_channel *channel, struct mixed_segment *segment);
+  // For a linear mixer
+  int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment *segment);
+  // For a basic effect change
+  int mixed_make_segment_general(float volume, float pan, float pitch, struct mixed_segment *segment);
+  // For a space (3D) processed effect
+  int mixed_make_segment_space(struct mixed_buffer *segment);
+  // For a LADSPA-based step
+  int mixed_make_segment_ladspa(char *file, size_t index, struct mixed_segment *segment);
+  int mixed_free_segment(struct mixed_segment *segment);
 
-  int mixed_graph_make(struct mixed_graph *graph);
-  void mixed_graph_free(struct mixed_graph *graph);
-  int mixed_graph_connect(void *source, uint8_t out, void *target, uint8_t in, struct mixed_graph *graph);
-  int mixed_graph_disconnect(void *source, uint8_t out, void *target, uint8_t in, struct mixed_graph *graph);
-  int mixed_graph_remove(void *segment, struct mixed_graph *graph);
-  int mixed_graph_elements(struct mixed_vector *vector, struct mixed_graph *graph);
-  
-  int mixed_free_mixer(struct mixed_mixer *mixer);
-  int mixed_pack_mixer(struct mixed_graph *graph, struct mixed_mixer *mixer);
-  int mixed_mix(size_t samples, struct mixed_mixer *mixer);
+  int mixed_mixer_start(struct mixed_mixer *mixer);
+  int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer);
+  int mixed_mixer_end(struct mixed_mixer *mixer);
 
   enum mixed_error mixed_error();
   char *mixed_error_string(enum mixed_error error_code);

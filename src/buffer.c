@@ -1,7 +1,7 @@
-#include <math.h>
+#include <string.h>
 #include "mixed.h"
 
-int mixed_buffer_make(struct mixed_buffer *buffer){
+int mixed_make_buffer(struct mixed_buffer *buffer){
   buffer->data = calloc(buffer->size, sizeof(float));
   if(!buffer->data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -10,7 +10,7 @@ int mixed_buffer_make(struct mixed_buffer *buffer){
   return 1;
 }
 
-void mixed_buffer_free(struct mixed_buffer *buffer){
+void mixed_free_buffer(struct mixed_buffer *buffer){
   if(buffer->data)
     free(buffer->data);
   buffer->data = 0;
@@ -121,7 +121,7 @@ inline void mixed_transfer_sample_to(struct mixed_buffer *in, size_t is, struct 
 // FIXME: We currently don't do any resampling because doing so is a
 //        huge pain and I currently don't want to think about it.
 //        Probably will want to conver to an internal float buffer first.
-int mixed_to_buffers(struct mixed_channel *in, struct mixed_buffer **outs){
+int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs){
   mixed_err(MIXED_NO_ERROR);
   switch(in->layout){
   case MIXED_ALTERNATING:
@@ -155,7 +155,7 @@ int mixed_to_buffers(struct mixed_channel *in, struct mixed_buffer **outs){
   return (mixed_error() == MIXED_NO_ERROR);
 }
 
-int mixed_to_channel(struct mixed_buffer **ins, struct mixed_channel *out){
+int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out){
   mixed_err(MIXED_NO_ERROR);
   switch(out->layout){
   case MIXED_ALTERNATING:
@@ -187,4 +187,15 @@ int mixed_to_channel(struct mixed_buffer **ins, struct mixed_channel *out){
     break;
   }
   return (mixed_error() == MIXED_NO_ERROR);
+}
+
+int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to){
+  if(from != to){
+    size_t size = (to->size<from->size)? from->size : to->size;
+    memcpy(to->data, from->data, sizeof(float)*size);
+    for(size_t i=size; size<to->size; ++i){
+      to->data[i] = 0.0f;
+    }
+  }
+  return 1;
 }
