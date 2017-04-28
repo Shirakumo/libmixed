@@ -96,7 +96,7 @@ extern "C" {
   };
 
   struct mixed_mixer{
-    struct mixed_buffer *buffers;
+    struct mixed_buffer **buffers;
     struct mixed_segment **segments;
     size_t samplerate;
     size_t buffersize;

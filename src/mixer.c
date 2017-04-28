@@ -14,11 +14,11 @@ void mixed_free_mixer(struct mixed_mixer *mixer){
   mixer->segments = 0;
 }
 
-int mixed_flatten_dag(){
+int mixed_flatten_dag(struct mixed_segment *segments, struct mixed_connection *connections, struct mixed_vector *flattened){
   
 }
 
-int mixed_color_dag(){
+int mixed_color_dag(struct mixed_segment *segments, struct mixed_connection *connections, size_t *colors){
   
 }
 
@@ -26,8 +26,9 @@ int mixed_pack_mixer(struct mixed_graph *graph, struct mixed_mixer *mixer){
   struct mixed_vector elements = {0};
   struct mixed_segment **segments = 0;
   struct mixed_buffer *buffers = 0;
-  size_t *colors = 0;
+  size_t colors = 0;
   
+  // Prepare data
   if(!mixed_vector_make(&elements)){
     return 0;
   }
@@ -35,39 +36,49 @@ int mixed_pack_mixer(struct mixed_graph *graph, struct mixed_mixer *mixer){
     goto cleanup;
   }
 
-  segments = calloc(elements.count, sizeof(struct mixed_segment *));
+  segments = calloc(elements.count+1, sizeof(struct mixed_segment *));
   if(!segments){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
-
-  colors = calloc(elements.count, sizeof(size_t *));
-  if(!colors){
-    mixed_err(MIXED_OUT_OF_MEMORY);
+  
+  // Process graphs
+  if(!mixed_flatten_dag(elements.data, graph->connections, segments)){
     goto cleanup;
   }
   
-  if(!mixed_flatten_dag(elements->data, graph->connections, segments)){
+  if(!mixed_color_dag(elements.data, graph->connections, &colors)){
     goto cleanup;
   }
   
-  if(!mixed_color_dag(elements->data, graph->connections, colors)){
-    goto cleanup;
-  }
-
-  size_t colorc = 0;
-  for(int i=0; i<elements.count; ++i){
-    if(colorc < colors[i]) colorc = colors[i];
-  }
-
-  buffers = calloc(colorc, sizeof(struct mixed_buffer));
+  // Allocate buffers
+  buffers = calloc(colors+1, sizeof(struct mixed_buffer *));
   if(!buffers){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
-
-  // EGHUIADWHUIADA
   
+  for(size_t i=0; i<colors; ++i){
+    struct mixed_buffer *buffer = buffers[i];
+    buffer->size = mixer->buffersize;
+    buffer->samplerate = mixer->samplerate;
+    if(!mixed_buffer_make(buffer)){
+      goto cleanup;
+    }
+  }
+  
+  // Tie buffers to segments
+  for(size_t i=0; segments[i]; ++i){
+    struct mixed_segment *segment = segments[i];
+    for(site_t j=0; segment->inputs[j]; j++){
+      segment->inputs[j] = buffers[segment->inputs[j]];
+    }
+    for(site_t j=0; segment->outputs[j]; j++){
+      segment->outputs[j] = buffers[segment->outputs[j]];
+    }
+  }
+  
+  // All done
   mixer->buffers = buffers;
   mixer->segments = segments;
   return 1;
@@ -78,8 +89,12 @@ int mixed_pack_mixer(struct mixed_graph *graph, struct mixed_mixer *mixer){
     free(segments);
   if(colors)
     free(colors);
-  if(buffers)
+  if(buffers){
+    for(size_t i=0; buffers[i]; ++i){
+      mixed_buffer_free(buffers[i]);
+    }
     free(buffers);
+  }
   return 0;
 }
 
