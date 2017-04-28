@@ -24,10 +24,10 @@ extern "C" {
     MIXED_OUT_OF_MEMORY,
     MIXED_UNKNOWN_ENCODING,
     MIXED_UNKNOWN_LAYOUT,
-    MIXED_CANNOT_MEND,
     MIXED_INPUT_TAKEN,
     MIXED_INPUT_MISSING,
-    MIXED_GRAPH_CYCLE
+    MIXED_GRAPH_CYCLE,
+    MIXED_MIXING_FAILED
   };
 
   enum mixed_encoding{
@@ -72,7 +72,7 @@ extern "C" {
   };
 
   struct mixed_segment{
-    int (*mix)(size_t samples);
+    int (*mix)(size_t samples, struct mixed_segment *segment);
     struct mixed_buffer *inputs;
     struct mixed_buffer *outputs;
     void *data;
@@ -85,32 +85,44 @@ extern "C" {
     uint8_t to_input;
   };
 
+  struct mixed_vector{
+    void *data;
+    size_t count;
+    size_t size;
+  };
+
   struct mixed_graph{
-    void **parts;
-    size_t parts_size;
-    struct mixed_connection **connections;
-    size_t connections_size;
+    struct mixed_vector *connections;
   };
 
   struct mixed_mixer{
-    struct mixed_channel *inputs;
-    struct mixed_channel *outputs;
     struct mixed_buffer *buffers;
-    struct mixed_segment *segments;
+    struct mixed_segment **segments;
     size_t samplerate;
   };
+  
+  int mixed_buffer_make(struct mixed_buffer *buffer);
+  void mixed_buffer_free(struct mixed_buffer *buffer);
+  int mixed_to_buffers(struct mixed_channel *in, struct mixed_buffer **outs);
+  int mixed_to_channel(struct mixed_buffer **ins, struct mixed_channel *out);
 
+  int mixed_vector_make(struct mixed_vector *vector);
+  void mixed_vector_free(struct mixed_vector *vector);
+  int mixed_vector_push(void *element, struct mixed_vector *vector);
+  int mixed_vector_pushnew(void *element, struct mixed_vector *vector);
+  void *mixed_vector_pop(struct mixed_vector *vector);
+  int mixed_vector_remove(void *element, struct mixed_vector *vector);
+
+  int mixed_graph_make(struct mixed_graph *graph);
+  void mixed_graph_free(struct mixed_graph *graph);
   int mixed_graph_connect(void *source, uint8_t out, void *target, uint8_t in, struct mixed_graph *graph);
   int mixed_graph_disconnect(void *source, uint8_t out, void *target, uint8_t in, struct mixed_graph *graph);
   int mixed_graph_remove(void *segment, struct mixed_graph *graph);
-  int mixed_graph_remove_mending(void *segment, struct mixed_graph *graph);
+  int mixed_graph_elements(struct mixed_vector *vector, struct mixed_graph *graph);
   
   int mixed_free_mixer(struct mixed_mixer *mixer);
   int mixed_pack_mixer(struct mixed_graph *graph, struct mixed_mixer *mixer);
   int mixed_mix(size_t samples, struct mixed_mixer *mixer);
-  
-  int mixed_to_buffers(struct mixed_channel *in, struct mixed_buffer *outs);
-  int mixed_to_channel(struct mixed_buffer *ins, struct mixed_channel *out);
 
   enum mixed_error mixed_error();
   char *mixed_error_string(enum mixed_error error_code);
