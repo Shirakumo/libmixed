@@ -6,7 +6,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("src/")
 file(GLOB lib_src "src/*.c")
 add_library(mixed SHARED ${lib_src})
-add_dependencies(mixed shaders)
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
 
 ## Test Program

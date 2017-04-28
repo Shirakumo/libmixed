@@ -59,9 +59,9 @@ extern "C" {
     enum mixed_channel_type type;
     void *data;
     size_t size;
-    mixed_encoding encoding;
+    enum mixed_encoding encoding;
     uint8_t channels;
-    mixed_layout layout;
+    enum mixed_layout layout;
     size_t samplerate;
   };
 
@@ -117,4 +117,5 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
 #endif

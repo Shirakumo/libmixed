@@ -1,3 +1,18 @@
+typedef int32_t int24_t;
+typedef uint32_t uint24_t;
+
+inline float mixed_from_float(float sample){
+  return (1.0f<sample)? 1.0f
+    : (-1.0f<sample)? sample
+    : -1.0f;
+}
+
+inline float mixed_from_double(double sample){
+  return (1.0d<sample)? 1.0f
+    : (-1.0d<sample)? (float)sample
+    : -1.0f;
+}
+
 inline float mixed_from_int8(int8_t sample){
   return (sample/128.0f);
 }
@@ -38,16 +53,16 @@ inline float mixed_from_uint64(uint64_t sample){
   return mixed_from_uint32(sample>>32);
 }
 
-inline float mixed_from_float(float sample){
+inline float mixed_to_float(float sample){
   return (1.0f<sample)? 1.0f
     : (-1.0f<sample)? sample
     : -1.0f;
 }
 
-inline float mixed_from_double(double sample){
-  return (1.0d<sample)? 1.0f
-    : (-1.0d<sample)? (float)sample
-    : -1.0f;
+inline double mixed_to_double(float sample){
+  return (1.0f<sample)? 1.0d
+    : (-1.0f<sample)? (double)sample
+    : -1.0d;
 }
 
 inline int8_t mixed_to_int8(float sample){
@@ -83,21 +98,9 @@ inline uint32_t mixed_to_uint32(float sample){
 }
 
 inline int64_t mixed_to_int64(float sample){
-  return ((double)sample)*9223372036854775808LL;
+  return ((double)sample)*9223372036854775807LL;
 }
 
 inline uint64_t mixed_to_uint64(float sample){
-  return ((double)sample)*9223372036854775808LL+9223372036854775808LL;
-}
-
-inline float mixed_to_float(float sample){
-  return (1.0f<sample)? 1.0f
-    : (-1.0f<sample)? sample
-    : -1.0f;
-}
-
-inline double mixed_to_double(float sample){
-  return (1.0f<sample)? 1.0d
-    : (-1.0f<sample)? (double)sample
-    : -1.0d;
+  return ((double)sample)*9223372036854775807LL+9223372036854775807LL;
 }
