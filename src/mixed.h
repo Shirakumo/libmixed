@@ -36,8 +36,6 @@ extern "C" {
     MIXED_UINT24,
     MIXED_INT32,
     MIXED_UINT32,
-    MIXED_INT64,
-    MIXED_UINT64,
     MIXED_FLOAT,
     MIXED_DOUBLE
   };

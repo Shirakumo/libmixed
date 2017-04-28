@@ -45,14 +45,6 @@ inline float mixed_from_uint32(uint32_t sample){
   return mixed_from_float((sample-2147483648L)/2147483648.0f);
 }
 
-inline float mixed_from_int64(int64_t sample){
-  return mixed_from_int32(sample>>32);
-}
-
-inline float mixed_from_uint64(uint64_t sample){
-  return mixed_from_uint32(sample>>32);
-}
-
 inline float mixed_to_float(float sample){
   return (1.0f<sample)? 1.0f
     : (-1.0f<sample)? sample
@@ -95,12 +87,4 @@ inline int32_t mixed_to_int32(float sample){
 
 inline uint32_t mixed_to_uint32(float sample){
   return (sample*2147483648L)+2147483648L;
-}
-
-inline int64_t mixed_to_int64(float sample){
-  return ((double)sample)*9223372036854775807LL;
-}
-
-inline uint64_t mixed_to_uint64(float sample){
-  return ((double)sample)*9223372036854775807LL+9223372036854775807LL;
 }

@@ -36,7 +36,6 @@ inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t is, stru
     out->data[os] = mixed_from_int24(sample);
     break;
   MIXED_UINT24:
-    // We assume big endian.
     int8_t data = (int8_t *)in->data;
     uint24_t sample = (data[3*is] << 16) + (data[3*is+1] << 8) + (data[3*is+2]);
     out->data[os] = mixed_from_uint24(sample);
@@ -46,12 +45,6 @@ inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t is, stru
     break;
   MIXED_UINT32:
     out->data[os] = mixed_from_uint32(((uint32_t *)in->data)[is]);
-    break;
-  MIXED_INT64:
-    out->data[os] = mixed_from_int64(((int64_t *)in->data)[is]);
-    break;
-  MIXED_UINT64:
-    out->data[os] = mixed_from_uint64(((uint64_t *)in->data)[is]);
     break;
   MIXED_FLOAT:
     out->data[os] = mixed_from_float(((float *)in->data)[is]);
@@ -65,6 +58,7 @@ inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t is, stru
   }
 }
 
+// We assume little endian for all formats.
 inline void mixed_transfer_sample_to(struct mixed_buffer *in, size_t is, struct mixed_channel *out, size_t os){
   switch(in->encoding){
   MIXED_INT8:
@@ -85,23 +79,16 @@ inline void mixed_transfer_sample_to(struct mixed_buffer *in, size_t is, struct 
     ((uint8_t *)out->data)[os];
     break;
   MIXED_UINT24:
-    // We assume big endian.
     uint24_t sample = mixed_to_uint24(in->data);
-    ((uint8_t *)out->data)[os+0] = (sample >> 16) & 0xFF;
-    ((uint8_t *)out->data)[os+1] = (sample >> 8) & 0xFF;
-    ((uint8_t *)out->data)[os+2] = (sample >> 0) & 0xFF;
+    ((uint8_t *)out->data)[os+2] = (sample >> 16) & 0xFF;
+    ((uint8_t *)out->data)[os+1] = (sample >>  8) & 0xFF;
+    ((uint8_t *)out->data)[os+0] = (sample >>  0) & 0xFF;
     break;
   MIXED_INT32:
     ((int32_t *)out->data)[os] = mixed_to_int32(in->data[is]);
     break;
   MIXED_UINT32:
     ((uint32_t *)out->data)[os] = mixed_to_uint32(in->data[is]);
-    break;
-  MIXED_INT64:
-    ((int64_t *)out->data)[os] = mixed_to_int64(in->data[is]);
-    break;
-  MIXED_UINT64:
-    ((uint64_t *)out->data)[os] = mixed_to_uint64(in->data[is]);
     break;
   MIXED_FLOAT:
     ((float *)out->data)[os] = mixed_to_float(in->data[is]);
