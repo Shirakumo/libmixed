@@ -1,4 +1,4 @@
-#include "mixed.h"
+#include "internal.h"
 
 extern inline float mixed_from_float(float sample);
 extern inline float mixed_from_double(double sample);

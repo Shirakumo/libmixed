@@ -1,4 +1,4 @@
-#include "mixed.h"
+#include "internal.h"
 
 int mixed_mixer_start(struct mixed_mixer *mixer){
   for(size_t i=0;; ++i){
@@ -17,7 +17,7 @@ int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer){
   for(size_t i=0;; ++i){
     struct mixed_segment *segment = mixer->segments[i];
     if(!segment) break;
-    if(!segment->end(samples, samplerate, segment)){
+    if(!segment->mix(samples, samplerate, segment)){
       mixed_err(MIXED_MIXING_FAILED);
       return 0;
     }

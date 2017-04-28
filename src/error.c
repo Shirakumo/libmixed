@@ -1,4 +1,4 @@
-#include "mixed.h"
+#include "internal.h"
 
 enum mixed_error errorcode = 0;
 

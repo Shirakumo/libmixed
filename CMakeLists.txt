@@ -7,6 +7,7 @@ include_directories("src/")
 file(GLOB lib_src "src/*.c")
 add_library(mixed SHARED ${lib_src})
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
+target_link_libraries(mixed libm.a)
 
 ## Test Program
 file(GLOB test_src "test/*.c")
