@@ -73,16 +73,14 @@ extern "C" {
   };
 
   struct mixed_segment{
+    // Clean up
+    int (*free)(struct mixed_segment *segment);
     // Mix samples
     int (*start)(struct mixed_segment *segment);
     int (*mix)(size_t samples, size_t samplerate, struct mixed_segment *segment);
     int (*end)(struct mixed_segment *segment);
-    // Clean up
-    int (*free)(struct mixed_segment *segment);
-    // Connect input
-    int (*connect)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
-    // Disconnect input
-    int (*disconnect)(size_t location, struct mixed_segment *segment);
+    // Connect buffer
+    int (*set_buffer)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
     // Request info
     struct mixed_segment_info (*info)(struct mixed_segment *segment);
     // Opaque fields
@@ -110,12 +108,11 @@ extern "C" {
   // For a linear mixer
   int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment *segment);
   // For a basic effect change
-  int mixed_make_segment_general(float volume, float pan, float pitch, struct mixed_segment *segment);
+  int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment);
   // For a space (3D) processed effect
   int mixed_make_segment_space(struct mixed_buffer *segment);
   // For a LADSPA-based step
   int mixed_make_segment_ladspa(char *file, size_t index, struct mixed_segment *segment);
-  int mixed_free_segment(struct mixed_segment *segment);
 
   int mixed_mixer_start(struct mixed_mixer *mixer);
   int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer);
