@@ -4,9 +4,11 @@ int mixed_mixer_start(struct mixed_mixer *mixer){
   for(size_t i=0;; ++i){
     struct mixed_segment *segment = mixer->segments[i];
     if(!segment) break;
-    if(!segment->start(segment)){
-      mixed_err(MIXED_MIXING_FAILED);
-      return 0;
+    if(segment->start){
+      if(!segment->start(segment)){
+        mixed_err(MIXED_MIXING_FAILED);
+        return 0;
+      }
     }
   }
   return 1;
@@ -29,9 +31,11 @@ int mixed_mixer_end(struct mixed_mixer *mixer){
   for(size_t i=0;; ++i){
     struct mixed_segment *segment = mixer->segments[i];
     if(!segment) break;
-    if(!segment->end(segment)){
-      mixed_err(MIXED_MIXING_FAILED);
-      return 0;
+    if(segment->end){
+      if(!segment->end(segment)){
+        mixed_err(MIXED_MIXING_FAILED);
+        return 0;
+      }
     }
   }
   return 1;
