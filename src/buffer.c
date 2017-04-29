@@ -18,40 +18,40 @@ void mixed_free_buffer(struct mixed_buffer *buffer){
 
 extern inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t is, struct mixed_buffer *out, size_t os){
   switch(in->encoding){
-  MIXED_INT8:
+  case MIXED_INT8:
     out->data[os] = mixed_from_int8(((int8_t *)in->data)[is]);
     break;
-  MIXED_UINT8:
+  case MIXED_UINT8:
     out->data[os] = mixed_from_uint8(((uint8_t *)in->data)[is]);
     break;
-  MIXED_INT16:
+  case MIXED_INT16:
     out->data[os] = mixed_from_int16(((int16_t *)in->data)[is]);
     break;
-  MIXED_UINT16:
+  case MIXED_UINT16:
     out->data[os] = mixed_from_uint16(((uint16_t *)in->data)[is]);
     break;
-  MIXED_INT24:{
+  case MIXED_INT24:{
       // FIXME
       int24_t sample = 0;
       out->data[os] = mixed_from_int24(sample);
     }
     break;
-  MIXED_UINT24:{
+  case MIXED_UINT24:{
       int8_t *data = (int8_t *)in->data;
       uint24_t sample = (data[3*is] << 16) + (data[3*is+1] << 8) + (data[3*is+2]);
       out->data[os] = mixed_from_uint24(sample);
     }
     break;
-  MIXED_INT32:
+  case MIXED_INT32:
     out->data[os] = mixed_from_int32(((int32_t *)in->data)[is]);
     break;
-  MIXED_UINT32:
+  case MIXED_UINT32:
     out->data[os] = mixed_from_uint32(((uint32_t *)in->data)[is]);
     break;
-  MIXED_FLOAT:
+  case MIXED_FLOAT:
     out->data[os] = mixed_from_float(((float *)in->data)[is]);
     break;
-  MIXED_DOUBLE:
+  case MIXED_DOUBLE:
     out->data[os] = mixed_from_double(((double *)in->data)[is]);
     break;
   default:
@@ -63,41 +63,41 @@ extern inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t i
 // We assume little endian for all formats.
 extern inline void mixed_transfer_sample_to(struct mixed_buffer *in, size_t is, struct mixed_channel *out, size_t os){
   switch(out->encoding){
-  MIXED_INT8:
+  case MIXED_INT8:
     ((int8_t *)out->data)[os] = mixed_to_int8(in->data[is]);
     break;
-  MIXED_UINT8:
+  case MIXED_UINT8:
     ((uint8_t *)out->data)[os] = mixed_to_uint8(in->data[is]);
     break;
-  MIXED_INT16:
+  case MIXED_INT16:
     ((int16_t *)out->data)[os] = mixed_to_int16(in->data[is]);
     break;
-  MIXED_UINT16:
+  case MIXED_UINT16:
     ((uint16_t *)out->data)[os] = mixed_to_uint16(in->data[is]);
     break;
-  MIXED_INT24:{
+  case MIXED_INT24:{
       // FIXME
       int24_t sample = mixed_to_int24(in->data[is]);
       ((int8_t *)out->data)[os];
     }
     break;
-  MIXED_UINT24:{
+  case MIXED_UINT24:{
       uint24_t sample = mixed_to_uint24(in->data[is]);
       ((uint8_t *)out->data)[os+2] = (sample >> 16) & 0xFF;
       ((uint8_t *)out->data)[os+1] = (sample >>  8) & 0xFF;
       ((uint8_t *)out->data)[os+0] = (sample >>  0) & 0xFF;
     }
     break;
-  MIXED_INT32:
+  case MIXED_INT32:
     ((int32_t *)out->data)[os] = mixed_to_int32(in->data[is]);
     break;
-  MIXED_UINT32:
+  case MIXED_UINT32:
     ((uint32_t *)out->data)[os] = mixed_to_uint32(in->data[is]);
     break;
-  MIXED_FLOAT:
+  case MIXED_FLOAT:
     ((float *)out->data)[os] = mixed_to_float(in->data[is]);
     break;
-  MIXED_DOUBLE:
+  case MIXED_DOUBLE:
     ((double *)out->data)[os] = mixed_to_double(in->data[is]);
     break;
   default:
