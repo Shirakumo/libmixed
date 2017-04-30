@@ -1,6 +1,5 @@
 find_path( OUT123_INCLUDE_DIR 
   NAMES
-  out123/out123.h
   out123.h
   HINTS
   "${OUT123_LOCATION}/include"
@@ -8,8 +7,11 @@ find_path( OUT123_INCLUDE_DIR
   PATHS
   "$ENV{PROGRAMFILES}/out123/include"
   "$ENV{PROGRAMFILES}/mpg123/include"
-  /usr/include
-  /usr/local/include
+  /sw
+  /usr
+  /usr/local
+  /opt
+  /opt/local
   DOC 
   "The directory where out123/out123.h resides"
   )
@@ -23,8 +25,11 @@ find_library( OUT123_out123_LIBRARY
   "${OUT123_LOCATION}/lib/x64"
   "$ENV{OUT123_LOCATION}/lib"
   PATHS
-  /usr/lib
-  /usr/local/lib
+  /sw
+  /usr
+  /usr/local
+  /opt
+  /opt/local
   DOC 
   "The out123 library"
   )

@@ -1,6 +1,5 @@
 find_path( MPG123_INCLUDE_DIR 
   NAMES
-  mpg123/mpg123.h
   mpg123.h
   HINTS
   "${MPG123_LOCATION}/include"
@@ -8,8 +7,11 @@ find_path( MPG123_INCLUDE_DIR
   PATHS
   "$ENV{PROGRAMFILES}/mpg123/include"
   "$ENV{PROGRAMFILES}/mpg123/include"
-  /usr/include
-  /usr/local/include
+  /sw
+  /usr
+  /usr/local
+  /opt
+  /opt/local
   DOC 
   "The directory where mpg123/mpg123.h resides"
   )
@@ -23,8 +25,11 @@ find_library( MPG123_mpg123_LIBRARY
   "${MPG123_LOCATION}/lib/x64"
   "$ENV{MPG123_LOCATION}/lib"
   PATHS
-  /usr/lib
-  /usr/local/lib
+  /sw
+  /usr
+  /usr/local
+  /opt
+  /opt/local
   DOC 
   "The mpg123 library"
   )

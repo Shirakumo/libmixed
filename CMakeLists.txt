@@ -11,6 +11,7 @@ target_link_libraries(mixed libm.a)
 
 ## Test Program
 find_package(mpg123)
+find_package(out123)
 if(OUT123_FOUND AND MPG123_FOUND)
   file(GLOB test_src "test/*.c")
   add_executable(mixed_test ${test_src})
