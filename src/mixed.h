@@ -132,6 +132,7 @@ extern "C" {
   int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer);
   int mixed_mixer_end(struct mixed_mixer *mixer);
 
+  uint8_t mixed_samplesize(enum mixed_encoding encoding);
   enum mixed_error mixed_error();
   char *mixed_error_string(enum mixed_error error_code);
 

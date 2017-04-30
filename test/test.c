@@ -153,12 +153,14 @@ int main(int argc, char **argv){
   mixed_mixer_start(&mixer);
 
   size_t read = 0;
+  uint8_t samplesize = mixed_samplesize(mp3_channel.encoding);
   do{
     if(mpg123_read(mh, buffer, buffersize, &read) != MPG123_OK){
       printf("Failure during MP3 decoding: %s\n", mpg123_strerror(mh));
       goto cleanup;
     }
-    if(!mixed_mixer_mix(read, &mixer)){
+    size_t samples = read/samplesize;
+    if(!mixed_mixer_mix(samples, &mixer)){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
