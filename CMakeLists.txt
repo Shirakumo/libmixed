@@ -17,7 +17,7 @@ if(OUT123_FOUND AND MPG123_FOUND)
   add_executable(mixed_test ${test_src})
   add_dependencies(mixed_test mixed)
   set_property(TARGET mixed_test PROPERTY C_STANDARD 99)
-  target_link_libraries(mixed_test mixed)
+  target_link_libraries(mixed_test mixed ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
 endif()
 
 ## Warnings
