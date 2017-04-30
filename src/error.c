@@ -11,6 +11,7 @@ enum mixed_error mixed_error(){
 }
 
 char *mixed_error_string(enum mixed_error code){
+  if(code < 0) code = mixed_error();
   switch(code){
   MIXED_NO_ERROR:
     return "No error has occurred.";
