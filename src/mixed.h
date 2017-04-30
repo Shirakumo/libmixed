@@ -24,7 +24,8 @@ extern "C" {
     MIXED_OUT_OF_MEMORY,
     MIXED_UNKNOWN_ENCODING,
     MIXED_UNKNOWN_LAYOUT,
-    MIXED_MIXING_FAILED
+    MIXED_MIXING_FAILED,
+    MIXED_NOT_IMPLEMENTED
   };
 
   enum mixed_encoding{
@@ -93,6 +94,8 @@ extern "C" {
   struct mixed_mixer{
     struct mixed_segment **segments;
     size_t samplerate;
+    size_t count;
+    size_t size;
   };
   
   int mixed_make_buffer(struct mixed_buffer *buffer);
@@ -101,6 +104,15 @@ extern "C" {
   int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out);
   int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
 
+  int mixed_free_segment(struct mixed_segment *segment);
+  int mixed_segment_start(struct mixed_segment *segment);
+  int mixed_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *segment);
+  int mixed_segment_end(struct mixed_segment *segment);
+  int mixed_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
+  struct mixed_segment_info mixed_segment_info(struct mixed_segment *segment);
+  int mixed_segment_get(size_t field, void **value, struct mixed_segment *segment);
+  int mixed_segment_set(size_t field, void *value, struct mixed_segment *segment);
+  
   // For a source channel converter
   int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segment *segment);
   // For a drain channel converter
@@ -114,6 +126,8 @@ extern "C" {
   // For a LADSPA-based step
   int mixed_make_segment_ladspa(char *file, size_t index, struct mixed_segment *segment);
 
+  int mixed_free_mixer(struct mixed_mixer *mixer);
+  int mixed_mixer_add(struct mixed_segment *segment, struct mixed_mixer *mixer);
   int mixed_mixer_start(struct mixed_mixer *mixer);
   int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer);
   int mixed_mixer_end(struct mixed_mixer *mixer);
