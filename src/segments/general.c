@@ -41,10 +41,31 @@ struct mixed_segment_info general_segment_info(struct mixed_segment *segment){
   struct mixed_segment_info info = {0};
   info.name = "general";
   info.description = "General segment for volume adjustment and panning.";
+  info.flags = MIXED_INPLACE;
   info.min_inputs = 2;
   info.max_inputs = 2;
   info.outputs = 2;
   return info;
+}
+
+int general_segment_get(size_t field, void *value, struct mixed_segment *segment){
+  struct general_segment_data *data = (struct general_segment_data *)segment->data;
+  switch(field){
+  case MIXED_GENERAL_VOLUME: *((float *)value) = data->volume; break;
+  case MIXED_GENERAL_PAN: *((float *)value) = data->pan; break;
+  default: return 0;
+  }
+  return 1;
+}
+
+int general_segment_set(size_t field, void *value, struct mixed_segment *segment){
+  struct general_segment_data *data = (struct general_segment_data *)segment->data;
+  switch(field){
+  case MIXED_GENERAL_VOLUME: data->volume = *(float *)value; break;
+  case MIXED_GENERAL_PAN: data->pan = *(float *)value; break;
+  default: return 0;
+  }
+  return 1;
 }
 
 int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment){
@@ -58,6 +79,8 @@ int mixed_make_segment_general(float volume, float pan, struct mixed_segment *se
   segment->mix = general_segment_mix;
   segment->set_buffer = general_segment_set_buffer;
   segment->info = general_segment_info;
+  segment->get = general_segment_get;
+  segment->set = general_segment_set;
   segment->data = data;
   return 1;
 }

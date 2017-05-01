@@ -88,7 +88,7 @@ extern "C" {
     // Request info
     struct mixed_segment_info (*info)(struct mixed_segment *segment);
     // Opaque fields
-    int (*get)(size_t field, void **value, struct mixed_segment *segment);
+    int (*get)(size_t field, void *value, struct mixed_segment *segment);
     int (*set)(size_t field, void *value, struct mixed_segment *segment);
     // User data
     void *data;
@@ -114,7 +114,7 @@ extern "C" {
   int mixed_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
   int mixed_segment_get_buffer(size_t location, struct mixed_buffer **buffer, struct mixed_segment *segment);
   struct mixed_segment_info mixed_segment_info(struct mixed_segment *segment);
-  int mixed_segment_get(size_t field, void **value, struct mixed_segment *segment);
+  int mixed_segment_get(size_t field, void *value, struct mixed_segment *segment);
   int mixed_segment_set(size_t field, void *value, struct mixed_segment *segment);
   
   // For a source channel converter

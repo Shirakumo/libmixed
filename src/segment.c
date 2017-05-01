@@ -50,7 +50,7 @@ struct mixed_segment_info mixed_segment_info(struct mixed_segment *segment){
   return info;
 }
 
-int mixed_segment_get(size_t field, void **value, struct mixed_segment *segment){
+int mixed_segment_get(size_t field, void *value, struct mixed_segment *segment){
   if(segment->get)
     return segment->get(field, value, segment);
   mixed_err(MIXED_NOT_IMPLEMENTED);
