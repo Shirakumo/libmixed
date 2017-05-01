@@ -23,7 +23,7 @@ int ladspa_segment_free(struct mixed_segment *segment){
 
 int ladspa_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
-  
+  // FIXME
 }
 
 int ladspa_segment_mix(size_t samples, struct mixed_segment *segment){
@@ -83,11 +83,13 @@ struct mixed_segment_info ladspa_segment_info(struct mixed_segment *segment){
 
 int ladspa_segment_get(size_t field, void *value, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
+  // FIXME
   return 0;
 }
 
 int ladspa_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
+  // FIXME
   return 0;
 }
 
@@ -137,6 +139,7 @@ int mixed_make_segment_ladspa(char *file, size_t index, struct mixed_segment *se
     return 0;
   }
 
+  // FIXME
   data->handle = descriptor->instantiate(descriptor, 0);
   if(!data->handle){
     mixed_err(MIXED_LADSPA_INSTANTIATION_FAILED);
