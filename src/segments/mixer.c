@@ -47,7 +47,7 @@ int mixer_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struc
       }
       // All good
       data->in[location] = buffer;
-      if(location = data->count){
+      if(location == data->count){
         ++data->count;
       }
     }else{ // Remove an element
