@@ -67,7 +67,6 @@ int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer){
   size_t count = mixer->count;
   for(size_t i=0; i<count; ++i){
     struct mixed_segment *segment = mixer->segments[i];
-    printf("Mixing %i samples in %s\n", samples, segment->info(segment).name);
     if(!segment->mix(samples, samplerate, segment)){
       mixed_err(MIXED_MIXING_FAILED);
       return 0;
