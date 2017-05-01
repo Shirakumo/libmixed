@@ -76,6 +76,21 @@ int mixer_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struc
   return 1;
 }
 
+int mixer_segment_get_buffer(size_t location, struct mixed_buffer **buffer, struct mixed_segment *segment){
+  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+  if(location == 0){
+    *buffer = data->out;
+  }else{
+    --location;
+    if(data->count <= location){
+      mixed_err(MIXED_MIXER_INVALID_INDEX);
+      return 0;
+    }
+    *buffer = data->in[location];
+  }
+  return 1;
+}
+
 int mixer_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
   size_t count = data->count;
@@ -110,6 +125,7 @@ int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment
   segment->free = mixer_segment_free;
   segment->mix = mixer_segment_mix;
   segment->set_buffer = mixer_segment_set_buffer;
+  segment->get_buffer = mixer_segment_get_buffer;
   segment->data = data;
   return 1;
 }

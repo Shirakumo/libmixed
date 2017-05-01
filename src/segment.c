@@ -35,6 +35,13 @@ int mixed_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struc
   return 0;
 }
 
+int mixed_segment_get_buffer(size_t location, struct mixed_buffer **buffer, struct mixed_segment *segment){
+  if(segment->get_buffer)
+    return segment->get_buffer(location, buffer, segment);
+  mixed_err(MIXED_NOT_IMPLEMENTED);
+  return 0;
+}
+
 struct mixed_segment_info mixed_segment_info(struct mixed_segment *segment){
   if(segment->info)
     return segment->info(segment);
