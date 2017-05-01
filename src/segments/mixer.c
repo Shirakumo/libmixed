@@ -22,7 +22,54 @@ int mixer_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struc
     data->out = buffer;
   }else{
     --location;
-    // FIXME
+    if(buffer){ // Add or set an element
+      if(data->count < location){
+        mixed_err(MIXED_MIXER_INVALID_INDEX);
+        return 0;
+      }
+      // Not yet initialized
+      if(!data->in){
+        if(data->size == 0) data->size = BASE_VECTOR_SIZE;
+        data->in = calloc(data->size, sizeof(struct mixed_buffer *));
+        data->count = 0;
+      }
+      // Too small
+      if(data->count == data->size){
+        data->in = realloc(data->in, data->size*2*sizeof(struct mixed_buffer *));
+        data->size *= 2;
+      }
+      // Check completeness
+      if(!data->in){
+        mixed_err(MIXED_OUT_OF_MEMORY);
+        data->count = 0;
+        data->size = 0;
+      }
+      // All good
+      data->in[location] = buffer;
+      if(location = data->count){
+        ++data->count;
+      }
+    }else{ // Remove an element
+      if(data->count <= location){
+        mixed_err(MIXED_MIXER_INVALID_INDEX);
+        return 0;
+      }
+      for(size_t i=location+1; i<data->count; ++i){
+        data->in[i-1] = data->in[i];
+      }
+      data->in[data->count] = 0;
+      --data->count;
+      // We have sufficiently deallocated. Shrink.
+      if(data->count < data->size/4 && BASE_VECTOR_SIZE < data->size){
+        data->in = realloc(data->in, data->size/2*sizeof(struct mixed_buffer *));
+        if(!data->in){
+          mixed_err(MIXED_OUT_OF_MEMORY);
+          data->count = 0;
+          data->size = 0;
+          return 0;
+        }
+      }
+    }
   }
   return 1;
 }
