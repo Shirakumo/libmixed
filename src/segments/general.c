@@ -37,6 +37,16 @@ int general_segment_mix(size_t samples, size_t samplerate, struct mixed_segment 
   return 1;
 }
 
+struct mixed_segment_info general_segment_info(struct mixed_segment *segment){
+  struct mixed_segment_info info = {0};
+  info.name = "general";
+  info.description = "General segment for volume adjustment and panning.";
+  info.min_inputs = 2;
+  info.max_inputs = 2;
+  info.outputs = 2;
+  return info;
+}
+
 int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment){
   struct general_segment_data *data = calloc(1, sizeof(struct general_segment_data));
   if(!data) return 0;
@@ -47,6 +57,7 @@ int mixed_make_segment_general(float volume, float pan, struct mixed_segment *se
   segment->free = general_segment_free;
   segment->mix = general_segment_mix;
   segment->set_buffer = general_segment_set_buffer;
+  segment->info = general_segment_info;
   segment->data = data;
   return 1;
 }

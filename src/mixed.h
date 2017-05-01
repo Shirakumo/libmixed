@@ -20,12 +20,13 @@ extern "C" {
 #include "encoding.h"
 
   enum mixed_error{
-    MIXED_NO_ERROR,
+    MIXED_NO_ERROR=1,
     MIXED_OUT_OF_MEMORY,
     MIXED_UNKNOWN_ENCODING,
     MIXED_UNKNOWN_LAYOUT,
     MIXED_MIXING_FAILED,
-    MIXED_NOT_IMPLEMENTED
+    MIXED_NOT_IMPLEMENTED,
+    MIXED_NOT_INITIALIZED
   };
 
   enum mixed_encoding{
@@ -100,8 +101,8 @@ extern "C" {
   
   int mixed_make_buffer(struct mixed_buffer *buffer);
   void mixed_free_buffer(struct mixed_buffer *buffer);
-  int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs);
-  int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out);
+  int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples);
+  int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples);
   int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
 
   int mixed_free_segment(struct mixed_segment *segment);
@@ -128,13 +129,14 @@ extern "C" {
 
   int mixed_free_mixer(struct mixed_mixer *mixer);
   int mixed_mixer_add(struct mixed_segment *segment, struct mixed_mixer *mixer);
+  int mixed_mixer_remove(struct mixed_segment *segment, struct mixed_mixer *mixer);
   int mixed_mixer_start(struct mixed_mixer *mixer);
   int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer);
   int mixed_mixer_end(struct mixed_mixer *mixer);
 
   uint8_t mixed_samplesize(enum mixed_encoding encoding);
-  enum mixed_error mixed_error();
-  char *mixed_error_string(enum mixed_error error_code);
+  int mixed_error();
+  char *mixed_error_string(int error_code);
 
 #ifdef __cplusplus
 }

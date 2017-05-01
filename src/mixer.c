@@ -29,10 +29,29 @@ int mixed_mixer_add(struct mixed_segment *segment, struct mixed_mixer *mixer){
   return 1;
 }
 
+int mixed_mixer_remove(struct mixed_segment *segment, struct mixed_mixer *mixer){
+  if(!mixer->segments){
+    mixed_err(MIXED_NOT_INITIALIZED);
+    return 0;
+  }
+  for(size_t i=0; i<mixer->count; ++i){
+    if(mixer->segments[i] == segment){
+      // Shift down
+      for(size_t j=i+1; j<mixer->count; ++j){
+        mixer->segments[j-1] = mixer->segments[j];
+      }
+      mixer->segments[mixer->count-1] = 0;
+      --mixer->count;
+      break;
+    }
+  }
+  return 1;
+}
+
 int mixed_mixer_start(struct mixed_mixer *mixer){
-  for(size_t i=0;; ++i){
+  size_t count = mixer->count;
+  for(size_t i=0; i<count; ++i){
     struct mixed_segment *segment = mixer->segments[i];
-    if(!segment) break;
     if(segment->start){
       if(!segment->start(segment)){
         mixed_err(MIXED_MIXING_FAILED);
@@ -45,9 +64,10 @@ int mixed_mixer_start(struct mixed_mixer *mixer){
 
 int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer){
   size_t samplerate = mixer->samplerate;
-  for(size_t i=0;; ++i){
+  size_t count = mixer->count;
+  for(size_t i=0; i<count; ++i){
     struct mixed_segment *segment = mixer->segments[i];
-    if(!segment) break;
+    printf("Mixing %i samples in %s\n", samples, segment->info(segment).name);
     if(!segment->mix(samples, samplerate, segment)){
       mixed_err(MIXED_MIXING_FAILED);
       return 0;
@@ -57,9 +77,9 @@ int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer){
 }
 
 int mixed_mixer_end(struct mixed_mixer *mixer){
-  for(size_t i=0;; ++i){
+  size_t count = mixer->count;
+  for(size_t i=0; i<count; ++i){
     struct mixed_segment *segment = mixer->segments[i];
-    if(!segment) break;
     if(segment->end){
       if(!segment->end(segment)){
         mixed_err(MIXED_MIXING_FAILED);

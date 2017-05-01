@@ -22,7 +22,7 @@ int mixer_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struc
     data->out = buffer;
   }else{
     --location;
-    
+    // FIXME
   }
   return 1;
 }
@@ -40,6 +40,16 @@ int mixer_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *s
     data->out->data[i] = out*div;
   }
   return 1;
+}
+
+struct mixed_segment_info mixer_segment_info(struct mixed_segment *segment){
+  struct mixed_segment_info info = {0};
+  info.name = "mixer";
+  info.description = "Mixes multiple buffers together";
+  info.min_inputs = 0;
+  info.max_inputs = -1;
+  info.outputs = 1;
+  return info;
 }
 
 int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment *segment){

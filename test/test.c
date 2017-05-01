@@ -30,11 +30,11 @@ int main(int argc, char **argv){
   struct mixed_channel mp3_channel = {0};
   struct mixed_segment mp3_segment = {0};
   out123_handle *oh = 0;
-  long out_samplerate = 0;
-  int out_channels = 0;
-  int out_encoding = 0;
+  long out_samplerate = 44100;
+  int out_channels = 2;
+  int out_encoding = MPG123_ENC_SIGNED_16;
   int out_framesize = 0;
-  char *out_encname = 0;
+  char *out_encname = "signed 16";
   struct mixed_channel out_channel = {0};
   struct mixed_segment out_segment = {0};
   struct mixed_buffer left = {0};
@@ -82,7 +82,7 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(out123_start(oh, 44100, 2, MPG123_ENC_FLOAT_32)){
+  if(out123_start(oh, mp3_samplerate, mp3_channels, MPG123_ENC_FLOAT_32)){
     printf("Failed to start playback on device: %s\n", out123_strerror(oh));
     goto cleanup;
   }
@@ -95,7 +95,7 @@ int main(int argc, char **argv){
   out_encname = out123_enc_longname(out_encoding);
   printf("OUT: %i channels @ %li Hz, %s\n", out_channels, out_samplerate, out_encname);
 
-  buffersize = mpg123_outblock(mh);
+  buffersize = 4096;
   buffer = calloc(buffersize, sizeof(uint8_t));
   if(!buffer){
     printf("Couldn't allocate temporary buffer.\n");
@@ -125,7 +125,17 @@ int main(int argc, char **argv){
     printf("Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
+  
+  uint8_t mp3_samplesize = mixed_samplesize(mp3_channel.encoding);
+  uint8_t out_samplesize = mixed_samplesize(out_channel.encoding);
+  size_t samples_in_buffer = buffersize/((mp3_samplesize < out_samplesize)
+                                         ? out_samplesize
+                                         : mp3_samplesize);
 
+  // Buffers are sized in samples.
+  left.size = samples_in_buffer;
+  right.size = samples_in_buffer;
+  
   // Attach buffers to segments
   if(   !mixed_make_buffer(&left)
      || !mixed_make_buffer(&right)){
@@ -142,7 +152,7 @@ int main(int argc, char **argv){
   }
 
   // Assemble the mixer
-  mixer.samplerate = 44100;
+  mixer.samplerate = out_samplerate;
   
   if(   !mixed_mixer_add(&mp3_segment, &mixer)
      || !mixed_mixer_add(&out_segment, &mixer)){
@@ -152,20 +162,20 @@ int main(int argc, char **argv){
   // Perform the mixing
   mixed_mixer_start(&mixer);
 
-  size_t read = 0;
-  uint8_t samplesize = mixed_samplesize(mp3_channel.encoding);
+  size_t read = 0, played = 0;
   do{
-    if(mpg123_read(mh, buffer, buffersize, &read) != MPG123_OK){
+    if(mpg123_read(mh, buffer, samples_in_buffer*mp3_samplesize, &read) != MPG123_OK){
       printf("Failure during MP3 decoding: %s\n", mpg123_strerror(mh));
       goto cleanup;
     }
-    size_t samples = read/samplesize;
+    size_t samples = read/mp3_samplesize;
     if(!mixed_mixer_mix(samples, &mixer)){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
-    if(out123_play(oh, buffer, read) < read){
-      printf("Warning: device not catching up with input.\n");
+    played = out123_play(oh, buffer, samples*out_samplesize);
+    if(played < read){
+      printf("Warning: device not catching up with input (%i vs %i)\n", played, read);
     }
   }while(read);
 

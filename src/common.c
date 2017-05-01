@@ -16,18 +16,18 @@ uint8_t mixed_samplesize(enum mixed_encoding encoding){
   }
 }
 
-enum mixed_error errorcode = 0;
+int errorcode = 0;
 
-void mixed_err(enum mixed_error code){
+void mixed_err(int code){
   errorcode = code;
 }
 
-enum mixed_error mixed_error(){
+int mixed_error(){
   return errorcode;
 }
 
-char *mixed_error_string(enum mixed_error code){
-  if(code < 0) code = mixed_error();
+char *mixed_error_string(int code){
+  if(code < 0) code = errorcode;
   switch(code){
   case MIXED_NO_ERROR:
     return "No error has occurred.";
@@ -41,6 +41,8 @@ char *mixed_error_string(enum mixed_error code){
     return "An error occurred during the mixing of a segment.";
   case MIXED_NOT_IMPLEMENTED:
     return "The segment function you tried to call was not provided.";
+  case MIXED_NOT_INITIALIZED:
+    return "An attempt was made to use an object without initializing it properly first.";
   default:
     return "Unknown error code.";
   }

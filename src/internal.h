@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "mixed.h"
 
-void mixed_err(enum mixed_error errorcode);
+void mixed_err(int errorcode);

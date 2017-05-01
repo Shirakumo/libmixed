@@ -2,6 +2,11 @@
 #include "internal.h"
 
 int mixed_make_buffer(struct mixed_buffer *buffer){
+  if(!buffer->size){
+    mixed_err(MIXED_NOT_INITIALIZED);
+    return 0;
+  }
+  
   buffer->data = calloc(buffer->size, sizeof(float));
   if(!buffer->data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -60,6 +65,46 @@ extern inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t i
   }
 }
 
+// FIXME: Naturally, rolling the transfer functions out into the outer
+//        loops so that we don't need to do the swich for every sample
+//        would be much faster, but I ain't doin' any o dat.
+// FIXME: We currently don't do any resampling because doing so is a
+//        huge pain and I currently don't want to think about it.
+//        Probably will want to conver to an internal float buffer first.
+int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples){
+  mixed_err(MIXED_NO_ERROR);
+  switch(in->layout){
+  case MIXED_ALTERNATING:{
+    uint8_t channel = 0;
+    size_t i = 0;
+    for(size_t sample=0; sample<samples; ++sample){
+      struct mixed_buffer *out = outs[channel];
+      mixed_transfer_sample_from(in, sample, out, i);
+      ++channel;
+      if(in->channels == channel){
+        channel = 0;
+        ++i;
+      }
+    }}
+    break;
+  case MIXED_SEQUENTIAL:{
+    size_t chansize = samples / in->channels;
+    size_t sample = 0;
+    for(uint8_t channel=0; channel<in->channels; ++channel){
+      struct mixed_buffer *out = outs[channel];
+      for(size_t i=0; i<chansize; ++i){
+        mixed_transfer_sample_from(in, sample, out, i);
+        ++sample;
+      }
+    }}
+    break;
+  default:
+    mixed_err(MIXED_UNKNOWN_LAYOUT);
+    break;
+  }
+  return (mixed_error() == MIXED_NO_ERROR);
+}
+
 // We assume little endian for all formats.
 extern inline void mixed_transfer_sample_to(struct mixed_buffer *in, size_t is, struct mixed_channel *out, size_t os){
   switch(out->encoding){
@@ -76,17 +121,17 @@ extern inline void mixed_transfer_sample_to(struct mixed_buffer *in, size_t is, 
     ((uint16_t *)out->data)[os] = mixed_to_uint16(in->data[is]);
     break;
   case MIXED_INT24:{
-      // FIXME
-      int24_t sample = mixed_to_int24(in->data[is]);
-      ((int8_t *)out->data)[os];
-    }
+    // FIXME
+    int24_t sample = mixed_to_int24(in->data[is]);
+    ((int8_t *)out->data)[os];
+  }
     break;
   case MIXED_UINT24:{
-      uint24_t sample = mixed_to_uint24(in->data[is]);
-      ((uint8_t *)out->data)[os+2] = (sample >> 16) & 0xFF;
-      ((uint8_t *)out->data)[os+1] = (sample >>  8) & 0xFF;
-      ((uint8_t *)out->data)[os+0] = (sample >>  0) & 0xFF;
-    }
+    uint24_t sample = mixed_to_uint24(in->data[is]);
+    ((uint8_t *)out->data)[os+2] = (sample >> 16) & 0xFF;
+    ((uint8_t *)out->data)[os+1] = (sample >>  8) & 0xFF;
+    ((uint8_t *)out->data)[os+0] = (sample >>  0) & 0xFF;
+  }
     break;
   case MIXED_INT32:
     ((int32_t *)out->data)[os] = mixed_to_int32(in->data[is]);
@@ -106,53 +151,13 @@ extern inline void mixed_transfer_sample_to(struct mixed_buffer *in, size_t is, 
   }
 }
 
-// FIXME: Naturally, rolling the transfer functions out into the outer
-//        loops so that we don't need to do the swich for every sample
-//        would be much faster, but I ain't doin' any o dat.
-// FIXME: We currently don't do any resampling because doing so is a
-//        huge pain and I currently don't want to think about it.
-//        Probably will want to conver to an internal float buffer first.
-int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs){
-  mixed_err(MIXED_NO_ERROR);
-  switch(in->layout){
-  case MIXED_ALTERNATING:{
-    uint8_t channel = 0;
-    size_t i = 0;
-    for(size_t sample=0; sample<in->size; ++sample){
-      struct mixed_buffer *out = outs[channel];
-      mixed_transfer_sample_from(in, sample, out, i);
-      ++channel;
-      if(in->channels == channel){
-        channel = 0;
-        ++i;
-      }
-    }}
-    break;
-  case MIXED_SEQUENTIAL:{
-    size_t chansize = in->size / in->channels;
-    size_t sample = 0;
-    for(uint8_t channel=0; channel<in->channels; ++channel){
-      struct mixed_buffer *out = outs[channel];
-      for(size_t i=0; i<chansize; ++i){
-        mixed_transfer_sample_from(in, sample, out, i);
-        ++sample;
-      }
-    }}
-    break;
-  default:
-    mixed_err(MIXED_UNKNOWN_LAYOUT);
-    break;
-  }
-  return (mixed_error() == MIXED_NO_ERROR);
-}
-
-int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out){
+int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples){
   mixed_err(MIXED_NO_ERROR);
   switch(out->layout){
   case MIXED_ALTERNATING:{
     uint8_t channel = 0;
     size_t i = 0;
-    for(size_t sample=0; sample<out->size; ++sample){
+    for(size_t sample=0; sample<samples; ++sample){
       struct mixed_buffer *in = ins[channel];
       mixed_transfer_sample_to(in, i, out, sample);
       ++channel;
@@ -163,7 +168,7 @@ int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out
     }}
     break;
   case MIXED_SEQUENTIAL:{
-    size_t chansize = out->size / out->channels;
+    size_t chansize = samples / out->channels;
     size_t sample = 0;
     for(uint8_t channel=0; channel<out->channels; ++channel){
       struct mixed_buffer *in = ins[channel];
