@@ -90,7 +90,7 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
     goto cleanup;
   }
   
-  mp3_encname = out123_enc_longname(mp3_encoding);
+  mp3_encname = (char *)out123_enc_longname(mp3_encoding);
   printf("MP3: %i channels @ %li Hz, %s\n", mp3_channels, mp3_samplerate, mp3_encname);
 
   mp3->channel.encoding = fmt123_to_mixed(mp3_encoding);
@@ -182,7 +182,7 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  out_encname = out123_enc_longname(out_encoding);
+  out_encname = (char *)out123_enc_longname(out_encoding);
   printf("OUT: %i channels @ %li Hz, %s\n", out_channels, out_samplerate, out_encname);
   
   // Prepare pipeline segments
