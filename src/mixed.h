@@ -94,7 +94,7 @@ extern "C" {
     int (*free)(struct mixed_segment *segment);
     // Mix samples
     int (*start)(struct mixed_segment *segment);
-    int (*mix)(size_t samples, size_t samplerate, struct mixed_segment *segment);
+    int (*mix)(size_t samples, struct mixed_segment *segment);
     int (*end)(struct mixed_segment *segment);
     // Connect buffer
     int (*set_buffer)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
@@ -123,7 +123,7 @@ extern "C" {
 
   int mixed_free_segment(struct mixed_segment *segment);
   int mixed_segment_start(struct mixed_segment *segment);
-  int mixed_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *segment);
+  int mixed_segment_mix(size_t samples, struct mixed_segment *segment);
   int mixed_segment_end(struct mixed_segment *segment);
   int mixed_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
   int mixed_segment_get_buffer(size_t location, struct mixed_buffer **buffer, struct mixed_segment *segment);

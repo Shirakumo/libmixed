@@ -24,12 +24,12 @@ int channel_segment_set_buffer(size_t location, struct mixed_buffer *buffer, str
   }
 }
 
-int source_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *segment){
+int source_segment_mix(size_t samples, struct mixed_segment *segment){
   struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
   return mixed_buffer_from_channel(data->channel, data->buffers, samples);
 }
 
-int drain_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *segment){
+int drain_segment_mix(size_t samples, struct mixed_segment *segment){
   struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
   return mixed_buffer_to_channel(data->buffers, data->channel, samples);
 }

@@ -14,9 +14,9 @@ int mixed_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int mixed_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *segment){
+int mixed_segment_mix(size_t samples, struct mixed_segment *segment){
   if(segment->mix)
-    return segment->mix(samples, samplerate, segment);
+    return segment->mix(samples, segment);
   mixed_err(MIXED_NOT_IMPLEMENTED);
   return 0;
 }

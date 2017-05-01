@@ -25,7 +25,7 @@ int general_segment_set_buffer(size_t location, struct mixed_buffer *buffer, str
   }
 }
 
-int general_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *segment){
+int general_segment_mix(size_t samples, struct mixed_segment *segment){
   struct general_segment_data *data = (struct general_segment_data *)segment->data;
   float lvolume = data->volume * ((0.0<data->pan)?(1.0f-data->pan):1.0f);
   float rvolume = data->volume * ((data->pan<0.0)?(1.0f+data->pan):1.0f);

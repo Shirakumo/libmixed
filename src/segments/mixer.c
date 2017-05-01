@@ -91,7 +91,7 @@ int mixer_segment_get_buffer(size_t location, struct mixed_buffer **buffer, stru
   return 1;
 }
 
-int mixer_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *segment){
+int mixer_segment_mix(size_t samples, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
   size_t count = data->count;
   // FIXME: could optimise this test out.

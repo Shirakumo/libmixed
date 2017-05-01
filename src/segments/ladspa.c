@@ -26,7 +26,7 @@ int ladspa_segment_set_buffer(size_t location, struct mixed_buffer *buffer, stru
   
 }
 
-int ladspa_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *segment){
+int ladspa_segment_mix(size_t samples, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
   data->descriptor->run(data->handle, samples);
   return 1;
