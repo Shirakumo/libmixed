@@ -35,7 +35,8 @@ int mixer_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struc
       }
       // Too small
       if(data->count == data->size){
-        data->in = realloc(data->in, data->size*2*sizeof(struct mixed_buffer *));
+        data->in = crealloc(data->in, data->size, data->size*2,
+                            sizeof(struct mixed_buffer *));
         data->size *= 2;
       }
       // Check completeness
@@ -61,7 +62,8 @@ int mixer_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struc
       --data->count;
       // We have sufficiently deallocated. Shrink.
       if(data->count < data->size/4 && BASE_VECTOR_SIZE < data->size){
-        data->in = realloc(data->in, data->size/2*sizeof(struct mixed_buffer *));
+        data->in = crealloc(data->in, data->size, data->size/2,
+                            sizeof(struct mixed_buffer *));
         if(!data->in){
           mixed_err(MIXED_OUT_OF_MEMORY);
           data->count = 0;

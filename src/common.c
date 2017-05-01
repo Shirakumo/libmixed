@@ -49,3 +49,15 @@ char *mixed_error_string(int code){
     return "Unknown error code.";
   }
 }
+
+void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
+  size_t newsize = newcount*size;
+  size_t oldsize = oldcount*size;
+  ptr = realloc(ptr, newsize);
+  if(ptr && oldsize < newsize){
+    for(size_t i=oldsize; i<newsize; ++i){
+      ((uint8_t *)ptr)[i] = 0;
+    }
+  }
+  return ptr;
+}

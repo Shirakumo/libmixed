@@ -15,7 +15,8 @@ int mixed_mixer_add(struct mixed_segment *segment, struct mixed_mixer *mixer){
   }
   // Too small
   if(mixer->count == mixer->size){
-    mixer->segments = realloc(mixer->segments, mixer->size*2*sizeof(struct mixed_segment *));
+    mixer->segments = crealloc(mixer->segments, mixer->size, mixer->size*2,
+                               sizeof(struct mixed_segment *));
     mixer->size *= 2;
   }
   // Check completeness
@@ -46,7 +47,8 @@ int mixed_mixer_remove(struct mixed_segment *segment, struct mixed_mixer *mixer)
       --mixer->count;
       // We have sufficiently deallocated. Shrink.
       if(mixer->count < mixer->size/4 && BASE_VECTOR_SIZE < mixer->size){
-        mixer->segments = realloc(mixer->segments, mixer->size/2*sizeof(struct mixed_buffer *));
+        mixer->segments = crealloc(mixer->segments, mixer->size, mixer->size/2,
+                                   sizeof(struct mixed_buffer *));
         if(!mixer->segments){
           mixed_err(MIXED_OUT_OF_MEMORY);
           mixer->count = 0;
