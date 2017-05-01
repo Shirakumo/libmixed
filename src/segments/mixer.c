@@ -120,7 +120,25 @@ int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment
   struct mixer_segment_data *data = calloc(1, sizeof(struct mixer_segment_data));
   if(!data) return 0;
 
-  data->in = buffers;
+  if(buffers){
+    size_t count = 0;
+    while(buffers[count]) ++count;
+    // Copy data over
+    if(0 < count){
+      data->out = buffers[0];
+      data->in = calloc(count-1, sizeof(struct mixed_buffer *));
+      if(!data->in){
+        mixed_err(MIXED_OUT_OF_MEMORY);
+        free(data);
+        return 0;
+      }
+      
+      data->size = count-1;
+      for(data->count = 0; data->count < data->size; ++data->count){
+        data->in[data->count] = buffers[data->count+1];
+      }
+    }
+  }
 
   segment->free = mixer_segment_free;
   segment->mix = mixer_segment_mix;
