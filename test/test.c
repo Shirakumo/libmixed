@@ -1,8 +1,15 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <signal.h>
 #include <mpg123.h>
 #include <out123.h>
 #include "mixed.h"
+
+char volatile interrupted = 0;
+
+void interrupt_handler(int shim){
+  interrupted = 1;
+}
 
 int fmt123_to_mixed(int fmt){
   switch(fmt){
@@ -43,6 +50,8 @@ int main(int argc, char **argv){
   struct mixed_segment gen_segment = {0};
   int8_t *buffer = 0;
   size_t buffersize = 0;
+
+  signal(SIGINT, interrupt_handler);
   
   if(argc<2){
     printf("Please pass an audio file to play.\n");
@@ -184,12 +193,14 @@ int main(int argc, char **argv){
     if(played < read){
       printf("Warning: device not catching up with input (%i vs %i)\n", played, read);
     }
-  }while(read);
+  }while(read && !interrupted);
 
   mixed_mixer_end(&mixer);
   
   exit = 0;
  cleanup:
+  printf("\nCleaning up.\n");
+  
   mixed_free_segment(&mp3_segment);
   mixed_free_segment(&gen_segment);
   mixed_free_segment(&out_segment);
