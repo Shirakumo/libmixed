@@ -34,9 +34,9 @@ char *mixed_error_string(int code){
   case MIXED_OUT_OF_MEMORY:
     return "An allocation has failed. You are likely out of memory.";
   case MIXED_UNKNOWN_ENCODING:
-    return "An unknown sample encoding was specified for a channel.";
+    return "The specified sample encoding is unknown.";
   case MIXED_UNKNOWN_LAYOUT:
-    return "An unknown sample layout was specified for a channel.";
+    return "The specified sample layout is unknown.";
   case MIXED_MIXING_FAILED:
     return "An error occurred during the mixing of a segment.";
   case MIXED_NOT_IMPLEMENTED:
@@ -45,6 +45,14 @@ char *mixed_error_string(int code){
     return "An attempt was made to use an object without initializing it properly first.";
   case MIXED_MIXER_INVALID_INDEX:
     return "Cannot set the channel at the specified location in the mixer segment.";
+  case MIXED_LADSPA_OPEN_FAILED:
+    return "Failed to open the LADSPA plugin library. Most likely the file could not be read.";
+  case MIXED_LADSPA_BAD_LIBRARY:
+    return "The LADSPA plugin library was found but does not seem to be a valid LADSPA 1.1 library.";
+  case MIXED_LADSPA_NO_PLUGIN_AT_INDEX:
+    return "The LADSPA plugin library does not have a plugin at the requested index.";
+  case MIXED_LADSPA_INSTANTIATION_FAILED:
+    return "Instantiation of the LADSPA plugin has failed.";
   default:
     return "Unknown error code.";
   }

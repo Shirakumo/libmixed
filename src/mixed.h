@@ -27,7 +27,11 @@ extern "C" {
     MIXED_MIXING_FAILED,
     MIXED_NOT_IMPLEMENTED,
     MIXED_NOT_INITIALIZED,
-    MIXED_MIXER_INVALID_INDEX
+    MIXED_MIXER_INVALID_INDEX,
+    MIXED_LADSPA_OPEN_FAILED,
+    MIXED_LADSPA_BAD_LIBRARY,
+    MIXED_LADSPA_NO_PLUGIN_AT_INDEX,
+    MIXED_LADSPA_INSTANTIATION_FAILED
   };
 
   enum mixed_encoding{
@@ -53,6 +57,15 @@ extern "C" {
     MIXED_SOURCE_LOCATION
   };
 
+  enum mixed_segment_fields{
+    MIXED_GENERAL_VOLUME,
+    MIXED_GENERAL_PAN
+  };
+
+  enum mixed_segment_info_flags{
+    MIXED_INPLACE = 0x1
+  };
+
   struct mixed_buffer{
     float *data;
     size_t size;
@@ -68,8 +81,9 @@ extern "C" {
   };
 
   struct mixed_segment_info{
-    char *name;
-    char *description;
+    const char *name;
+    const char *description;
+    enum mixed_segment_info_flags flags;
     size_t min_inputs;
     size_t max_inputs;
     size_t outputs;
