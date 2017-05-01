@@ -40,6 +40,7 @@ int main(int argc, char **argv){
   struct mixed_buffer left = {0};
   struct mixed_buffer right = {0};
   struct mixed_mixer mixer = {0};
+  struct mixed_segment gen_segment = {0};
   int8_t *buffer = 0;
   size_t buffersize = 0;
   
@@ -121,6 +122,7 @@ int main(int argc, char **argv){
   out_channel.samplerate = out_samplerate;
   
   if(   !mixed_make_segment_source(&mp3_channel, &mp3_segment)
+     || !mixed_make_segment_general(1.0, 0.9, &gen_segment)
      || !mixed_make_segment_drain(&out_channel, &out_segment)){
     printf("Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
@@ -145,6 +147,10 @@ int main(int argc, char **argv){
 
   if(   !mixed_segment_set_buffer(0, &left, &mp3_segment)
      || !mixed_segment_set_buffer(1, &right, &mp3_segment)
+     || !mixed_segment_set_buffer(0, &left, &gen_segment)
+     || !mixed_segment_set_buffer(1, &right, &gen_segment)
+     || !mixed_segment_set_buffer(2, &left, &gen_segment)
+     || !mixed_segment_set_buffer(3, &right, &gen_segment)
      || !mixed_segment_set_buffer(0, &left, &out_segment)
      || !mixed_segment_set_buffer(1, &right, &out_segment)){
     printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
@@ -155,6 +161,7 @@ int main(int argc, char **argv){
   mixer.samplerate = out_samplerate;
   
   if(   !mixed_mixer_add(&mp3_segment, &mixer)
+     || !mixed_mixer_add(&gen_segment, &mixer)
      || !mixed_mixer_add(&out_segment, &mixer)){
     printf("Failed to assemble mixer: %s\n", mixed_error_string(-1));
   }
@@ -168,12 +175,12 @@ int main(int argc, char **argv){
       printf("Failure during MP3 decoding: %s\n", mpg123_strerror(mh));
       goto cleanup;
     }
-    size_t samples = read/mp3_samplesize;
-    if(!mixed_mixer_mix(samples, &mixer)){
+    size_t samples_read = read/mp3_samplesize;
+    if(!mixed_mixer_mix(samples_read, &mixer)){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
-    played = out123_play(oh, buffer, samples*out_samplesize);
+    played = out123_play(oh, buffer, samples_read*out_samplesize);
     if(played < read){
       printf("Warning: device not catching up with input (%i vs %i)\n", played, read);
     }
@@ -184,6 +191,7 @@ int main(int argc, char **argv){
   exit = 0;
  cleanup:
   mixed_free_segment(&mp3_segment);
+  mixed_free_segment(&gen_segment);
   mixed_free_segment(&out_segment);
   mixed_free_buffer(&left);
   mixed_free_buffer(&right);
