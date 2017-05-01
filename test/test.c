@@ -153,13 +153,17 @@ int main(int argc, char **argv){
     printf("Failed to allocate mixer buffers: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
-
+  
   if(   !mixed_segment_set_buffer(0, &left, &mp3_segment)
      || !mixed_segment_set_buffer(1, &right, &mp3_segment)
+        // The general segment has two ins and two outs. But since it is
+        // specified as being in-place, we can attach the same buffers.
      || !mixed_segment_set_buffer(0, &left, &gen_segment)
      || !mixed_segment_set_buffer(1, &right, &gen_segment)
      || !mixed_segment_set_buffer(2, &left, &gen_segment)
      || !mixed_segment_set_buffer(3, &right, &gen_segment)
+        // Drains and sources both take as many buffers as they have
+        // channels. Here we assume (and require!) two.
      || !mixed_segment_set_buffer(0, &left, &out_segment)
      || !mixed_segment_set_buffer(1, &right, &out_segment)){
     printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
@@ -168,7 +172,10 @@ int main(int argc, char **argv){
 
   // Assemble the mixer
   mixer.samplerate = out_samplerate;
-  
+
+  // The order in which segments are added does matter, as the system
+  // will not figure out on its own in which order the segments should
+  // be called. We specify this here.
   if(   !mixed_mixer_add(&mp3_segment, &mixer)
      || !mixed_mixer_add(&gen_segment, &mixer)
      || !mixed_mixer_add(&out_segment, &mixer)){
@@ -184,11 +191,13 @@ int main(int argc, char **argv){
       printf("Failure during MP3 decoding: %s\n", mpg123_strerror(mh));
       goto cleanup;
     }
+    
     size_t samples_read = read/mp3_samplesize;
     if(!mixed_mixer_mix(samples_read, &mixer)){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
+    
     played = out123_play(oh, buffer, samples_read*out_samplesize);
     if(played < read){
       printf("Warning: device not catching up with input (%i vs %i)\n", played, read);
@@ -196,7 +205,8 @@ int main(int argc, char **argv){
   }while(read && !interrupted);
 
   mixed_mixer_end(&mixer);
-  
+
+  // Clean the shop
   exit = 0;
  cleanup:
   printf("\nCleaning up.\n");
