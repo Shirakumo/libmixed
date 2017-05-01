@@ -94,14 +94,16 @@ int mixer_segment_get_buffer(size_t location, struct mixed_buffer **buffer, stru
 int mixer_segment_mix(size_t samples, size_t samplerate, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
   size_t count = data->count;
-  float div = 1.0f/count;
-  
-  for(size_t i=0; i<samples; ++i){
-    float out = 0.0f;
-    for(size_t b=0; b<count; ++b){
-      out += data->in[b]->data[i];
+  // FIXME: could optimise this test out.
+  if(0 < count){
+    float div = 1.0f/count;
+    for(size_t i=0; i<samples; ++i){
+      float out = 0.0f;
+      for(size_t b=0; b<count; ++b){
+        out += data->in[b]->data[i];
+      }
+      data->out->data[i] = out*div;
     }
-    data->out->data[i] = out*div;
   }
   return 1;
 }
