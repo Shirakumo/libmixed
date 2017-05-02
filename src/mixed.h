@@ -168,7 +168,7 @@ extern "C" {
   // For a volume fade in/out effect
   int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, size_t samplerate, struct mixed_segment *segment);
   // For a space (3D) processed effect
-  int mixed_make_segment_space(struct mixed_buffer *segment);
+  int mixed_make_segment_space(struct mixed_segment *segment);
   // For a LADSPA-based step
   int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment);
 

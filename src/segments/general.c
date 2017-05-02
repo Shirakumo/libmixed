@@ -77,7 +77,10 @@ int general_segment_set(size_t field, void *value, struct mixed_segment *segment
 
 int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment){
   struct general_segment_data *data = calloc(1, sizeof(struct general_segment_data));
-  if(!data) return 0;
+  if(!data){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  }
 
   data->volume = volume;
   data->pan = pan;

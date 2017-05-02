@@ -57,7 +57,10 @@ struct mixed_segment_info drain_segment_info(struct mixed_segment *segment){
 
 int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segment *segment){
   struct channel_segment_data *data = calloc(1, sizeof(struct channel_segment_data));
-  if(!data) return 0;
+  if(!data){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  }
 
   struct mixed_buffer **buffers = calloc(channel->channels, sizeof(struct mixed_buffer));
   if(!buffers){
@@ -78,7 +81,10 @@ int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segmen
 
 int mixed_make_segment_drain(struct mixed_channel *channel, struct mixed_segment *segment){
   struct channel_segment_data *data = calloc(1, sizeof(struct channel_segment_data));
-  if(!data) return 0;
+  if(!data){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  }
 
   struct mixed_buffer **buffers = calloc(channel->channels, sizeof(struct mixed_buffer));
   if(!buffers){

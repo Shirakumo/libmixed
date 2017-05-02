@@ -72,7 +72,10 @@ struct mixed_segment_info mixer_segment_info(struct mixed_segment *segment){
 
 int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment *segment){
   struct mixer_segment_data *data = calloc(1, sizeof(struct mixer_segment_data));
-  if(!data) return 0;
+  if(!data){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  }
 
   if(buffers){
     size_t count = 0;
@@ -98,6 +101,7 @@ int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment
   segment->mix = mixer_segment_mix;
   segment->set_in = mixer_segment_set_in;
   segment->set_out = mixer_segment_set_out;
+  segment->info = mixer_segment_info;
   segment->data = data;
   return 1;
 }

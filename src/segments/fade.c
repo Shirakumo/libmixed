@@ -138,7 +138,10 @@ int fade_segment_set(size_t field, void *value, struct mixed_segment *segment){
 
 int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, size_t samplerate, struct mixed_segment *segment){
   struct fade_segment_data *data = calloc(1, sizeof(struct fade_segment_data));
-  if(!data) return 0;
+  if(!data){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  }
 
   data->from = from;
   data->to = to;
