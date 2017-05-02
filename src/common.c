@@ -43,8 +43,8 @@ char *mixed_error_string(int code){
     return "The segment function you tried to call was not provided.";
   case MIXED_NOT_INITIALIZED:
     return "An attempt was made to use an object without initializing it properly first.";
-  case MIXED_MIXER_INVALID_INDEX:
-    return "Cannot set the channel at the specified location in the mixer segment.";
+  case MIXED_INVALID_BUFFER_LOCATION:
+    return "Cannot set the buffer at the specified location in the segment.";
   case MIXED_LADSPA_OPEN_FAILED:
     return "Failed to open the LADSPA plugin library. Most likely the file could not be read.";
   case MIXED_LADSPA_BAD_LIBRARY:

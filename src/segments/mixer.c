@@ -29,7 +29,7 @@ int mixer_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mi
 
   if(buffer){ // Add or set an element
     if(data->count < location){
-      mixed_err(MIXED_MIXER_INVALID_INDEX);
+      mixed_err(MIXED_INVALID_BUFFER_LOCATION);
       return 0;
     }
     // Not yet initialized
@@ -57,7 +57,7 @@ int mixer_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mi
     }
   }else{ // Remove an element
     if(data->count <= location){
-      mixed_err(MIXED_MIXER_INVALID_INDEX);
+      mixed_err(MIXED_INVALID_BUFFER_LOCATION);
       return 0;
     }
     for(size_t i=location+1; i<data->count; ++i){
