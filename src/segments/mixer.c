@@ -1,10 +1,10 @@
 #include "internal.h"
 
 struct mixer_segment_data{
-  struct mixed_buffer *out;
   struct mixed_buffer **in;
   size_t count;
   size_t size;
+  struct mixed_buffer *out;
 };
 
 int mixer_segment_free(struct mixed_segment *segment){
@@ -28,54 +28,17 @@ int mixer_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mi
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
 
   if(buffer){ // Add or set an element
-    if(data->count < location){
-      mixed_err(MIXED_INVALID_BUFFER_LOCATION);
-      return 0;
-    }
-    // Not yet initialized
-    if(!data->in){
-      if(data->size == 0) data->size = BASE_VECTOR_SIZE;
-      data->in = calloc(data->size, sizeof(struct mixed_buffer *));
-      data->count = 0;
-    }
-    // Too small
-    if(data->count == data->size){
-      data->in = crealloc(data->in, data->size, data->size*2,
-                          sizeof(struct mixed_buffer *));
-      data->size *= 2;
-    }
-    // Check completeness
-    if(!data->in){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      data->count = 0;
-      data->size = 0;
-    }
-    // All good
-    data->in[location] = buffer;
-    if(location == data->count){
-      ++data->count;
+    if(location < data->count){
+      data->in[location] = buffer;
+    }else{
+      return vector_add(buffer, (struct vector *)data);
     }
   }else{ // Remove an element
     if(data->count <= location){
       mixed_err(MIXED_INVALID_BUFFER_LOCATION);
       return 0;
     }
-    for(size_t i=location+1; i<data->count; ++i){
-      data->in[i-1] = data->in[i];
-    }
-    data->in[data->count] = 0;
-    --data->count;
-    // We have sufficiently deallocated. Shrink.
-    if(data->count < data->size/4 && BASE_VECTOR_SIZE < data->size){
-      data->in = crealloc(data->in, data->size, data->size/2,
-                          sizeof(struct mixed_buffer *));
-      if(!data->in){
-        mixed_err(MIXED_OUT_OF_MEMORY);
-        data->count = 0;
-        data->size = 0;
-        return 0;
-      }
-    }
+    return vector_remove_pos(location, (struct vector *)data);
   }
   return 1;
 }

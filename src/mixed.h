@@ -136,9 +136,9 @@ extern "C" {
 
   struct mixed_mixer{
     struct mixed_segment **segments;
-    size_t samplerate;
     size_t count;
     size_t size;
+    size_t samplerate;
   };
   
   int mixed_make_buffer(struct mixed_buffer *buffer);
