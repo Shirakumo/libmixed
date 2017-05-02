@@ -5,6 +5,7 @@
 struct ladspa_segment_data{
   LADSPA_Descriptor *descriptor;
   LADSPA_Handle *handle;
+  float *control;
   char active;
   size_t samplerate;
 };
@@ -16,6 +17,8 @@ int ladspa_segment_free(struct mixed_segment *segment){
       data->descriptor->deactivate(data->handle);
     if(data->descriptor->cleanup)
       data->descriptor->cleanup(data->handle);
+    if(data->control)
+      free(data->control);
     free(segment->data);
   }
   segment->data = 0;
@@ -30,7 +33,7 @@ int ladspa_segment_set_in(size_t location, struct mixed_buffer *buffer, struct m
     if(   LADSPA_IS_PORT_AUDIO(port)
        && LADSPA_IS_PORT_INPUT(port)){
       if(index == location){
-        data->descriptor->connect_port(data->handle, index, buffer->data);
+        data->descriptor->connect_port(data->handle, i, buffer->data);
         return 1;
       }
       ++index;
@@ -48,7 +51,7 @@ int ladspa_segment_set_out(size_t location, struct mixed_buffer *buffer, struct 
     if(   LADSPA_IS_PORT_AUDIO(port)
           && LADSPA_IS_PORT_OUTPUT(port)){
       if(index == location){
-        data->descriptor->connect_port(data->handle, index, buffer->data);
+        data->descriptor->connect_port(data->handle, i, buffer->data);
         return 1;
       }
       ++index;
@@ -122,14 +125,42 @@ struct mixed_segment_info ladspa_segment_info(struct mixed_segment *segment){
 }
 
 int ladspa_segment_get(size_t field, void *value, struct mixed_segment *segment){
+  // I don't think the LADSPA interface is compatible with how we want
+  // to use it. If I read it correctly, it says that the output controls
+  // are only updated while the plugin is actually run, which is not
+  // what we want here in most cases.
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
-  // FIXME
+  size_t index = 0;
+  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+    const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
+    if(   LADSPA_IS_PORT_CONTROL(port)
+       && LADSPA_IS_PORT_OUTPUT(port)){
+      if(index == field){
+        *((float *)value) = data->control[i];
+        return 1;
+      }
+      ++index;
+    }
+  }
+  mixed_err(MIXED_INVALID_FIELD);
   return 0;
 }
 
 int ladspa_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
-  // FIXME
+  size_t index = 0;
+  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+    const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
+    if(   LADSPA_IS_PORT_CONTROL(port)
+       && LADSPA_IS_PORT_INPUT(port)){
+      if(index == field){
+        data->control[i] = *((float *)value);
+        return 1;
+      }
+      ++index;
+    }
+  }
+  mixed_err(MIXED_INVALID_FIELD);
   return 0;
 }
 
@@ -169,21 +200,34 @@ int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descri
 }
 
 int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment){
-  LADSPA_Descriptor *descriptor;
+  LADSPA_Descriptor *descriptor = 0;
+  struct ladspa_segment_data *data = 0;
+  
   if(!ladspa_load_descriptor(file, index, &descriptor)){
-    return 0;
+    goto cleanup;
   }
 
-  struct ladspa_segment_data *data = calloc(1, sizeof(struct ladspa_segment_data));
+  data = calloc(1, sizeof(struct ladspa_segment_data));
   if(!data){
-    return 0;
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+
+  data->control = calloc(descriptor->PortCount, sizeof(float));
+  if(!data->control){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
   }
 
   data->handle = data->descriptor->instantiate(data->descriptor, samplerate);  
   if(!data->handle){
     mixed_err(MIXED_LADSPA_INSTANTIATION_FAILED);
-    free(data);
-    return 0;
+    goto cleanup;
+  }
+
+  // Connect all ports to shims
+  for(size_t i=0; i<descriptor->PortCount; ++i){
+    descriptor->connect_port(data->handle, i, &data->control[i]);
   }
 
   segment->free = ladspa_segment_free;
@@ -197,4 +241,13 @@ int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struc
   segment->set = ladspa_segment_set;
   segment->data = data;
   return 1;
+
+ cleanup:
+  if(data->control)
+    free(data->control);
+  
+  if(data)
+    free(data);
+  
+  return 0;
 }
