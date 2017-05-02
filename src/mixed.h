@@ -66,7 +66,10 @@ extern "C" {
     MIXED_FADE_FROM,
     MIXED_FADE_TO,
     MIXED_FADE_TIME,
-    MIXED_FADE_TYPE
+    MIXED_FADE_TYPE,
+    MIXED_SPACE_LOCATION,
+    MIXED_SPACE_DIRECTION,
+    MIXED_SPACE_UP
   };
 
   enum mixed_fade_type{

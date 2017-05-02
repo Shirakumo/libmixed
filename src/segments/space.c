@@ -11,7 +11,8 @@ struct space_segment_data{
   size_t count;
   size_t size;
   float location[3];
-  float orientation[3];
+  float direction[3];
+  float up[3];
   struct mixed_buffer *left;
   struct mixed_buffer *right;
 };
@@ -64,6 +65,50 @@ int space_segment_mix(size_t samples, struct mixed_segment *segment){
   
 }
 
+int space_segment_get(size_t field, void *value, struct mixed_segment *segment){
+  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+  switch(field){
+  case MIXED_SPACE_LOCATION:
+    *((float **)value)[0] = data->location[0];
+    *((float **)value)[1] = data->location[1];
+    *((float **)value)[2] = data->location[2];
+  case MIXED_SPACE_DIRECTION:
+    *((float **)value)[0] = data->direction[0];
+    *((float **)value)[1] = data->direction[1];
+    *((float **)value)[2] = data->direction[2];
+  case MIXED_SPACE_UP:
+    *((float **)value)[0] = data->up[0];
+    *((float **)value)[1] = data->up[1];
+    *((float **)value)[2] = data->up[2];
+    break;
+  default: mixed_err(MIXED_INVALID_FIELD); return 0;
+  }
+  return 1;
+}
+
+int space_segment_set(size_t field, void *value, struct mixed_segment *segment){
+  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+  switch(field){
+  case MIXED_SPACE_LOCATION:
+    data->location[0] = *((float **)value)[0];
+    data->location[1] = *((float **)value)[1];
+    data->location[2] = *((float **)value)[2];
+    break;
+  case MIXED_SPACE_DIRECTION:
+    data->direction[0] = *((float **)value)[0];
+    data->direction[1] = *((float **)value)[1];
+    data->direction[2] = *((float **)value)[2];
+    break;
+  case MIXED_SPACE_UP:
+    data->up[0] = *((float **)value)[0];
+    data->up[1] = *((float **)value)[1];
+    data->up[2] = *((float **)value)[2];
+    break;
+  default: mixed_err(MIXED_INVALID_FIELD); return 0;
+  }
+  return 1;
+}
+
 struct mixed_segment_info space_segment_info(struct mixed_segment *segment){
   struct mixed_segment_info info = {0};
   info.name = "space";
@@ -85,5 +130,7 @@ int mixed_make_segment_space(struct mixed_segment *segment){
   segment->mix = space_segment_mix;
   segment->set_in = space_segment_set_in;
   segment->set_out = space_segment_set_out;
+  segment->set = space_segment_set;
+  segment->get = space_segment_get;
   segment->data = data;
 }
