@@ -62,7 +62,18 @@ extern "C" {
 
   enum mixed_segment_fields{
     MIXED_GENERAL_VOLUME,
-    MIXED_GENERAL_PAN
+    MIXED_GENERAL_PAN,
+    MIXED_FADE_FROM,
+    MIXED_FADE_TO,
+    MIXED_FADE_TIME,
+    MIXED_FADE_TYPE
+  };
+
+  enum mixed_fade_type{
+    MIXED_LINEAR,
+    MIXED_CUBIC_IN,
+    MIXED_CUBIC_OUT,
+    MIXED_CUBIC_IN_OUT
   };
 
   enum mixed_segment_info_flags{
@@ -154,6 +165,8 @@ extern "C" {
   int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment *segment);
   // For a basic effect change
   int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment);
+  // For a volume fade in/out effect
+  int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, size_t samplerate, struct mixed_segment *segment);
   // For a space (3D) processed effect
   int mixed_make_segment_space(struct mixed_buffer *segment);
   // For a LADSPA-based step
