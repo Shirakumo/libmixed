@@ -14,13 +14,20 @@ int general_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-int general_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int general_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct general_segment_data *data = (struct general_segment_data *)segment->data;
   switch(location){
-  case 0: data->in[0] = buffer; return 1;
-  case 1: data->in[1] = buffer; return 1;
-  case 2: data->out[0] = buffer; return 1;
-  case 3: data->out[1] = buffer; return 1;
+  case MIXED_LEFT: data->in[MIXED_LEFT] = buffer; return 1;
+  case MIXED_RIGHT: data->in[MIXED_RIGHT] = buffer; return 1;
+  default: return 0; break;
+  }
+}
+
+int general_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+  struct general_segment_data *data = (struct general_segment_data *)segment->data;
+  switch(location){
+  case MIXED_LEFT: data->out[MIXED_LEFT] = buffer; return 1;
+  case MIXED_RIGHT: data->out[MIXED_RIGHT] = buffer; return 1;
   default: return 0; break;
   }
 }
@@ -31,8 +38,8 @@ int general_segment_mix(size_t samples, struct mixed_segment *segment){
   float rvolume = data->volume * ((data->pan<0.0)?(1.0f+data->pan):1.0f);
   
   for(size_t i=0; i<samples; ++i){
-    data->out[0]->data[i] = data->in[0]->data[i]*lvolume;
-    data->out[1]->data[i] = data->in[1]->data[i]*rvolume;
+    data->out[MIXED_LEFT]->data[i] = data->in[MIXED_LEFT]->data[i]*lvolume;
+    data->out[MIXED_RIGHT]->data[i] = data->in[MIXED_RIGHT]->data[i]*rvolume;
   }
   return 1;
 }
@@ -77,7 +84,8 @@ int mixed_make_segment_general(float volume, float pan, struct mixed_segment *se
   
   segment->free = general_segment_free;
   segment->mix = general_segment_mix;
-  segment->set_buffer = general_segment_set_buffer;
+  segment->set_in = general_segment_set_in;
+  segment->set_out = general_segment_set_out;
   segment->info = general_segment_info;
   segment->get = general_segment_get;
   segment->set = general_segment_set;

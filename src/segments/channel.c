@@ -69,7 +69,7 @@ int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segmen
 
   segment->free = channel_segment_free;
   segment->mix = source_segment_mix;
-  segment->set_buffer = channel_segment_set_buffer;
+  segment->set_out = channel_segment_set_buffer;
   segment->info = source_segment_info;
   segment->data = data;
   return 1;
@@ -90,7 +90,7 @@ int mixed_make_segment_drain(struct mixed_channel *channel, struct mixed_segment
 
   segment->free = channel_segment_free;
   segment->mix = drain_segment_mix;
-  segment->set_buffer = channel_segment_set_buffer;
+  segment->set_in = channel_segment_set_buffer;
   segment->info = drain_segment_info;
   segment->data = data;
   return 1;

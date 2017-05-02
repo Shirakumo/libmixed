@@ -6,6 +6,7 @@ struct ladspa_segment_data{
   LADSPA_Descriptor *descriptor;
   LADSPA_Handle *handle;
   char active;
+  size_t samplerate;
 };
 
 int ladspa_segment_free(struct mixed_segment *segment){
@@ -21,7 +22,12 @@ int ladspa_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-int ladspa_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int ladspa_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+  struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
+  // FIXME
+}
+
+int ladspa_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
   // FIXME
 }
@@ -32,25 +38,49 @@ int ladspa_segment_mix(size_t samples, struct mixed_segment *segment){
   return 1;
 }
 
-int ladspa_segment_start(struct mixed_segment *segment){
+int ladspa_segment_start(struct mixed_segment *segment, size_t samplerate){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
+  if(data->active){
+    mixed_err(MIXED_SEGMENT_ALREADY_STARTED);
+    return 0;
+  }
+  
+  // Sample rate has changed, clean up.
+  if(samplerate != data->samplerate && data->handle){
+    if(data->descriptor->cleanup)
+      data->descriptor->cleanup(data->handle);
+    data->handle = 0;
+  }
+  
+  if(!data->handle){
+    data->handle = data->descriptor->instantiate(data->descriptor, samplerate);
+  }
+  
+  if(!data->handle){
+    mixed_err(MIXED_LADSPA_INSTANTIATION_FAILED);
+    return 0;
+  }
+  
   if(data->descriptor->activate){
     data->descriptor->activate(data->handle);
-    data->active = 1;
-  }else{
-    mixed_err(MIXED_NOT_IMPLEMENTED);
   }
+  data->active = 1;
   return 1;
 }
 
 int ladspa_segment_end(struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
+  if(!data->active){
+    mixed_err(MIXED_SEGMENT_ALREADY_ENDED);
+    return 0;
+  }
+  
   if(data->descriptor->deactivate){
     data->descriptor->deactivate(data->handle);
-    data->active = 0;
   }else{
     mixed_err(MIXED_NOT_IMPLEMENTED);
   }
+  data->active = 0;
   return 1;
 }
 
@@ -139,19 +169,12 @@ int mixed_make_segment_ladspa(char *file, size_t index, struct mixed_segment *se
     return 0;
   }
 
-  // FIXME
-  data->handle = descriptor->instantiate(descriptor, 0);
-  if(!data->handle){
-    mixed_err(MIXED_LADSPA_INSTANTIATION_FAILED);
-    free(data);
-    return 0;
-  }
-
   segment->free = ladspa_segment_free;
   segment->mix = ladspa_segment_mix;
   segment->start = ladspa_segment_start;
   segment->end = ladspa_segment_end;
-  segment->set_buffer = ladspa_segment_set_buffer;
+  segment->set_in = ladspa_segment_set_in;
+  segment->set_out = ladspa_segment_set_out;
   segment->info = ladspa_segment_info;
   segment->get = ladspa_segment_get;
   segment->set = ladspa_segment_set;

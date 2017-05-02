@@ -114,8 +114,8 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
     goto cleanup;
   }
 
-  if(   !mixed_segment_set_buffer(0, &mp3->left,  &mp3->segment)
-     || !mixed_segment_set_buffer(1, &mp3->right, &mp3->segment)){
+  if(   !mixed_segment_set_out(MIXED_LEFT, &mp3->left, &mp3->segment)
+     || !mixed_segment_set_out(MIXED_RIGHT, &mp3->right, &mp3->segment)){
     printf("Failed to set buffers for %s: %s\n", file, mixed_error_string(-1));
     goto cleanup;
   }
@@ -216,17 +216,17 @@ int main(int argc, char **argv){
   }
   
   if(   // The mixer segment's 0th buffer is its output.
-        !mixed_segment_set_buffer(0, &left, &lmix_segment)
-     || !mixed_segment_set_buffer(0, &right, &rmix_segment)
+        !mixed_segment_set_out(MIXED_MONO, &left, &lmix_segment)
+     || !mixed_segment_set_out(MIXED_MONO, &right, &rmix_segment)
         // The general segment has two ins and two outs. But since it is
         // specified as being in-place, we can attach the same buffers.
-     || !mixed_segment_set_buffer(0, &left, &gen_segment)
-     || !mixed_segment_set_buffer(1, &right, &gen_segment)
-     || !mixed_segment_set_buffer(2, &left, &gen_segment)
-     || !mixed_segment_set_buffer(3, &right, &gen_segment)
+     || !mixed_segment_set_in(MIXED_LEFT, &left, &gen_segment)
+     || !mixed_segment_set_in(MIXED_RIGHT, &right, &gen_segment)
+     || !mixed_segment_set_out(MIXED_LEFT, &left, &gen_segment)
+     || !mixed_segment_set_out(MIXED_RIGHT, &right, &gen_segment)
         // The drain needs two input channels to play back from.
-     || !mixed_segment_set_buffer(0, &left, &out_segment)
-     || !mixed_segment_set_buffer(1, &right, &out_segment)){
+     || !mixed_segment_set_in(MIXED_LEFT, &left, &out_segment)
+     || !mixed_segment_set_in(MIXED_RIGHT, &right, &out_segment)){
     printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -239,8 +239,8 @@ int main(int argc, char **argv){
     }
     mp3s[i-1] = mp3;
     // Attach to combining segments
-    if(   !mixed_segment_set_buffer(i, &mp3->left, &lmix_segment)
-       || !mixed_segment_set_buffer(i, &mp3->right, &rmix_segment)){
+    if(   !mixed_segment_set_in(i, &mp3->left, &lmix_segment)
+       || !mixed_segment_set_in(i, &mp3->right, &rmix_segment)){
       printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
       goto cleanup;
     }

@@ -67,7 +67,7 @@ int mixed_mixer_start(struct mixed_mixer *mixer){
   for(size_t i=0; i<count; ++i){
     struct mixed_segment *segment = mixer->segments[i];
     if(segment->start){
-      if(!segment->start(segment)){
+      if(!segment->start(segment, mixer->samplerate)){
         mixed_err(MIXED_MIXING_FAILED);
         return 0;
       }

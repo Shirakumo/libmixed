@@ -7,9 +7,9 @@ int mixed_free_segment(struct mixed_segment *segment){
   return 1;
 }
 
-int mixed_segment_start(struct mixed_segment *segment){
+int mixed_segment_start(struct mixed_segment *segment, size_t samplerate){
   if(segment->start)
-    return segment->start(segment);
+    return segment->start(segment, samplerate);
   mixed_err(MIXED_NOT_IMPLEMENTED);
   return 1;
 }
@@ -28,16 +28,16 @@ int mixed_segment_end(struct mixed_segment *segment){
   return 1;
 }
 
-int mixed_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
-  if(segment->set_buffer)
-    return segment->set_buffer(location, buffer, segment);
+int mixed_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+  if(segment->set_in)
+    return segment->set_in(location, buffer, segment);
   mixed_err(MIXED_NOT_IMPLEMENTED);
   return 0;
 }
 
-int mixed_segment_get_buffer(size_t location, struct mixed_buffer **buffer, struct mixed_segment *segment){
-  if(segment->get_buffer)
-    return segment->get_buffer(location, buffer, segment);
+int mixed_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+  if(segment->set_out)
+    return segment->set_out(location, buffer, segment);
   mixed_err(MIXED_NOT_IMPLEMENTED);
   return 0;
 }

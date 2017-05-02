@@ -16,77 +16,66 @@ int mixer_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-int mixer_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int mixer_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
-  if(location == 0){
-    data->out = buffer;
-  }else{
-    --location;
-    if(buffer){ // Add or set an element
-      if(data->count < location){
-        mixed_err(MIXED_MIXER_INVALID_INDEX);
-        return 0;
-      }
-      // Not yet initialized
-      if(!data->in){
-        if(data->size == 0) data->size = BASE_VECTOR_SIZE;
-        data->in = calloc(data->size, sizeof(struct mixed_buffer *));
-        data->count = 0;
-      }
-      // Too small
-      if(data->count == data->size){
-        data->in = crealloc(data->in, data->size, data->size*2,
-                            sizeof(struct mixed_buffer *));
-        data->size *= 2;
-      }
-      // Check completeness
-      if(!data->in){
-        mixed_err(MIXED_OUT_OF_MEMORY);
-        data->count = 0;
-        data->size = 0;
-      }
-      // All good
-      data->in[location] = buffer;
-      if(location == data->count){
-        ++data->count;
-      }
-    }else{ // Remove an element
-      if(data->count <= location){
-        mixed_err(MIXED_MIXER_INVALID_INDEX);
-        return 0;
-      }
-      for(size_t i=location+1; i<data->count; ++i){
-        data->in[i-1] = data->in[i];
-      }
-      data->in[data->count] = 0;
-      --data->count;
-      // We have sufficiently deallocated. Shrink.
-      if(data->count < data->size/4 && BASE_VECTOR_SIZE < data->size){
-        data->in = crealloc(data->in, data->size, data->size/2,
-                            sizeof(struct mixed_buffer *));
-        if(!data->in){
-          mixed_err(MIXED_OUT_OF_MEMORY);
-          data->count = 0;
-          data->size = 0;
-          return 0;
-        }
-      }
-    }
+  switch(location){
+  case MIXED_MONO: data->out = buffer; return 1;
+  default: return 0;
   }
-  return 1;
 }
 
-int mixer_segment_get_buffer(size_t location, struct mixed_buffer **buffer, struct mixed_segment *segment){
+int mixer_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
-  if(location == 0){
-    *buffer = data->out;
-  }else{
-    --location;
+
+  if(buffer){ // Add or set an element
+    if(data->count < location){
+      mixed_err(MIXED_MIXER_INVALID_INDEX);
+      return 0;
+    }
+    // Not yet initialized
+    if(!data->in){
+      if(data->size == 0) data->size = BASE_VECTOR_SIZE;
+      data->in = calloc(data->size, sizeof(struct mixed_buffer *));
+      data->count = 0;
+    }
+    // Too small
+    if(data->count == data->size){
+      data->in = crealloc(data->in, data->size, data->size*2,
+                          sizeof(struct mixed_buffer *));
+      data->size *= 2;
+    }
+    // Check completeness
+    if(!data->in){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      data->count = 0;
+      data->size = 0;
+    }
+    // All good
+    data->in[location] = buffer;
+    if(location == data->count){
+      ++data->count;
+    }
+  }else{ // Remove an element
     if(data->count <= location){
       mixed_err(MIXED_MIXER_INVALID_INDEX);
       return 0;
     }
-    *buffer = data->in[location];
+    for(size_t i=location+1; i<data->count; ++i){
+      data->in[i-1] = data->in[i];
+    }
+    data->in[data->count] = 0;
+    --data->count;
+    // We have sufficiently deallocated. Shrink.
+    if(data->count < data->size/4 && BASE_VECTOR_SIZE < data->size){
+      data->in = crealloc(data->in, data->size, data->size/2,
+                          sizeof(struct mixed_buffer *));
+      if(!data->in){
+        mixed_err(MIXED_OUT_OF_MEMORY);
+        data->count = 0;
+        data->size = 0;
+        return 0;
+      }
+    }
   }
   return 1;
 }
@@ -144,8 +133,8 @@ int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment
 
   segment->free = mixer_segment_free;
   segment->mix = mixer_segment_mix;
-  segment->set_buffer = mixer_segment_set_buffer;
-  segment->get_buffer = mixer_segment_get_buffer;
+  segment->set_in = mixer_segment_set_in;
+  segment->set_out = mixer_segment_set_out;
   segment->data = data;
   return 1;
 }

@@ -28,6 +28,8 @@ extern "C" {
     MIXED_NOT_IMPLEMENTED,
     MIXED_NOT_INITIALIZED,
     MIXED_MIXER_INVALID_INDEX,
+    MIXED_SEGMENT_ALREADY_STARTED,
+    MIXED_SEGMENT_ALREADY_ENDED,
     MIXED_LADSPA_OPEN_FAILED,
     MIXED_LADSPA_BAD_LIBRARY,
     MIXED_LADSPA_NO_PLUGIN_AT_INDEX,
@@ -66,6 +68,18 @@ extern "C" {
     MIXED_INPLACE = 0x1
   };
 
+  enum mixed_channel_index{
+    MIXED_MONO = 0,
+    MIXED_LEFT = 0,
+    MIXED_RIGHT = 1,
+    MIXED_LEFT_FRONT = 0,
+    MIXED_RIGHT_FRONT = 1,
+    MIXED_LEFT_REAR = 2,
+    MIXED_RIGHT_REAR = 3,
+    MIXED_CENTER = 4,
+    MIXED_SUBWOOFER = 5
+  };
+
   struct mixed_buffer{
     float *data;
     size_t size;
@@ -93,17 +107,17 @@ extern "C" {
     // Clean up
     int (*free)(struct mixed_segment *segment);
     // Mix samples
-    int (*start)(struct mixed_segment *segment);
+    int (*start)(struct mixed_segment *segment, size_t samplerate);
     int (*mix)(size_t samples, struct mixed_segment *segment);
     int (*end)(struct mixed_segment *segment);
     // Connect buffer
-    int (*set_buffer)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
-    int (*get_buffer)(size_t location, struct mixed_buffer **buffer, struct mixed_segment *segment);
+    int (*set_in)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
+    int (*set_out)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
     // Request info
     struct mixed_segment_info (*info)(struct mixed_segment *segment);
     // Opaque fields
-    int (*get)(size_t field, void *value, struct mixed_segment *segment);
     int (*set)(size_t field, void *value, struct mixed_segment *segment);
+    int (*get)(size_t field, void *value, struct mixed_segment *segment);
     // User data
     void *data;
   };
@@ -122,14 +136,14 @@ extern "C" {
   int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
 
   int mixed_free_segment(struct mixed_segment *segment);
-  int mixed_segment_start(struct mixed_segment *segment);
+  int mixed_segment_start(struct mixed_segment *segment, size_t samplerate);
   int mixed_segment_mix(size_t samples, struct mixed_segment *segment);
   int mixed_segment_end(struct mixed_segment *segment);
-  int mixed_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
-  int mixed_segment_get_buffer(size_t location, struct mixed_buffer **buffer, struct mixed_segment *segment);
+  int mixed_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
+  int mixed_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
   struct mixed_segment_info mixed_segment_info(struct mixed_segment *segment);
-  int mixed_segment_get(size_t field, void *value, struct mixed_segment *segment);
   int mixed_segment_set(size_t field, void *value, struct mixed_segment *segment);
+  int mixed_segment_get(size_t field, void *value, struct mixed_segment *segment);
   
   // For a source channel converter
   int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segment *segment);
