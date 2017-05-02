@@ -24,12 +24,38 @@ int ladspa_segment_free(struct mixed_segment *segment){
 
 int ladspa_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
-  // FIXME
+  size_t index = 0;
+  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+    const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
+    if(   LADSPA_IS_PORT_AUDIO(port)
+       && LADSPA_IS_PORT_INPUT(port)){
+      if(index == location){
+        data->descriptor->connect_port(data->handle, index, buffer->data);
+        return 1;
+      }
+      ++index;
+    }
+  }
+  mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+  return 0;
 }
 
 int ladspa_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
-  // FIXME
+  size_t index = 0;
+  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+    const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
+    if(   LADSPA_IS_PORT_AUDIO(port)
+          && LADSPA_IS_PORT_OUTPUT(port)){
+      if(index == location){
+        data->descriptor->connect_port(data->handle, index, buffer->data);
+        return 1;
+      }
+      ++index;
+    }
+  }
+  mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+  return 0;
 }
 
 int ladspa_segment_mix(size_t samples, struct mixed_segment *segment){
