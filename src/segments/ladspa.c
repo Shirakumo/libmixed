@@ -38,26 +38,10 @@ int ladspa_segment_mix(size_t samples, struct mixed_segment *segment){
   return 1;
 }
 
-int ladspa_segment_start(struct mixed_segment *segment, size_t samplerate){
+int ladspa_segment_start(struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
   if(data->active){
     mixed_err(MIXED_SEGMENT_ALREADY_STARTED);
-    return 0;
-  }
-  
-  // Sample rate has changed, clean up.
-  if(samplerate != data->samplerate && data->handle){
-    if(data->descriptor->cleanup)
-      data->descriptor->cleanup(data->handle);
-    data->handle = 0;
-  }
-  
-  if(!data->handle){
-    data->handle = data->descriptor->instantiate(data->descriptor, samplerate);
-  }
-  
-  if(!data->handle){
-    mixed_err(MIXED_LADSPA_INSTANTIATION_FAILED);
     return 0;
   }
   
@@ -158,7 +142,7 @@ int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descri
   return exit;
 }
 
-int mixed_make_segment_ladspa(char *file, size_t index, struct mixed_segment *segment){
+int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment){
   LADSPA_Descriptor *descriptor;
   if(!ladspa_load_descriptor(file, index, &descriptor)){
     return 0;
@@ -166,6 +150,13 @@ int mixed_make_segment_ladspa(char *file, size_t index, struct mixed_segment *se
 
   struct ladspa_segment_data *data = calloc(1, sizeof(struct ladspa_segment_data));
   if(!data){
+    return 0;
+  }
+
+  data->handle = data->descriptor->instantiate(data->descriptor, samplerate);  
+  if(!data->handle){
+    mixed_err(MIXED_LADSPA_INSTANTIATION_FAILED);
+    free(data);
     return 0;
   }
 

@@ -7,9 +7,9 @@ int mixed_free_segment(struct mixed_segment *segment){
   return 1;
 }
 
-int mixed_segment_start(struct mixed_segment *segment, size_t samplerate){
+int mixed_segment_start(struct mixed_segment *segment){
   if(segment->start)
-    return segment->start(segment, samplerate);
+    return segment->start(segment);
   mixed_err(MIXED_NOT_IMPLEMENTED);
   return 1;
 }
