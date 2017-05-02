@@ -19,7 +19,7 @@ int general_segment_set_in(size_t location, struct mixed_buffer *buffer, struct 
   switch(location){
   case MIXED_LEFT: data->in[MIXED_LEFT] = buffer; return 1;
   case MIXED_RIGHT: data->in[MIXED_RIGHT] = buffer; return 1;
-  default: return 0; break;
+  default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0; break;
   }
 }
 
@@ -28,7 +28,7 @@ int general_segment_set_out(size_t location, struct mixed_buffer *buffer, struct
   switch(location){
   case MIXED_LEFT: data->out[MIXED_LEFT] = buffer; return 1;
   case MIXED_RIGHT: data->out[MIXED_RIGHT] = buffer; return 1;
-  default: return 0; break;
+  default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0; break;
   }
 }
 
@@ -60,7 +60,7 @@ int general_segment_get(size_t field, void *value, struct mixed_segment *segment
   switch(field){
   case MIXED_GENERAL_VOLUME: *((float *)value) = data->volume; break;
   case MIXED_GENERAL_PAN: *((float *)value) = data->pan; break;
-  default: return 0;
+  default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
 }
@@ -70,7 +70,7 @@ int general_segment_set(size_t field, void *value, struct mixed_segment *segment
   switch(field){
   case MIXED_GENERAL_VOLUME: data->volume = *(float *)value; break;
   case MIXED_GENERAL_PAN: data->pan = *(float *)value; break;
-  default: return 0;
+  default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
 }

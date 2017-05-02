@@ -20,7 +20,7 @@ int mixer_segment_set_out(size_t location, struct mixed_buffer *buffer, struct m
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
   switch(location){
   case MIXED_MONO: data->out = buffer; return 1;
-  default: return 0;
+  default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0;
   }
 }
 
