@@ -45,6 +45,12 @@ char *mixed_error_string(int code){
     return "An attempt was made to use an object without initializing it properly first.";
   case MIXED_INVALID_BUFFER_LOCATION:
     return "Cannot set the buffer at the specified location in the segment.";
+  case MIXED_INVALID_FIELD:
+    return "A field that the segment does not recognise was requested.";
+  case MIXED_SEGMENT_ALREADY_STARTED:
+    return "Cannot start the segment as it is already started.";
+  case MIXED_SEGMENT_ALREADY_ENDED:
+    return "Cannot end the segment as it is already ended.";
   case MIXED_LADSPA_OPEN_FAILED:
     return "Failed to open the LADSPA plugin library. Most likely the file could not be read.";
   case MIXED_LADSPA_BAD_LIBRARY:
