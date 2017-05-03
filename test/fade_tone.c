@@ -9,28 +9,29 @@ int main(int argc, char **argv){
   struct mixed_mixer mixer = {0};
   struct mixed_segment generator = {0};
   struct mixed_segment fade = {0};
-  struct out *out;
+  struct out *out = 0;
 
   enum mixed_generator_type wave_type = MIXED_SINE;
   size_t frequency = 440;
 
-  if(2 <= argc){
-    if(0 == strcmp("sine", argv[1])) wave_type = MIXED_SINE;
-    else if(0 == strcmp("square", argv[1])) wave_type = MIXED_SQUARE;
-    else if(0 == strcmp("triangle", argv[1])) wave_type = MIXED_TRIANGLE;
-    else if(0 == strcmp("sawtooth", argv[1])) wave_type = MIXED_SAWTOOTH;
-    else{
-      printf("Invalid wave type. Must be one of sine, square, triangle, sawtooth.\n");
-      goto cleanup;
-    }
+  if(argc < 3){
+    printf("Usage: ./test_fade_tone wave-type frequency \n");
+    return 0;
   }
 
-  if(3 <= argc){
-    frequency = strtol(argv[2], 0, 10);
-    if(frequency <= 0){
-      printf("Invalid frequency. Must be an integer above 0.\n");
-      goto cleanup;
-    }
+  if(0 == strcmp("sine", argv[1])) wave_type = MIXED_SINE;
+  else if(0 == strcmp("square", argv[1])) wave_type = MIXED_SQUARE;
+  else if(0 == strcmp("triangle", argv[1])) wave_type = MIXED_TRIANGLE;
+  else if(0 == strcmp("sawtooth", argv[1])) wave_type = MIXED_SAWTOOTH;
+  else{
+    printf("Invalid wave type. Must be one of sine, square, triangle, sawtooth.\n");
+    goto cleanup;
+  }
+  
+  frequency = strtol(argv[2], 0, 10);
+  if(frequency <= 0){
+    printf("Invalid frequency. Must be an integer above 0.\n");
+    goto cleanup;
   }
   
   signal(SIGINT, interrupt_handler);

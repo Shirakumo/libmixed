@@ -8,12 +8,12 @@ int main(int argc, char **argv){
   struct mixed_segment rmix_segment = {0};
   struct mixed_segment gen_segment = {0};
   struct mp3 *mp3s[argc-1];
-  struct out *out;
+  struct out *out = 0;
 
   signal(SIGINT, interrupt_handler);
   
   if(argc<2){
-    printf("Please pass at least one audio file to play.\n");
+    printf("Usage: ./test_mix_mp3 mp3-file mp3-file* \n");
     return 0;
   }
 

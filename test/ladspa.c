@@ -6,18 +6,14 @@ int main(int argc, char **argv){
   size_t samplerate = 44100;
   struct mixed_mixer mixer = {0};
   struct mixed_segment ladspa = {0};
-  struct mp3 *mp3;
-  struct out *out;
+  struct mp3 *mp3 = 0;
+  struct out *out = 0;
 
   signal(SIGINT, interrupt_handler);
 
-  if(argc < 2){
-    printf("Usage: ./test_ladspa mp3-file ladspa-file ladspa-param* \n");
-    goto cleanup;
-  }
-
   if(argc < 3){
     printf("Usage: ./test_ladspa mp3-file ladspa-file ladspa-param* \n");
+    return 0;
   }
 
   if(mpg123_init() != MPG123_OK){
