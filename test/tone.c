@@ -15,7 +15,7 @@ int main(int argc, char **argv){
   size_t frequency = 440;
 
   if(argc < 3){
-    printf("Usage: ./test_fade_tone wave-type frequency \n");
+    printf("Usage: ./test_tone wave-type frequency \n");
     return 0;
   }
 
