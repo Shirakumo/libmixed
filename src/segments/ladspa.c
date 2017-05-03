@@ -192,7 +192,8 @@ int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descri
   }
 
   *_descriptor = (LADSPA_Descriptor *)descriptor;
-
+  exit = 1;
+  
  cleanup:
   if(lib)
     dlclose(lib);
@@ -200,12 +201,7 @@ int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descri
 }
 
 int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment){
-  LADSPA_Descriptor *descriptor = 0;
   struct ladspa_segment_data *data = 0;
-  
-  if(!ladspa_load_descriptor(file, index, &descriptor)){
-    goto cleanup;
-  }
 
   data = calloc(1, sizeof(struct ladspa_segment_data));
   if(!data){
@@ -213,7 +209,11 @@ int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struc
     goto cleanup;
   }
 
-  data->control = calloc(descriptor->PortCount, sizeof(float));
+  if(!ladspa_load_descriptor(file, index, &data->descriptor)){
+    goto cleanup;
+  }
+
+  data->control = calloc(data->descriptor->PortCount, sizeof(float));
   if(!data->control){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
@@ -226,8 +226,8 @@ int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struc
   }
 
   // Connect all ports to shims
-  for(size_t i=0; i<descriptor->PortCount; ++i){
-    descriptor->connect_port(data->handle, i, &data->control[i]);
+  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+    data->descriptor->connect_port(data->handle, i, &data->control[i]);
   }
 
   segment->free = ladspa_segment_free;
@@ -243,11 +243,11 @@ int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struc
   return 1;
 
  cleanup:
-  if(data->control)
-    free(data->control);
-  
-  if(data)
+  if(data){
+    if(data->control)
+      free(data->control);
     free(data);
+  }
   
   return 0;
 }
