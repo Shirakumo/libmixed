@@ -2,7 +2,7 @@
 
 int main(){
   int exit = 1;
-  size_t samples = 2048;
+  size_t samples = 1024;
   size_t samplerate = 44100;
   struct mixed_mixer mixer = {0};
   struct mixed_segment generator = {0};
@@ -38,6 +38,7 @@ int main(){
   mixed_mixer_start(&mixer);
 
   size_t played;
+  uint8_t samplesize = mixed_samplesize(out->channel.encoding);
   do{
     if(!mixed_mixer_mix(samples, &mixer)){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
@@ -45,7 +46,7 @@ int main(){
     }
     
     played = out123_play(out->handle, out->channel.data, out->channel.size);
-    if(played < samples){
+    if(played < samples*samplesize){
       printf("Warning: device not catching up with input (%i vs %i)\n", played, samples);
     }
   }while(!interrupted);
