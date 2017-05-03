@@ -7,7 +7,8 @@ include_directories("src/")
 file(GLOB lib_src "src/*.c" "src/segments/*.c")
 add_library(mixed SHARED ${lib_src})
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
-target_link_libraries(mixed libm.a dl)
+set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(mixed dl m)
 
 ## Test Program
 find_package(mpg123)
