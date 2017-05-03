@@ -1,13 +1,37 @@
+#include <string.h>
+#include <stdlib.h>
 #include "common.h"
 
-int main(){
+int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 1024;
+  size_t samples = 1000;
   size_t samplerate = 44100;
   struct mixed_mixer mixer = {0};
   struct mixed_segment generator = {0};
   struct mixed_segment fade = {0};
   struct out *out;
+
+  enum mixed_generator_type wave_type = MIXED_SINE;
+  size_t frequency = 440;
+
+  if(2 <= argc){
+    if(0 == strcmp("sine", argv[1])) wave_type = MIXED_SINE;
+    else if(0 == strcmp("square", argv[1])) wave_type = MIXED_SQUARE;
+    else if(0 == strcmp("triangle", argv[1])) wave_type = MIXED_TRIANGLE;
+    else if(0 == strcmp("sawtooth", argv[1])) wave_type = MIXED_SAWTOOTH;
+    else{
+      printf("Invalid wave type. Must be one of sine, square, triangle, sawtooth.\n");
+      goto cleanup;
+    }
+  }
+
+  if(3 <= argc){
+    frequency = strtol(argv[2], 0, 10);
+    if(frequency <= 0){
+      printf("Invalid frequency. Must be an integer above 0.\n");
+      goto cleanup;
+    }
+  }
   
   signal(SIGINT, interrupt_handler);
 
@@ -15,7 +39,7 @@ int main(){
     goto cleanup;
   }
 
-  if(!mixed_make_segment_generator(MIXED_SINE, 440, samplerate, &generator) ||
+  if(!mixed_make_segment_generator(wave_type, frequency, samplerate, &generator) ||
      !mixed_make_segment_fade(0.0, 1.0, 5.0, MIXED_CUBIC_IN_OUT, samplerate, &fade)){
     printf("Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
