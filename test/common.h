@@ -121,6 +121,11 @@ int load_out_segment(size_t samples, struct out **_out){
     goto cleanup;
   }
 
+  // Make sure to play back some empty samples first.
+  for(int i=0; i<out_samplerate; i+=samples){
+    out123_play(out->handle, out->channel.data, out->channel.size);
+  }
+
   *_out = out;
   return 1;
 
