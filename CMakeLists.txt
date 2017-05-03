@@ -10,15 +10,19 @@ set_property(TARGET mixed PROPERTY C_STANDARD 99)
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(mixed dl m)
 
-## Test Program
+## Test Programs
 find_package(mpg123)
 find_package(out123)
 if(OUT123_FOUND AND MPG123_FOUND)
   file(GLOB test_src "test/*.c")
-  add_executable(mixed_test ${test_src})
-  add_dependencies(mixed_test mixed)
-  set_property(TARGET mixed_test PROPERTY C_STANDARD 99)
-  target_link_libraries(mixed_test mixed ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
+  foreach(test_file ${test_src})
+    get_filename_component(test_name ${test_file} NAME_WE)
+    set(test_name "test_${test_name}")
+    add_executable(${test_name} ${test_file})
+    add_dependencies(${test_name} mixed)
+    set_property(TARGET ${test_name} PROPERTY C_STANDARD 99)
+    target_link_libraries(${test_name} mixed ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
+  endforeach()
 endif()
 
 ## Warnings
