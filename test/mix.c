@@ -6,14 +6,13 @@ int main(int argc, char **argv){
   struct mixed_mixer mixer = {0};
   struct mixed_segment lmix_segment = {0};
   struct mixed_segment rmix_segment = {0};
-  struct mixed_segment gen_segment = {0};
   struct mp3 *mp3s[argc-1];
   struct out *out = 0;
 
   signal(SIGINT, interrupt_handler);
   
   if(argc<2){
-    printf("Usage: ./test_mix_mp3 mp3-file mp3-file* \n");
+    printf("Usage: ./test_mix mp3-file mp3-file* \n");
     return 0;
   }
 
@@ -27,21 +26,14 @@ int main(int argc, char **argv){
   }
   
   if(!mixed_make_segment_mixer(0, &lmix_segment) ||
-     !mixed_make_segment_mixer(0, &rmix_segment) ||
-     !mixed_make_segment_general(1.0, 0.0, &gen_segment)){
+     !mixed_make_segment_mixer(0, &rmix_segment)){
     printf("Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
   
   if(// The mixer segment's 0th buffer is its output.
      !mixed_segment_set_out(MIXED_MONO, &out->left, &lmix_segment) ||
-     !mixed_segment_set_out(MIXED_MONO, &out->right, &rmix_segment) ||
-     // The general segment has two ins and two outs. But since it is
-     // specified as being in-place, we can attach the same buffers.
-     !mixed_segment_set_in(MIXED_LEFT, &out->left, &gen_segment) ||
-     !mixed_segment_set_in(MIXED_RIGHT, &out->right, &gen_segment) ||
-     !mixed_segment_set_out(MIXED_LEFT, &out->left, &gen_segment) ||
-     !mixed_segment_set_out(MIXED_RIGHT, &out->right, &gen_segment)){
+     !mixed_segment_set_out(MIXED_MONO, &out->right, &rmix_segment)){
     printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -71,7 +63,6 @@ int main(int argc, char **argv){
   // be called. We specify this here.
   if(!mixed_mixer_add(&lmix_segment, &mixer) ||
      !mixed_mixer_add(&rmix_segment, &mixer) ||
-     !mixed_mixer_add(&gen_segment, &mixer) ||
      !mixed_mixer_add(&out->segment, &mixer)){
     printf("Failed to assemble mixer: %s\n", mixed_error_string(-1));
     goto cleanup;
@@ -118,7 +109,6 @@ int main(int argc, char **argv){
   
   mixed_free_segment(&lmix_segment);
   mixed_free_segment(&rmix_segment);
-  mixed_free_segment(&gen_segment);
   mixed_free_mixer(&mixer);
 
   for(size_t i=1; i<argc; ++i){
