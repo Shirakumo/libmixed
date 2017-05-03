@@ -69,7 +69,9 @@ extern "C" {
     MIXED_FADE_TYPE,
     MIXED_SPACE_LOCATION,
     MIXED_SPACE_DIRECTION,
-    MIXED_SPACE_UP
+    MIXED_SPACE_UP,
+    MIXED_GENERATOR_FREQUENCY,
+    MIXED_GENERATOR_TYPE
   };
 
   enum mixed_fade_type{
@@ -77,6 +79,13 @@ extern "C" {
     MIXED_CUBIC_IN,
     MIXED_CUBIC_OUT,
     MIXED_CUBIC_IN_OUT
+  };
+
+  enum mixed_generator_type{
+    MIXED_SINE,
+    MIXED_SQUARE,
+    MIXED_TRIANGLE,
+    MIXED_SAWTOOTH
   };
 
   enum mixed_segment_info_flags{
@@ -170,6 +179,8 @@ extern "C" {
   int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment);
   // For a volume fade in/out effect
   int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, size_t samplerate, struct mixed_segment *segment);
+  // For a wave generator source
+  int mixed_make_segment_generator(enum mixed_generator_type type, size_t frequency, size_t samplerate, struct mixed_segment *segment);
   // For a space (3D) processed effect
   int mixed_make_segment_space(struct mixed_segment *segment);
   // For a LADSPA-based step
