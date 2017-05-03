@@ -2,7 +2,7 @@
 
 int main(){
   int exit = 1;
-  size_t samples = 1024;
+  size_t samples = 2048;
   size_t samplerate = 44100;
   struct mixed_mixer mixer = {0};
   struct mixed_segment generator = {0};
@@ -15,15 +15,15 @@ int main(){
     goto cleanup;
   }
 
-  if(!mixed_make_segment_generator(MIXED_SAWTOOTH, 440, samplerate, &generator) ||
+  if(!mixed_make_segment_generator(MIXED_SINE, 440, samplerate, &generator) ||
      !mixed_make_segment_fade(0.0, 1.0, 5.0, MIXED_CUBIC_IN_OUT, samplerate, &fade)){
     printf("Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
-  if(!mixed_segment_set_out(MIXED_MONO, &out->left, &generator) ||
+  if(!mixed_segment_set_out(MIXED_MONO, &out->left, &generator) /* ||
      !mixed_segment_set_in(MIXED_MONO, &out->left, &fade) ||
-     !mixed_segment_set_out(MIXED_MONO, &out->left, &fade)){
+     !mixed_segment_set_out(MIXED_MONO, &out->left, &fade)*/){
     printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -55,7 +55,9 @@ int main(){
   exit = 0;
 
  cleanup:
-
+  
+  mixed_free_segment(&generator);
+  mixed_free_segment(&fade);
   free_out(out);
   
   return exit;

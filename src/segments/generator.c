@@ -25,7 +25,7 @@ int generator_segment_set_out(size_t location, struct mixed_buffer *buffer, stru
 }
 
 float sine_wave(size_t position, size_t length){
-  return sin(M_PI * ((float)position) / ((float)length));
+  return sinf(2 * M_PI * ((float)position) / ((float)length));
 }
 
 float square_wave(size_t position, size_t length){
@@ -49,10 +49,10 @@ int generator_segment_mix(size_t samples, struct mixed_segment *segment){
   float (*generator)(size_t position, size_t length) = 0;
 
   switch(data->type){
-  case MIXED_SINE: generator = sine_wave;
-  case MIXED_SQUARE: generator = square_wave;
-  case MIXED_TRIANGLE: generator = triangle_wave;
-  case MIXED_SAWTOOTH: generator = sawtooth_wave;
+  case MIXED_SINE: generator = sine_wave; break;
+  case MIXED_SQUARE: generator = square_wave; break;
+  case MIXED_TRIANGLE: generator = triangle_wave; break;
+  case MIXED_SAWTOOTH: generator = sawtooth_wave; break;
   }
   
   for(size_t i=0; i<samples; ++i){
@@ -60,7 +60,7 @@ int generator_segment_mix(size_t samples, struct mixed_segment *segment){
     ++position;
   }
 
-  data->phase = position % data->frequency;
+  data->phase = position % length;
   return 1;
 }
 
