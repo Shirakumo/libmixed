@@ -1,9 +1,8 @@
 #include "internal.h"
 
 struct fade_segment_data{
-  struct mixed_buffer **in;
-  struct mixed_buffer **out;
-  size_t count;
+  struct mixed_buffer *in;
+  struct mixed_buffer *out;
   float from;
   float to;
   float time;
@@ -13,22 +12,17 @@ struct fade_segment_data{
 };
 
 int fade_segment_free(struct mixed_segment *segment){
-  struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
-  if(data){
-    if(data->in)
-      free(data->in);
-    if(data->out)
-      free(data->out);
-    free(data);
-  }
+  if(segment->data)
+    free(segment->data);
   segment->data = 0;
   return 1;
 }
 
 int fade_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
-  if(location < data->count){
-    data->in[location] = buffer;
+  if(location == 0){
+    data->in = buffer;
+    return 1;
   }
   mixed_err(MIXED_INVALID_BUFFER_LOCATION);
   return 0;
@@ -36,64 +30,65 @@ int fade_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mix
 
 int fade_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
-  if(location < data->count){
-    data->out[location] = buffer;
+  if(location == 0){
+    data->out = buffer;
+    return 1;
   }
   mixed_err(MIXED_INVALID_BUFFER_LOCATION);
   return 0;
 }
 
-float fade_ease(float from, float to, float x, size_t type){
-  float factor = 1.0f;
-  float temp = 0.0f;
-  switch(type){
-  case MIXED_LINEAR:
-    factor = x;
-  case MIXED_CUBIC_IN:
-    factor = x*x*x;
-  case MIXED_CUBIC_OUT:
-    temp = x-1.0f;
-    factor = temp*temp*temp+1.0f;
-  case MIXED_CUBIC_IN_OUT:
-    if(factor < 0.5f){
-      temp = 2.0f*x;
-      factor = temp*temp*temp/2.0f;
-    }else{
-      temp = 2.0f*(x-1.0f);
-      factor = temp*temp*temp/2.0f+1.0f;
-    }
-  default:
-    factor = 1.0f;
+float fade_linear(float x){
+  return x;
+}
+
+float fade_cubic_in(float x){
+  return x*x*x;
+}
+
+float fade_cubic_out(float x){
+  x = x-1.0;
+  return x*x*x+1.0;
+}
+
+float fade_cubic_in_out(float x){
+  if(x < 0.5f){
+    x = 2.0*x;
+    return x*x*x/2.0;
+  }else{
+    x = 2.0*(x-1.0);
+    return x*x*x/2.0+1.0;
   }
-  return from+(to-from)*factor;
 }
 
 int fade_segment_mix(size_t samples, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
 
-  double time;
+  double time = data->time_passed;
   float endtime = data->time;
   float from = data->from;
-  float to = data->to;
+  float range = data->to - data->from;
   double sampletime = 1.0f/data->samplerate;
-  enum mixed_fade_type type = data->type;
-  size_t channels = data->count;
+  
+  float (*ease)(float x);
+  switch(data->type){
+  case MIXED_LINEAR: ease = fade_linear; break;
+  case MIXED_CUBIC_IN: ease = fade_cubic_in; break;
+  case MIXED_CUBIC_OUT: ease = fade_cubic_out; break;
+  case MIXED_CUBIC_IN_OUT: ease = fade_cubic_in_out; break;
+  }
+  
   // NOTE: You could probably get away with having the same fade factor
   //       for the entirety of the sample range if the total duration
   //       of the buffer is small enough (~1ms?) as the human ear
   //       wouldn't be able to properly notice it.
-  for(size_t c=0; c<channels; ++c){
-    float *in = data->in[c]->data;
-    float *out = data->out[c]->data;
-    time = data->time_passed;
-    for(size_t i=0; i<samples; ++i){
-      float x = (time < endtime)? time/endtime : 1.0f;
-      // FIXME: Could optimise the easing function dispatch out since
-      //        it cannot be changed between start/end anyway.
-      float fade = fade_ease(from, to, x, type);
-      out[i] = in[i]*fade;
-      time += sampletime;
-    }
+  float *in = data->in->data;
+  float *out = data->out->data;
+  for(size_t i=0; i<samples; ++i){
+    float x = (time < endtime)? time/endtime : 1.0f;
+    float fade = from+ease(x)*range;
+    out[i] = in[i]*fade;
+    time += sampletime;
   }
 
   data->time_passed = time;
@@ -106,9 +101,9 @@ struct mixed_segment_info fade_segment_info(struct mixed_segment *segment){
   info.name = "fade";
   info.description = "Fade the volume of buffers.";
   info.flags = MIXED_INPLACE;
-  info.min_inputs = data->count;
-  info.max_inputs = data->count;
-  info.outputs = data->count;
+  info.min_inputs = 1;
+  info.max_inputs = 1;
+  info.outputs = 1;
   return info;
 }
 

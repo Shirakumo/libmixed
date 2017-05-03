@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 1000;
+  size_t samples = 1024;
   size_t samplerate = 44100;
   struct mixed_mixer mixer = {0};
   struct mixed_segment generator = {0};
@@ -45,9 +45,9 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_segment_set_out(MIXED_MONO, &out->left, &generator) /* ||
+  if(!mixed_segment_set_out(MIXED_MONO, &out->left, &generator) ||
      !mixed_segment_set_in(MIXED_MONO, &out->left, &fade) ||
-     !mixed_segment_set_out(MIXED_MONO, &out->left, &fade)*/){
+     !mixed_segment_set_out(MIXED_MONO, &out->left, &fade)){
     printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
