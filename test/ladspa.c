@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 1024;
+  size_t samples = 4096;
   size_t samplerate = 44100;
   struct mixed_mixer mixer = {0};
   struct mixed_segment ladspa = {0};
