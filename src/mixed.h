@@ -18,9 +18,9 @@ extern "C" {
 #include <stdint.h>
 #include <stdlib.h>
 #include "encoding.h"
-
+  
   enum mixed_error{
-    MIXED_NO_ERROR=1,
+    MIXED_NO_ERROR,
     MIXED_OUT_OF_MEMORY,
     MIXED_UNKNOWN_ENCODING,
     MIXED_UNKNOWN_LAYOUT,
@@ -67,11 +67,25 @@ extern "C" {
     MIXED_FADE_TO,
     MIXED_FADE_TIME,
     MIXED_FADE_TYPE,
+    MIXED_GENERATOR_FREQUENCY,
+    MIXED_GENERATOR_TYPE,
     MIXED_SPACE_LOCATION,
     MIXED_SPACE_DIRECTION,
+    MIXED_SPACE_VELOCITY,
     MIXED_SPACE_UP,
-    MIXED_GENERATOR_FREQUENCY,
-    MIXED_GENERATOR_TYPE
+    MIXED_SPACE_SOUNDSPEED,
+    MIXED_SPACE_DOPPLER_FACTOR,
+    MIXED_SPACE_MIN_DISTANCE,
+    MIXED_SPACE_MAX_DISTANCE,
+    MIXED_SPACE_ROLLOFF,
+    MIXED_SPACE_ATTENUATION
+  };
+
+  enum mixed_attenuation{
+    MIXED_NO_ATTENUATION,
+    MIXED_INVERSE_ATTENUATION,
+    MIXED_LINEAR_ATTENUATION,
+    MIXED_EXPONENTIAL_ATTENUATION
   };
 
   enum mixed_fade_type{
@@ -89,7 +103,8 @@ extern "C" {
   };
 
   enum mixed_segment_info_flags{
-    MIXED_INPLACE = 0x1
+    MIXED_INPLACE = 0x1,
+    MIXED_MODIFIES_SOURCE = 0x2
   };
 
   enum mixed_channel_index{
@@ -180,10 +195,10 @@ extern "C" {
   int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, size_t samplerate, struct mixed_segment *segment);
   // For a wave generator source
   int mixed_make_segment_generator(enum mixed_generator_type type, size_t frequency, size_t samplerate, struct mixed_segment *segment);
-  // For a space (3D) processed effect
-  int mixed_make_segment_space(struct mixed_segment *segment);
   // For a LADSPA-based step
   int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment);
+  // For a space (3D) processed effect
+  int mixed_make_segment_space(struct mixed_segment *segment);
 
   int mixed_free_mixer(struct mixed_mixer *mixer);
   int mixed_mixer_add(struct mixed_segment *segment, struct mixed_mixer *mixer);
