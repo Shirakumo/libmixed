@@ -67,6 +67,10 @@ extern inline float dist(float a[3], float b[3]){
   return mag(r);
 }
 
+extern inline float clamp(float l, float v, float r){
+  return (v < l)? l : ((v < r)? v : r);
+}
+
 float calculate_frequency_shift(struct space_segment_data *listener, struct space_source *source){
   if(listener->doppler_factor <= 0.0) return 1.0;
   // See OpenAL1.1 specification §3.5.2
@@ -99,7 +103,7 @@ void space_mix_channel(float *out, size_t samples, float *location, struct space
     // Mix the first source directly to avoid a clearing loop
     struct space_source *source = data->sources[0];
     float *in = source->buffer->data;
-    float distance = dist(source->location, data->location);
+    float distance = clamp(min, dist(source->location, data->location), max);
     float attenuation = data->attenuation(min, max, distance, roll);
     // FIXME: I don't think this is quite right yet.
     float speaker_mod = (dot(location, source->location) + 1.0) / 2.0;
