@@ -139,10 +139,10 @@ int space_segment_mix(size_t samples, struct mixed_segment *segment){
     }
   }
   // FIXME: allow an arbitrary number of speakers.
-  // Mix
-  float left[3] = {-1.0, 0.0, 0.0};
+  // Head is usually ~15cm
+  float left[3] = {-7.5, 0.0, 0.0};
   space_mix_channel(data->left->data, samples, left, data);
-  float right[3] = {1.0, 0.0, 0.0};
+  float right[3] = {7.5, 0.0, 0.0};
   space_mix_channel(data->right->data, samples, right, data);
 }
 
@@ -370,9 +370,9 @@ int mixed_make_segment_space(struct mixed_segment *segment){
     return 0;
   }
 
-  data->direction[2] = 1.0; // Facing in Z+ direction
-  data->up[1] = 1.0;        // OpenGL-like. Y+ is up.
-  data->soundspeed = 343.3;
+  data->direction[2] = 1.0;    // Facing in Z+ direction
+  data->up[1] = 1.0;           // OpenGL-like. Y+ is up.
+  data->soundspeed = 34330.0;  // Means units are in [cm].
   data->doppler_factor = 1.0;
   data->min_distance = 0.0;
   data->max_distance = 100.0;
