@@ -1,3 +1,5 @@
+#include <time.h>
+#include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>

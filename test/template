@@ -5,7 +5,7 @@ int main(int argc, char **argv){
   size_t samples = 1024;
   size_t samplerate = 44100;
   struct mixed_mixer mixer = {0};
-  struct out *out;
+  struct out *out = 0;
 
   signal(SIGINT, interrupt_handler);
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv){
   exit = 0;
 
  cleanup:
-  free_out(&out);
+  free_out(out);
   
   return exit;
 }
