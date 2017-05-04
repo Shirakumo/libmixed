@@ -16,12 +16,32 @@ int main(int argc, char **argv){
   struct mixed_segment space = {0};
   struct out *out = 0;
   struct mp3 *mp3 = 0;
+  float dphi = 1.0; // Measured deg/s
+  float r = 100.0;  // Measured in cm
 
   signal(SIGINT, interrupt_handler);
 
-  if(argc < 2){
-    printf("Usage: ./test_space mp3-file\n");
+  if(argc < 2 || 4 < argc){
+    printf("Usage: ./test_space mp3-file [speed] [radius]\n");
     return 0;
+  }
+
+  if(3 <= argc){
+    char *end;
+    dphi = strtod(argv[2], &end);
+    if(*end != '\0'){
+      printf("Cannot use '%s' as an angle speed.\n", argv[2]);
+      goto cleanup;
+    }
+  }
+
+  if(4 <= argc){
+    char *end;
+    r = strtod(argv[2], &end);
+    if(*end != '\0'){
+      printf("Cannot use '%s' as a radius.\n", argv[3]);
+      goto cleanup;
+    }
   }
 
   if(mpg123_init() != MPG123_OK){
@@ -61,8 +81,6 @@ int main(int argc, char **argv){
   float t = mtime();
   float dt = 0.0;
   float phi = 0.0;
-  float dphi = 1.0; // Measured deg/s
-  float r = 100.0;  // Measured in cm
   float x, y, rad;
   
   size_t read, played;

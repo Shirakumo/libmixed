@@ -39,7 +39,7 @@ int main(int argc, char **argv){
     char *end;
     float value = strtod(argv[i], &end);
     if(*end != '\0'){
-      printf("Cannot use '%s' as a float parameter to the LADSPA plugin.\n");
+      printf("Cannot use '%s' as a float parameter to the LADSPA plugin.\n", argv[i]);
       goto cleanup;
     }
     mixed_segment_set(i-3, &value, &ladspa);
