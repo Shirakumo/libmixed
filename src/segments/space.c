@@ -43,11 +43,11 @@ float attenuation_inverse(float min, float max, float dist, float roll){
 }
 
 float attenuation_linear(float min, float max, float dist, float roll){
-  return 1 - roll * (dist - min) / (max - min);
+  return 1.0 - roll * (dist - min) / (max - min);
 }
 
 float attenuation_exponential(float min, float max, float dist, float roll){
-  return pow(dist / min, -roll);
+  return 1.0/pow(dist / min, roll);
 }
 
 extern inline float dot(float a[3], float b[3]){
