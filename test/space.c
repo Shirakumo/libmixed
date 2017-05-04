@@ -81,7 +81,7 @@ int main(int argc, char **argv){
   float t = mtime();
   float dt = 0.0;
   float phi = 0.0;
-  float x, y, rad;
+  float x, z, rad;
   
   size_t read, played;
   uint8_t samplesize = mixed_samplesize(out->channel.encoding);
@@ -103,7 +103,7 @@ int main(int argc, char **argv){
     phi += dphi * dt;
     rad = phi * M_PI / 180.0;
     x = r * cos(rad);
-    y = r * sin(rad);
+    z = r * sin(rad);
 
     // FIXME: set position in segment
     

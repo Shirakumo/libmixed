@@ -58,13 +58,13 @@ extern inline float mag(float a[3]){
   return sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 }
 
-extern inline float min(float a, float b){
-  return (a < b)? a : b;
-}
-
 extern inline float dist(float a[3], float b[3]){
   float r[3] = {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
   return mag(r);
+}
+
+extern inline float min(float a, float b){
+  return (a < b)? a : b;
 }
 
 extern inline float clamp(float l, float v, float r){
@@ -96,6 +96,7 @@ void space_mix_channel(float *out, size_t samples, float *location, struct space
       out[i] = 0.0;
     }
   }else{
+    // FIXME: move listener location as needed for ear location
     float min = data->min_distance;
     float max = data->max_distance;
     float roll = data->rolloff;
@@ -105,11 +106,9 @@ void space_mix_channel(float *out, size_t samples, float *location, struct space
     float *in = source->buffer->data;
     float distance = clamp(min, dist(source->location, data->location), max);
     float attenuation = data->attenuation(min, max, distance, roll);
-    // FIXME: I don't think this is quite right yet.
-    float speaker_mod = (dot(location, source->location) + 1.0) / 2.0;
-    float volume = attenuation * speaker_mod;
+    // FIXME: determine damping due to "ear direction"
     for(size_t i=0; i<samples; ++i){
-      out[i] = in[i] * volume;
+      out[i] = in[i] * attenuation;
     }
     // Mix the rest of the sources additively.
     for(size_t s=1; s<data->count; ++s){
@@ -117,10 +116,8 @@ void space_mix_channel(float *out, size_t samples, float *location, struct space
       in = source->buffer->data;
       distance = dist(source->location, data->location);
       attenuation = data->attenuation(min, max, distance, roll);
-      speaker_mod = (dot(location, source->location) + 1.0) / 2.0;
-      volume = attenuation * speaker_mod;
       for(size_t i=0; i<samples; ++i){
-        out[i] += in[i] * volume;
+        out[i] += in[i] * attenuation;
       }
     }
   }
