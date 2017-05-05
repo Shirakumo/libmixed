@@ -21,7 +21,7 @@ int generator_segment_set_out(size_t field, size_t location, void *buffer, struc
   case MIXED_BUFFER:
     switch(location){
     case MIXED_MONO: data->out = (struct mixed_buffer *)buffer; return 1;
-    default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0; break;
+    default: mixed_err(MIXED_INVALID_LOCATION); return 0; break;
     }
   default:
     mixed_err(MIXED_INVALID_FIELD);

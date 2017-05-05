@@ -43,8 +43,8 @@ char *mixed_error_string(int code){
     return "The segment function you tried to call was not provided.";
   case MIXED_NOT_INITIALIZED:
     return "An attempt was made to use an object without initializing it properly first.";
-  case MIXED_INVALID_BUFFER_LOCATION:
-    return "Cannot set the buffer at the specified location in the segment.";
+  case MIXED_INVALID_LOCATION:
+    return "Cannot set the field at the specified location in the segment.";
   case MIXED_INVALID_FIELD:
     return "A field that the segment does not recognise was requested.";
   case MIXED_SEGMENT_ALREADY_STARTED:

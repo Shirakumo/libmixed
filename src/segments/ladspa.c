@@ -41,7 +41,7 @@ int ladspa_segment_set_in(size_t field, size_t location, void *buffer, struct mi
         ++index;
       }
     }
-    mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+    mixed_err(MIXED_INVALID_LOCATION);
     return 0;
   default:
     mixed_err(MIXED_INVALID_FIELD);
@@ -66,7 +66,7 @@ int ladspa_segment_set_out(size_t field, size_t location, void *buffer, struct m
         ++index;
       }
     }
-    mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+    mixed_err(MIXED_INVALID_LOCATION);
     return 0;
   default:
     mixed_err(MIXED_INVALID_FIELD);

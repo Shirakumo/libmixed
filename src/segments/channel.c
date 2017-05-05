@@ -23,7 +23,7 @@ int channel_segment_set_buffer(size_t field, size_t location, void *buffer, stru
       data->buffers[location] = (struct mixed_buffer *)buffer;
       return 1;
     }else{
-      mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+      mixed_err(MIXED_INVALID_LOCATION);
       return 0;
     }
   default:

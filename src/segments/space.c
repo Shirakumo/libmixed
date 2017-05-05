@@ -150,7 +150,7 @@ int space_segment_set_out(size_t field, size_t location, void *buffer, struct mi
     switch(location){
     case MIXED_LEFT: data->left = (struct mixed_buffer *)buffer; return 1;
     case MIXED_RIGHT: data->right = (struct mixed_buffer *)buffer; return 1;
-    default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0;
+    default: mixed_err(MIXED_INVALID_LOCATION); return 0;
     }
   default:
     mixed_err(MIXED_INVALID_FIELD);
@@ -177,7 +177,7 @@ int space_segment_set_in(size_t field, size_t location, void *buffer, struct mix
       }
     }else{ // Remove an element
       if(data->count <= location){
-        mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+        mixed_err(MIXED_INVALID_LOCATION);
         return 0;
       }
       free(data->sources[location]);
@@ -187,7 +187,7 @@ int space_segment_set_in(size_t field, size_t location, void *buffer, struct mix
   case MIXED_SPACE_LOCATION:
   case MIXED_SPACE_VELOCITY:
     if(data->count <= location){
-      mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+      mixed_err(MIXED_INVALID_LOCATION);
       return 0;
     }
     struct space_source *source = data->sources[location];
@@ -329,7 +329,7 @@ int space_segment_set_source(size_t field, size_t location, void *value, struct 
   float *parts = *(float **)value;
   
   if(data->count <= location){
-    mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+    mixed_err(MIXED_INVALID_LOCATION);
     return 0;
   }
 
@@ -358,7 +358,7 @@ int space_segment_get_source(size_t field, size_t location, void *value, struct 
   float *parts = *(float **)value;
   
   if(data->count <= location){
-    mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+    mixed_err(MIXED_INVALID_LOCATION);
     return 0;
   }
 

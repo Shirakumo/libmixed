@@ -22,7 +22,7 @@ int general_segment_set_in(size_t field, size_t location, void *buffer, struct m
     switch(location){
     case MIXED_LEFT: data->in[MIXED_LEFT] = (struct mixed_buffer *)buffer; return 1;
     case MIXED_RIGHT: data->in[MIXED_RIGHT] = (struct mixed_buffer *)buffer; return 1;
-    default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0; break;
+    default: mixed_err(MIXED_INVALID_LOCATION); return 0; break;
     }
   default:
     mixed_err(MIXED_INVALID_FIELD);
@@ -38,7 +38,7 @@ int general_segment_set_out(size_t field, size_t location, void *buffer, struct 
     switch(location){
     case MIXED_LEFT: data->out[MIXED_LEFT] = (struct mixed_buffer *)buffer; return 1;
     case MIXED_RIGHT: data->out[MIXED_RIGHT] = (struct mixed_buffer *)buffer; return 1;
-    default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0; break;
+    default: mixed_err(MIXED_INVALID_LOCATION); return 0; break;
     }
   default:
     mixed_err(MIXED_INVALID_FIELD);
