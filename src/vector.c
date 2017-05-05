@@ -1,5 +1,11 @@
 #include "internal.h"
 
+void free_vector(struct vector *vector){
+  if(vector->data)
+    free(vector->data);
+  vector->data = 0;
+}
+
 int vector_add(void *element, struct vector *vector){
   // Not yet initialised
   if(!vector->data){

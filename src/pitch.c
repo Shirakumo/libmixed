@@ -65,39 +65,50 @@ void fft(float *fftBuffer, long framesize, long sign){
 }
 
 void free_pitch_data(struct pitch_data *data){
-  
   if(data->in_fifo)
     free(data->in_fifo);
+  data->in_fifo = 0;
 
   if(data->out_fifo)
     free(data->out_fifo);
+  data->out_fifo = 0;
 
   if(data->fft_workspace)
     free(data->fft_workspace);
+  data->fft_workspace = 0;
 
   if(data->last_phase)
     free(data->last_phase);
+  data->last_phase = 0;
 
   if(data->phase_sum)
     free(data->phase_sum);
+  data->phase_sum = 0;
 
   if(data->output_accumulator)
     free(data->output_accumulator);
+  data->output_accumulator = 0;
 
   if(data->analyzed_frequency)
     free(data->analyzed_frequency);
+  data->analyzed_frequency = 0;
 
   if(data->analyzed_magnitude)
     free(data->analyzed_magnitude);
+  data->analyzed_magnitude = 0;
 
   if(data->synthesized_frequency)
     free(data->synthesized_frequency);
+  data->synthesized_frequency = 0;
 
   if(data->synthesized_magnitude)
     free(data->synthesized_magnitude);
+  data->synthesized_magnitude = 0;
 }
 
 int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, struct pitch_data *data){
+  // FIXME: determine which of these can be static and which actually
+  //        need to be retained for processing over contiguous buffers
   data->in_fifo = calloc(framesize, sizeof(float));
   data->out_fifo = calloc(framesize, sizeof(float));
   data->fft_workspace = calloc(framesize*2, sizeof(float));

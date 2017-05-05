@@ -11,6 +11,7 @@ struct vector{
   size_t size;
 };
 
+void free_vector(struct vector *vector);
 int vector_add(void *element, struct vector *vector);
 int vector_remove_pos(size_t i, struct vector *vector);
 int vector_remove_item(void *element, struct vector *vector);
