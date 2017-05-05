@@ -198,7 +198,7 @@ extern "C" {
   // For a LADSPA-based step
   int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment);
   // For a space (3D) processed effect
-  int mixed_make_segment_space(struct mixed_segment *segment);
+  int mixed_make_segment_space(size_t samplerate, struct mixed_segment *segment);
 
   int mixed_free_mixer(struct mixed_mixer *mixer);
   int mixed_mixer_add(struct mixed_segment *segment, struct mixed_mixer *mixer);

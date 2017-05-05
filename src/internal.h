@@ -12,9 +12,26 @@ int vector_add(void *element, struct vector *vector);
 int vector_remove_pos(size_t i, struct vector *vector);
 int vector_remove_item(void *element, struct vector *vector);
 
-void free_pitch_data(void *data);
-int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, void *data);
-void pitch_shift(float pitchShift, float *in, float *out, size_t samples, void *data);
+struct pitch_data{
+  float *in_fifo;
+  float *out_fifo;
+  float *fft_workspace;
+  float *last_phase;
+  float *phase_sum;
+  float *output_accumulator;
+  float *analyzed_frequency;
+  float *analyzed_magnitude;
+  float *synthesized_frequency;
+  float *synthesized_magnitude;
+  size_t framesize;
+  size_t oversampling;
+  size_t overlap;
+  size_t samplerate;
+};
+
+void free_pitch_data(struct pitch_data *data);
+int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, struct pitch_data *data);
+void pitch_shift(float pitch, float *in, float *out, size_t samples, struct pitch_data *data);
 
 void mixed_err(int errorcode);
 

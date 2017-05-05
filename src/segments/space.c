@@ -13,6 +13,7 @@ struct space_segment_data{
   size_t size;
   struct mixed_buffer *left;
   struct mixed_buffer *right;
+  struct pitch_data pitch_data;
   float location[3];
   float velocity[3];
   float direction[3];
@@ -71,7 +72,7 @@ extern inline float clamp(float l, float v, float r){
   return (v < l)? l : ((v < r)? v : r);
 }
 
-float calculate_frequency_shift(struct space_segment_data *listener, struct space_source *source){
+float calculate_pitch_shift(struct space_segment_data *listener, struct space_source *source){
   if(listener->doppler_factor <= 0.0) return 1.0;
   // See OpenAL1.1 specification §3.5.2
   float SL[3] = {listener->location[0] - source->location[0],
@@ -123,20 +124,15 @@ void space_mix_channel(float *out, size_t samples, float *location, struct space
   }
 }
 
-void space_adjust_frequency(struct space_source *source, float shift){
-  float *data = source->buffer->data;
-  size_t samples = source->buffer->size;
-  // FIXME: implement the pitching
-}
-
 int space_segment_mix(size_t samples, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
   // Shift frequencies
   for(size_t s=0; s<data->count; ++s){
     struct space_source *source = data->sources[s];
-    float frequency_shift = calculate_frequency_shift(data, source);
-    if(frequency_shift != 1.0){
-      space_adjust_frequency(source, frequency_shift);
+    float pitch = calculate_pitch_shift(data, source);
+    if(pitch != 1.0){
+      struct mixed_buffer *buffer = source->buffer;
+      pitch_shift(pitch, buffer->data, buffer->data, buffer->size, &data->pitch_data);
     }
   }
   // FIXME: allow an arbitrary number of speakers.
@@ -364,10 +360,16 @@ struct mixed_segment_info space_segment_info(struct mixed_segment *segment){
   return info;
 }
 
-int mixed_make_segment_space(struct mixed_segment *segment){
+int mixed_make_segment_space(size_t samplerate, struct mixed_segment *segment){
   struct space_segment_data *data = calloc(1, sizeof(struct space_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  }
+
+  // These factors might need tweaking for efficiency/quality.
+  if(!make_pitch_data(2048, 16, samplerate, &data->pitch_data)){
+    free(data);
     return 0;
   }
 
@@ -387,4 +389,5 @@ int mixed_make_segment_space(struct mixed_segment *segment){
   segment->set = space_segment_set;
   segment->get = space_segment_get;
   segment->data = data;
+  return 1;
 }

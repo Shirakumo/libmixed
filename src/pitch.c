@@ -67,25 +67,7 @@ void fft(float *fftBuffer, long framesize, long sign){
   }
 }
 
-struct pitch_data{
-  float *in_fifo;
-  float *out_fifo;
-  float *fft_workspace;
-  float *last_phase;
-  float *phase_sum;
-  float *output_accumulator;
-  float *analyzed_frequency;
-  float *analyzed_magnitude;
-  float *synthesized_frequency;
-  float *synthesized_magnitude;
-  size_t framesize;
-  size_t oversampling;
-  size_t overlap;
-  size_t samplerate;
-};
-
-void free_pitch_data(void *_data){
-  struct pitch_data *data = (struct pitch_data *)_data;
+void free_pitch_data(struct pitch_data *data){
   
   if(data->in_fifo)
     free(data->in_fifo);
@@ -118,8 +100,7 @@ void free_pitch_data(void *_data){
     free(data->synthesized_magnitude);
 }
 
-int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, void *_data){
-  struct pitch_data *data = (struct pitch_data *)_data;
+int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, struct pitch_data *data){
   data->in_fifo = calloc(framesize, sizeof(float));
   data->out_fifo = calloc(framesize, sizeof(float));
   data->fft_workspace = calloc(framesize*2, sizeof(float));
@@ -153,8 +134,7 @@ int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, vo
   return 1;
 }
 
-void pitch_shift(float pitchShift, float *in, float *out, size_t samples, void *_data){
-  struct pitch_data *data = (struct pitch_data *)_data;
+void pitch_shift(float pitch, float *in, float *out, size_t samples, struct pitch_data *data){
   size_t framesize = data->framesize;
   size_t oversampling = data->oversampling;
   float *in_fifo = data->in_fifo;
@@ -242,10 +222,10 @@ void pitch_shift(float pitchShift, float *in, float *out, size_t samples, void *
       memset(synthesized_magnitude, 0, framesize*sizeof(float));
       memset(synthesized_frequency, 0, framesize*sizeof(float));
       for (k = 0; k <= framesize2; k++) { 
-        index = k*pitchShift;
+        index = k*pitch;
         if (index <= framesize2) { 
           synthesized_magnitude[index] += analyzed_magnitude[k]; 
-          synthesized_frequency[index] = analyzed_frequency[k] * pitchShift; 
+          synthesized_frequency[index] = analyzed_frequency[k] * pitch; 
         } 
       }
 			

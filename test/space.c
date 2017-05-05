@@ -57,7 +57,7 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_make_segment_space(&space)){
+  if(!mixed_make_segment_space(samplerate, &space)){
     printf("Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
