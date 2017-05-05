@@ -103,7 +103,7 @@ extern "C" {
     MIXED_MODIFIES_SOURCE = 0x2
   };
 
-  enum mixed_channel_index{
+  enum mixed_location{
     MIXED_MONO = 0,
     MIXED_LEFT = 0,
     MIXED_RIGHT = 1,
