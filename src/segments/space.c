@@ -6,26 +6,12 @@ struct space_source{
   float velocity[3];
 };
 
-struct space_source_vector{
-  struct space_source **el;
-  size_t count;
-  size_t size;
-};
-
-struct space_output{
-  struct mixed_buffer *buffer;
-  float location[3];
-};
-
-struct space_output_vector{
-  struct space_output **el;
-  size_t count;
-  size_t size;
-};
-
 struct space_segment_data{
-  struct space_source_vector sources;
-  struct space_output_vector outputs;
+  struct space_source **sources;
+  size_t count;
+  size_t size;
+  struct mixed_buffer *left;
+  struct mixed_buffer *right;
   struct pitch_data pitch_data;
   float location[3];
   float velocity[3];
@@ -40,11 +26,9 @@ struct space_segment_data{
 };
 
 int space_segment_free(struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
-  if(data){
-    free_vector((struct vector *)&data->sources);
-    free_vector((struct vector *)&data->outputs);
-    free(data);
+  if(segment->data){
+    free(((struct space_segment_data *)segment->data)->sources);
+    free(segment->data);
   }
   segment->data = 0;
   return 1;
@@ -106,36 +90,32 @@ float calculate_pitch_shift(struct space_segment_data *listener, struct space_so
   return (SS - DF*vls) / (SS - DF*vss);
 }
 
-void mix_output(struct space_output *output, size_t samples, struct space_segment_data *data){
-  float *out = output->buffer->data;
-  float *out_location = output->location;
-  if(data->sources.count == 0){
+void space_mix_channel(float *out, size_t samples, float *location, struct space_segment_data *data){
+  if(!data->count){
     memset(out, 0, samples*sizeof(float));
   }else{
-    float loc[3] = {data->location[0] + out_location[0],
-                    data->location[1] + out_location[1],
-                    data->location[2] + out_location[2]};
+    // FIXME: move listener location as needed for ear location
     float min = data->min_distance;
     float max = data->max_distance;
     float roll = data->rolloff;
-    float div = 1.0/((float)data->sources.count);
+    float div = 1.0/((float)data->count);
     // Mix the first source directly to avoid a clearing loop
-    struct space_source *source = data->sources.el[0];
+    struct space_source *source = data->sources[0];
     float *in = source->buffer->data;
-    float distance = clamp(min, dist(loc, source->location), max);
+    float distance = clamp(min, dist(source->location, data->location), max);
     float attenuation = data->attenuation(min, max, distance, roll);
     // FIXME: determine damping due to "ear direction"
     for(size_t i=0; i<samples; ++i){
-      out[i] = div * in[i] * attenuation;
+      out[i] = in[i] * attenuation;
     }
     // Mix the rest of the sources additively.
-    for(size_t s=1; s<data->sources.count; ++s){
-      source = data->sources.el[s];
+    for(size_t s=1; s<data->count; ++s){
+      source = data->sources[s];
       in = source->buffer->data;
-      distance = dist(loc, source->location);
+      distance = dist(source->location, data->location);
       attenuation = data->attenuation(min, max, distance, roll);
       for(size_t i=0; i<samples; ++i){
-        out[i] += div * in[i] * attenuation;
+        out[i] += in[i] * attenuation;
       }
     }
   }
@@ -144,13 +124,8 @@ void mix_output(struct space_output *output, size_t samples, struct space_segmen
 int space_segment_mix(size_t samples, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
   // Shift frequencies
-  // NOTE: If you wanted to be entirely correct, you'd have to calculate a
-  //       different pitch for each channel and also include a rotational
-  //       velocity for the listener, as that too would influence the pitch
-  //       of the source for each ear. For simplicity and efficiency reasons
-  //       we don't do this.
-  for(size_t s=0; s<data->sources.count; ++s){
-    struct space_source *source = data->sources.el[s];
+  for(size_t s=0; s<data->count; ++s){
+    struct space_source *source = data->sources[s];
     float pitch = calculate_pitch_shift(data, source);
     if(pitch != 1.0){
       struct mixed_buffer *buffer = source->buffer;
@@ -159,45 +134,29 @@ int space_segment_mix(size_t samples, struct mixed_segment *segment){
       pitch_shift(pitch, buffer->data, buffer->data, buffer->size, &data->pitch_data);
     }
   }
-  // Mix sources
-  for(size_t o=0; o<data->outputs.count; ++o){
-    struct space_output *output = data->outputs.el[o];
-    mix_output(output, samples, data);
-  }
+  // FIXME: allow an arbitrary number of speakers.
+  // Head is usually ~15cm
+  float left[3] = {-7.5, 0.0, 0.0};
+  space_mix_channel(data->left->data, samples, left, data);
+  float right[3] = {7.5, 0.0, 0.0};
+  space_mix_channel(data->right->data, samples, right, data);
 }
 
 int space_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
-
-  if(buffer){ // Add or set an element
-    if(location < data->outputs.count){
-      data->outputs.el[location]->buffer = buffer;
-    }else{
-      struct space_output *output = calloc(1, sizeof(struct space_output));
-      if(!output){
-        mixed_err(MIXED_OUT_OF_MEMORY);
-        return 0;
-      }
-      output->buffer = buffer;
-      return vector_add(output, (struct vector *)&data->outputs);
-    }
-  }else{ // Remove an element
-    if(data->outputs.count <= location){
-      mixed_err(MIXED_INVALID_BUFFER_LOCATION);
-      return 0;
-    }
-    free(data->outputs.el[location]);
-    return vector_remove_pos(location, (struct vector *)&data->outputs);
+  switch(location){
+  case MIXED_LEFT: data->left = buffer; return 1;
+  case MIXED_RIGHT: data->right = buffer; return 1;
+  default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0;
   }
-  return 1;
 }
 
 int space_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
 
   if(buffer){ // Add or set an element
-    if(location < data->sources.count){
-      data->sources.el[location]->buffer = buffer;
+    if(location < data->count){
+      data->sources[location]->buffer = buffer;
     }else{
       struct space_source *source = calloc(1, sizeof(struct space_source));
       if(!source){
@@ -205,15 +164,15 @@ int space_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mi
         return 0;
       }
       source->buffer = buffer;
-      return vector_add(source, (struct vector *)&data->sources);
+      return vector_add(source, (struct vector *)data);
     }
   }else{ // Remove an element
-    if(data->sources.count <= location){
+    if(data->count <= location){
       mixed_err(MIXED_INVALID_BUFFER_LOCATION);
       return 0;
     }
-    free(data->sources.el[location]);
-    return vector_remove_pos(location, (struct vector *)&data->sources);
+    free(data->sources[location]);
+    return vector_remove_pos(location, (struct vector *)data);
   }
   return 1;
 }
@@ -335,12 +294,12 @@ int space_segment_set_source(size_t field, size_t location, void *value, struct 
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
   float *parts = *(float **)value;
   
-  if(data->sources.count <= location){
+  if(data->count <= location){
     mixed_err(MIXED_INVALID_BUFFER_LOCATION);
     return 0;
   }
 
-  struct space_source *source = data->sources.el[location];
+  struct space_source *source = data->sources[location];
   
   switch(field){
   case MIXED_SPACE_LOCATION:
@@ -364,12 +323,12 @@ int space_segment_get_source(size_t field, size_t location, void *value, struct 
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
   float *parts = *(float **)value;
   
-  if(data->sources.count <= location){
+  if(data->count <= location){
     mixed_err(MIXED_INVALID_BUFFER_LOCATION);
     return 0;
   }
 
-  struct space_source *source = data->sources.el[location];
+  struct space_source *source = data->sources[location];
   
   switch(field){
   case MIXED_SPACE_LOCATION:
@@ -429,15 +388,5 @@ int mixed_make_segment_space(size_t samplerate, struct mixed_segment *segment){
   segment->set = space_segment_set;
   segment->get = space_segment_get;
   segment->data = data;
-  
-  // Configure dummy stereo setup
-  if(!space_segment_set_out(MIXED_LEFT, (struct mixed_buffer *)-1, segment) ||
-     !space_segment_set_out(MIXED_RIGHT, (struct mixed_buffer *)-1, segment)){
-    free(data);
-    return 0;
-  }
-  // Head is usually ~15cm
-  data->outputs.el[0]->location[1] = -7.5;
-  data->outputs.el[1]->location[1] =  7.5;
   return 1;
 }
