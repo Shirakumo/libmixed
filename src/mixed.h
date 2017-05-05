@@ -55,11 +55,6 @@ extern "C" {
     MIXED_SEQUENTIAL
   };
 
-  enum mixed_space_field{
-    MIXED_LISTENER_LOCATION,
-    MIXED_SOURCE_LOCATION
-  };
-
   enum mixed_segment_fields{
     MIXED_BUFFER,
     MIXED_GENERAL_VOLUME,
