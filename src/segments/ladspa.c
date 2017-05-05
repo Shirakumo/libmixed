@@ -1,4 +1,3 @@
-#include <dlfcn.h>
 #include "ladspa.h"
 #include "internal.h"
 

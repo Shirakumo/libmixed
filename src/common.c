@@ -69,9 +69,7 @@ void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   size_t oldsize = oldcount*size;
   ptr = realloc(ptr, newsize);
   if(ptr && oldsize < newsize){
-    for(size_t i=oldsize; i<newsize; ++i){
-      ((uint8_t *)ptr)[i] = 0;
-    }
+    memset(ptr+oldsize, 0, newsize-oldsize);
   }
   return ptr;
 }

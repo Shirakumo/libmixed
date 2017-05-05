@@ -1,4 +1,3 @@
-#include <math.h>
 #include "internal.h"
 
 struct generator_segment_data{

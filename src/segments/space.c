@@ -1,4 +1,3 @@
-#include <math.h>
 #include "internal.h"
 
 struct space_source{
@@ -93,9 +92,7 @@ float calculate_pitch_shift(struct space_segment_data *listener, struct space_so
 
 void space_mix_channel(float *out, size_t samples, float *location, struct space_segment_data *data){
   if(!data->count){
-    for(size_t i=0; i<samples; ++i){
-      out[i] = 0.0;
-    }
+    memset(out, 0, samples*sizeof(float));
   }else{
     // FIXME: move listener location as needed for ear location
     float min = data->min_distance;
@@ -132,6 +129,8 @@ int space_segment_mix(size_t samples, struct mixed_segment *segment){
     float pitch = calculate_pitch_shift(data, source);
     if(pitch != 1.0){
       struct mixed_buffer *buffer = source->buffer;
+      // FIXME: I don't know if I can re-use the pitch_data buffer for every
+      //        source like this, or if I need one per-source.
       pitch_shift(pitch, buffer->data, buffer->data, buffer->size, &data->pitch_data);
     }
   }

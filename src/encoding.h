@@ -1,4 +1,3 @@
-#include <math.h>
 typedef int32_t int24_t;
 typedef uint32_t uint24_t;
 

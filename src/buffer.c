@@ -1,4 +1,3 @@
-#include <string.h>
 #include "internal.h"
 
 int mixed_make_buffer(struct mixed_buffer *buffer){
