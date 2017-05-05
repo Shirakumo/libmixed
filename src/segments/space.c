@@ -184,6 +184,27 @@ int space_segment_set_in(size_t field, size_t location, void *buffer, struct mix
       return vector_remove_pos(location, (struct vector *)data);
     }
     return 1;
+  case MIXED_SPACE_LOCATION:
+  case MIXED_SPACE_VELOCITY:
+    if(data->count <= location){
+      mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+      return 0;
+    }
+    struct space_source *source = data->sources[location];
+    float *value = (float *)buffer;
+    switch(field){
+    case MIXED_SPACE_LOCATION:
+      source->location[0] = value[0];
+      source->location[1] = value[1];
+      source->location[2] = value[2];
+      break;
+    case MIXED_SPACE_VELOCITY:
+      source->velocity[0] = value[0];
+      source->velocity[1] = value[1];
+      source->velocity[2] = value[2];
+      break;
+    }
+    return 1;
   default:
     mixed_err(MIXED_INVALID_FIELD);
     return 0;

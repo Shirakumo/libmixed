@@ -81,7 +81,8 @@ int main(int argc, char **argv){
   float t = mtime();
   float dt = 0.0;
   float phi = 0.0;
-  float x, z, rad;
+  float pos[3] = {0.0, 0.0, 0.0};
+  float rad;
   
   size_t read, played;
   uint8_t samplesize = mixed_samplesize(out->channel.encoding);
@@ -102,10 +103,10 @@ int main(int argc, char **argv){
     // Calculate new position
     phi += dphi * dt;
     rad = phi * M_PI / 180.0;
-    x = r * cos(rad);
-    z = r * sin(rad);
+    pos[0] = r * cos(rad);
+    pos[2] = r * sin(rad);
 
-    // FIXME: set position in segment
+    mixed_segment_set_in(MIXED_SPACE_LOCATION, 0, pos, &space);
     
     if(!mixed_mixer_mix(samples, &mixer)){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
