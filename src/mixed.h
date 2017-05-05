@@ -61,6 +61,7 @@ extern "C" {
   };
 
   enum mixed_segment_fields{
+    MIXED_BUFFER,
     MIXED_GENERAL_VOLUME,
     MIXED_GENERAL_PAN,
     MIXED_FADE_FROM,
@@ -149,8 +150,10 @@ extern "C" {
     int (*start)(struct mixed_segment *segment);
     int (*mix)(size_t samples, struct mixed_segment *segment);
     int (*end)(struct mixed_segment *segment);
-    int (*set_in)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
-    int (*set_out)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
+    int (*set_in)(size_t field, size_t location, void *value, struct mixed_segment *segment);
+    int (*set_out)(size_t field, size_t location, void *value, struct mixed_segment *segment);
+    int (*get_in)(size_t field, size_t location, void *value, struct mixed_segment *segment);
+    int (*get_out)(size_t field, size_t location, void *value, struct mixed_segment *segment);
     int (*set)(size_t field, void *value, struct mixed_segment *segment);
     int (*get)(size_t field, void *value, struct mixed_segment *segment);
     void *data;
@@ -172,8 +175,10 @@ extern "C" {
   int mixed_segment_start(struct mixed_segment *segment);
   int mixed_segment_mix(size_t samples, struct mixed_segment *segment);
   int mixed_segment_end(struct mixed_segment *segment);
-  int mixed_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
-  int mixed_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
+  int mixed_segment_set_in(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  int mixed_segment_set_out(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  int mixed_segment_get_in(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  int mixed_segment_get_out(size_t field, size_t location, void *value, struct mixed_segment *segment);
   struct mixed_segment_info mixed_segment_info(struct mixed_segment *segment);
   int mixed_segment_set(size_t field, void *value, struct mixed_segment *segment);
   int mixed_segment_get(size_t field, void *value, struct mixed_segment *segment);

@@ -28,16 +28,30 @@ int mixed_segment_end(struct mixed_segment *segment){
   return 1;
 }
 
-int mixed_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int mixed_segment_set_in(size_t field, size_t location, void *value, struct mixed_segment *segment){
   if(segment->set_in)
-    return segment->set_in(location, buffer, segment);
+    return segment->set_in(field, location, value, segment);
   mixed_err(MIXED_NOT_IMPLEMENTED);
   return 0;
 }
 
-int mixed_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int mixed_segment_set_out(size_t field, size_t location, void *value, struct mixed_segment *segment){
   if(segment->set_out)
-    return segment->set_out(location, buffer, segment);
+    return segment->set_out(field, location, value, segment);
+  mixed_err(MIXED_NOT_IMPLEMENTED);
+  return 0;
+}
+
+int mixed_segment_get_in(size_t field, size_t location, void *value, struct mixed_segment *segment){
+  if(segment->get_in)
+    return segment->get_in(field, location, value, segment);
+  mixed_err(MIXED_NOT_IMPLEMENTED);
+  return 0;
+}
+
+int mixed_segment_get_out(size_t field, size_t location, void *value, struct mixed_segment *segment){
+  if(segment->get_out)
+    return segment->get_out(field, location, value, segment);
   mixed_err(MIXED_NOT_IMPLEMENTED);
   return 0;
 }

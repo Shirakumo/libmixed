@@ -118,8 +118,8 @@ int load_out_segment(size_t samples, struct out **_out){
     goto cleanup;
   }
 
-  if(!mixed_segment_set_in(MIXED_LEFT, &out->left, &out->segment) ||
-     !mixed_segment_set_in(MIXED_RIGHT, &out->right, &out->segment)){
+  if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &out->left, &out->segment) ||
+     !mixed_segment_set_in(MIXED_BUFFER, MIXED_RIGHT, &out->right, &out->segment)){
     printf("Failed to set buffers for out: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -224,8 +224,8 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
     goto cleanup;
   }
 
-  if(!mixed_segment_set_out(MIXED_LEFT, &mp3->left, &mp3->segment) ||
-     !mixed_segment_set_out(MIXED_RIGHT, &mp3->right, &mp3->segment)){
+  if(!mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &mp3->left, &mp3->segment) ||
+     !mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &mp3->right, &mp3->segment)){
     printf("Failed to set buffers for %s: %s\n", file, mixed_error_string(-1));
     goto cleanup;
   }

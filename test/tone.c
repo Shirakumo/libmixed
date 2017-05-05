@@ -46,9 +46,9 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_segment_set_out(MIXED_MONO, &out->left, &generator) ||
-     !mixed_segment_set_in(MIXED_MONO, &out->left, &fade) ||
-     !mixed_segment_set_out(MIXED_MONO, &out->left, &fade)){
+  if(!mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &generator) ||
+     !mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &out->left, &fade) ||
+     !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &fade)){
     printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }

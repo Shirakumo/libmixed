@@ -142,39 +142,52 @@ int space_segment_mix(size_t samples, struct mixed_segment *segment){
   space_mix_channel(data->right->data, samples, right, data);
 }
 
-int space_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int space_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
-  switch(location){
-  case MIXED_LEFT: data->left = buffer; return 1;
-  case MIXED_RIGHT: data->right = buffer; return 1;
-  default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0;
+  
+  switch(field){
+  case MIXED_BUFFER:
+    switch(location){
+    case MIXED_LEFT: data->left = (struct mixed_buffer *)buffer; return 1;
+    case MIXED_RIGHT: data->right = (struct mixed_buffer *)buffer; return 1;
+    default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0;
+    }
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
   }
 }
 
-int space_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int space_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
 
-  if(buffer){ // Add or set an element
-    if(location < data->count){
-      data->sources[location]->buffer = buffer;
+  switch(field){
+  case MIXED_BUFFER:
+    if(buffer){ // Add or set an element
+      if(location < data->count){
+        data->sources[location]->buffer = (struct mixed_buffer *)buffer;
     }else{
-      struct space_source *source = calloc(1, sizeof(struct space_source));
-      if(!source){
-        mixed_err(MIXED_OUT_OF_MEMORY);
+        struct space_source *source = calloc(1, sizeof(struct space_source));
+        if(!source){
+          mixed_err(MIXED_OUT_OF_MEMORY);
+          return 0;
+        }
+        source->buffer = (struct mixed_buffer *)buffer;
+        return vector_add(source, (struct vector *)data);
+      }
+    }else{ // Remove an element
+      if(data->count <= location){
+        mixed_err(MIXED_INVALID_BUFFER_LOCATION);
         return 0;
       }
-      source->buffer = buffer;
-      return vector_add(source, (struct vector *)data);
+      free(data->sources[location]);
+      return vector_remove_pos(location, (struct vector *)data);
     }
-  }else{ // Remove an element
-    if(data->count <= location){
-      mixed_err(MIXED_INVALID_BUFFER_LOCATION);
-      return 0;
-    }
-    free(data->sources[location]);
-    return vector_remove_pos(location, (struct vector *)data);
+    return 1;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
   }
-  return 1;
 }
 
 int space_segment_get(size_t field, void *value, struct mixed_segment *segment){

@@ -16,31 +16,42 @@ int mixer_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-int mixer_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int mixer_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
-  switch(location){
-  case MIXED_MONO: data->out = buffer; return 1;
-  default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0;
+  switch(field){
+  case MIXED_BUFFER:
+    switch(location){
+    case MIXED_MONO: data->out = (struct mixed_buffer *)buffer; return 1;
+    default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0;
+    }
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
   }
 }
 
-int mixer_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int mixer_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
 
-  if(buffer){ // Add or set an element
-    if(location < data->count){
-      data->in[location] = buffer;
+  switch(field){
+    if(buffer){ // Add or set an element
+      if(location < data->count){
+        data->in[location] = (struct mixed_buffer *)buffer;
     }else{
-      return vector_add(buffer, (struct vector *)data);
-    }
-  }else{ // Remove an element
-    if(data->count <= location){
-      mixed_err(MIXED_INVALID_BUFFER_LOCATION);
-      return 0;
-    }
+        return vector_add(buffer, (struct vector *)data);
+      }
+    }else{ // Remove an element
+      if(data->count <= location){
+        mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+        return 0;
+      }
     return vector_remove_pos(location, (struct vector *)data);
+    }
+    return 1;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
   }
-  return 1;
 }
 
 int mixer_segment_mix(size_t samples, struct mixed_segment *segment){

@@ -62,9 +62,9 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_segment_set_in(0, &mp3->left, &space) ||
-     !mixed_segment_set_out(MIXED_LEFT, &out->left, &space) ||
-     !mixed_segment_set_out(MIXED_RIGHT, &out->right, &space)){
+  if(!mixed_segment_set_in(MIXED_BUFFER, 0, &mp3->left, &space) ||
+     !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &space) ||
+     !mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &out->right, &space)){
     printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }

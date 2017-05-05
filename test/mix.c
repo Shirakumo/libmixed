@@ -32,8 +32,8 @@ int main(int argc, char **argv){
   }
   
   if(// The mixer segment's 0th buffer is its output.
-     !mixed_segment_set_out(MIXED_MONO, &out->left, &lmix_segment) ||
-     !mixed_segment_set_out(MIXED_MONO, &out->right, &rmix_segment)){
+     !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &lmix_segment) ||
+     !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->right, &rmix_segment)){
     printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -46,8 +46,8 @@ int main(int argc, char **argv){
     }
     mp3s[i-1] = mp3;
     // Attach to combining segments
-    if(!mixed_segment_set_in(i, &mp3->left, &lmix_segment) ||
-       !mixed_segment_set_in(i, &mp3->right, &rmix_segment)){
+    if(!mixed_segment_set_in(MIXED_BUFFER, i, &mp3->left, &lmix_segment) ||
+       !mixed_segment_set_in(MIXED_BUFFER, i, &mp3->right, &rmix_segment)){
       printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
       goto cleanup;
     }

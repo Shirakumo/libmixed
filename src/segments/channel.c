@@ -14,13 +14,20 @@ int channel_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_segment_set_buffer(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int channel_segment_set_buffer(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
-  if(location<data->channel->channels){
-    data->buffers[location] = buffer;
-    return 1;
-  }else{
-    mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+
+  switch(field){
+  case MIXED_BUFFER:
+    if(location<data->channel->channels){
+      data->buffers[location] = (struct mixed_buffer *)buffer;
+      return 1;
+    }else{
+      mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+      return 0;
+    }
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
     return 0;
   }
 }

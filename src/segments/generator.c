@@ -15,11 +15,17 @@ int generator_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-int generator_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int generator_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct generator_segment_data *data = (struct generator_segment_data *)segment->data;
-  switch(location){
-  case MIXED_MONO: data->out = buffer; return 1;
-  default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0; break;
+  switch(field){
+  case MIXED_BUFFER:
+    switch(location){
+    case MIXED_MONO: data->out = (struct mixed_buffer *)buffer; return 1;
+    default: mixed_err(MIXED_INVALID_BUFFER_LOCATION); return 0; break;
+    }
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
   }
 }
 

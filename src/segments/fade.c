@@ -18,24 +18,38 @@ int fade_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-int fade_segment_set_in(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int fade_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
-  if(location == 0){
-    data->in = buffer;
-    return 1;
+
+  switch(field){
+  case MIXED_BUFFER:
+    if(location == 0){
+      data->in = (struct mixed_buffer *)buffer;
+      return 1;
+    }
+    mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+    return 0;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
   }
-  mixed_err(MIXED_INVALID_BUFFER_LOCATION);
-  return 0;
 }
 
-int fade_segment_set_out(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment){
+int fade_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
-  if(location == 0){
-    data->out = buffer;
-    return 1;
+
+  switch(field){
+  case MIXED_BUFFER:
+    if(location == 0){
+      data->out = (struct mixed_buffer *)buffer;
+      return 1;
+    }
+    mixed_err(MIXED_INVALID_BUFFER_LOCATION);
+    return 0;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
   }
-  mixed_err(MIXED_INVALID_BUFFER_LOCATION);
-  return 0;
 }
 
 float fade_linear(float x){

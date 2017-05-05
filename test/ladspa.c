@@ -45,10 +45,10 @@ int main(int argc, char **argv){
     mixed_segment_set(i-3, &value, &ladspa);
   }
 
-  if(!mixed_segment_set_in(MIXED_LEFT, &mp3->left, &ladspa) ||
-     !mixed_segment_set_in(MIXED_RIGHT, &mp3->right, &ladspa) ||
-     !mixed_segment_set_out(MIXED_LEFT, &out->left, &ladspa) ||
-     !mixed_segment_set_out(MIXED_RIGHT, &out->right, &ladspa)){
+  if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &mp3->left, &ladspa) ||
+     !mixed_segment_set_in(MIXED_BUFFER, MIXED_RIGHT, &mp3->right, &ladspa) ||
+     !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &ladspa) ||
+     !mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &out->right, &ladspa)){
     printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
