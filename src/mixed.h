@@ -140,24 +140,19 @@ extern "C" {
     size_t min_inputs;
     size_t max_inputs;
     size_t outputs;
+    // FIXME: fields
   };
 
   struct mixed_segment{
-    // Clean up
     int (*free)(struct mixed_segment *segment);
-    // Mix samples
+    struct mixed_segment_info (*info)(struct mixed_segment *segment);
     int (*start)(struct mixed_segment *segment);
     int (*mix)(size_t samples, struct mixed_segment *segment);
     int (*end)(struct mixed_segment *segment);
-    // Connect buffer
     int (*set_in)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
     int (*set_out)(size_t location, struct mixed_buffer *buffer, struct mixed_segment *segment);
-    // Request info
-    struct mixed_segment_info (*info)(struct mixed_segment *segment);
-    // Opaque fields
     int (*set)(size_t field, void *value, struct mixed_segment *segment);
     int (*get)(size_t field, void *value, struct mixed_segment *segment);
-    // User data
     void *data;
   };
 
