@@ -62,7 +62,7 @@ int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segmen
     return 0;
   }
 
-  struct mixed_buffer **buffers = calloc(channel->channels, sizeof(struct mixed_buffer));
+  struct mixed_buffer **buffers = calloc(channel->channels, sizeof(struct mixed_buffer *));
   if(!buffers){
     free(data);
     return 0;
@@ -86,7 +86,7 @@ int mixed_make_segment_drain(struct mixed_channel *channel, struct mixed_segment
     return 0;
   }
 
-  struct mixed_buffer **buffers = calloc(channel->channels, sizeof(struct mixed_buffer));
+  struct mixed_buffer **buffers = calloc(channel->channels, sizeof(struct mixed_buffer *));
   if(!buffers){
     free(data);
     return 0;
