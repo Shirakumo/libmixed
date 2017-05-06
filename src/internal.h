@@ -27,10 +27,10 @@ struct pitch_data{
   float *analyzed_magnitude;
   float *synthesized_frequency;
   float *synthesized_magnitude;
-  size_t framesize;
-  size_t oversampling;
-  size_t overlap;
-  size_t samplerate;
+  long framesize;
+  long oversampling;
+  long overlap;
+  long samplerate;
 };
 
 void free_pitch_data(struct pitch_data *data);

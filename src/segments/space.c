@@ -130,14 +130,13 @@ float calculate_pitch_shift(struct space_segment_data *listener, struct space_so
 
 int space_segment_mix(size_t samples, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
+  
   // Shift frequencies
   for(size_t s=0; s<data->count; ++s){
     struct space_source *source = data->sources[s];
-    float pitch = calculate_pitch_shift(data, source);
+    float pitch = clamp(0.5, calculate_pitch_shift(data, source), 2.0);
     if(pitch != 1.0){
       struct mixed_buffer *buffer = source->buffer;
-      // FIXME: I don't know if I can re-use the pitch_data buffer for every
-      //        source like this, or if I need one per-source.
       pitch_shift(pitch, buffer->data, buffer->data, buffer->size, &data->pitch_data);
     }
   }
@@ -424,7 +423,7 @@ int mixed_make_segment_space(size_t samplerate, struct mixed_segment *segment){
   }
 
   // These factors might need tweaking for efficiency/quality.
-  if(!make_pitch_data(2048, 16, samplerate, &data->pitch_data)){
+  if(!make_pitch_data(2048, 4, samplerate, &data->pitch_data)){
     free(data);
     return 0;
   }

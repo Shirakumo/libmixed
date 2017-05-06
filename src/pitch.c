@@ -19,7 +19,6 @@
 #include "internal.h"
 
 #define M_PI 3.14159265358979323846
-#define MAX_FRAME_LENGTH 8192
 
 void fft(float *fftBuffer, long framesize, long sign){
   float wr, wi, arg, *p1, *p2, temp;
@@ -114,7 +113,7 @@ int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, st
   data->fft_workspace = calloc(framesize*2, sizeof(float));
   data->last_phase = calloc(framesize/2+1, sizeof(float));
   data->phase_sum = calloc(framesize/2+1, sizeof(float));
-  data->output_accumulator = calloc(framesize*3, sizeof(float));
+  data->output_accumulator = calloc(framesize*2, sizeof(float));
   data->analyzed_frequency = calloc(framesize, sizeof(float));
   data->analyzed_magnitude = calloc(framesize, sizeof(float));
   data->synthesized_frequency = calloc(framesize, sizeof(float));
@@ -156,14 +155,14 @@ void pitch_shift(float pitch, float *in, float *out, size_t samples, struct pitc
   float *synthesized_frequency = data->synthesized_frequency;
   float *synthesized_magnitude = data->synthesized_magnitude;
   double magnitude, phase, tmp, window, real, imag;
-  size_t i, k, qpd, index;
-
+  long i, k, qpd, index;
+  
   /* set up some handy variables */
-  size_t framesize2 = framesize/2;
-  size_t step = framesize/oversampling;
+  long framesize2 = framesize/2;
+  long step = framesize/oversampling;
   double bin_frequencies = (double)data->samplerate/(double)framesize;
   double expected = 2.*M_PI*(double)step/(double)framesize;
-  size_t fifo_latency = framesize-step;
+  long fifo_latency = framesize-step;
   if (data->overlap == 0) data->overlap = fifo_latency;
 
   /* main processing loop */
