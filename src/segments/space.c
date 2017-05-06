@@ -158,6 +158,22 @@ int space_segment_set_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
+int space_segment_get_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+  
+  switch(field){
+  case MIXED_BUFFER:
+    switch(location){
+    case MIXED_LEFT: *(struct mixed_buffer **)buffer = data->left; return 1;
+    case MIXED_RIGHT: *(struct mixed_buffer **)buffer = data->right; return 1;
+    default: mixed_err(MIXED_INVALID_LOCATION); return 0;
+    }
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
+  }
+}
+
 int space_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
 
@@ -211,29 +227,65 @@ int space_segment_set_in(size_t field, size_t location, void *buffer, struct mix
   }
 }
 
+int space_segment_get_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+  
+  if(data->count <= location){
+    mixed_err(MIXED_INVALID_LOCATION);
+    return 0;
+  }
+  
+  struct space_source *source = data->sources[location];
+
+  switch(field){
+  case MIXED_BUFFER:
+    *(struct mixed_buffer **)buffer = source->buffer;
+    return 1;
+  case MIXED_SPACE_LOCATION:
+  case MIXED_SPACE_VELOCITY:{
+    float *value = (float *)buffer;
+    switch(field){
+    case MIXED_SPACE_LOCATION:
+      value[0] = source->location[0];
+      value[1] = source->location[1];
+      value[2] = source->location[2];
+      break;
+    case MIXED_SPACE_VELOCITY:
+      value[0] = source->velocity[0];
+      value[1] = source->velocity[1];
+      value[2] = source->velocity[2];
+      break;
+    }}
+    return 1;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
+  }
+}
+
 int space_segment_get(size_t field, void *value, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
-  float **parts = (float **)value;
+  float *parts = (float *)value;
   switch(field){
   case MIXED_SPACE_LOCATION:
-    *(parts[0]) = data->location[0];
-    *(parts[1]) = data->location[1];
-    *(parts[2]) = data->location[2];
+    parts[0] = data->location[0];
+    parts[1] = data->location[1];
+    parts[2] = data->location[2];
     break;
   case MIXED_SPACE_VELOCITY:
-    *(parts[0]) = data->velocity[0];
-    *(parts[1]) = data->velocity[1];
-    *(parts[2]) = data->velocity[2];
+    parts[0] = data->velocity[0];
+    parts[1] = data->velocity[1];
+    parts[2] = data->velocity[2];
     break;
   case MIXED_SPACE_DIRECTION:
-    *(parts[0]) = data->direction[0];
-    *(parts[1]) = data->direction[1];
-    *(parts[2]) = data->direction[2];
+    parts[0] = data->direction[0];
+    parts[1] = data->direction[1];
+    parts[2] = data->direction[2];
     break;
   case MIXED_SPACE_UP:
-    *(parts[0]) = data->up[0];
-    *(parts[1]) = data->up[1];
-    *(parts[2]) = data->up[2];
+    parts[0] = data->up[0];
+    parts[1] = data->up[1];
+    parts[2] = data->up[2];
     break;
   case MIXED_SPACE_SOUNDSPEED:
     *(float *)value = data->soundspeed;
@@ -360,7 +412,9 @@ int mixed_make_segment_space(size_t samplerate, struct mixed_segment *segment){
   segment->free = space_segment_free;
   segment->mix = space_segment_mix;
   segment->set_in = space_segment_set_in;
+  segment->get_in = space_segment_get_in;
   segment->set_out = space_segment_set_out;
+  segment->get_out = space_segment_get_out;
   segment->set = space_segment_set;
   segment->get = space_segment_get;
   segment->data = data;
