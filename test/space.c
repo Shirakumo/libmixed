@@ -104,13 +104,13 @@ int main(int argc, char **argv){
     // Calculate new position
     phi += dphi * dt;
     rad = phi * M_PI / 180.0;
-    vel[0] = r*cos(rad) - pos[0];
+    vel[0] = r*2*cos(rad) - pos[0];
     vel[2] = r*sin(rad) - pos[2];
     pos[0] = pos[0] + vel[0];
     pos[2] = pos[2] + vel[2];
 
     mixed_segment_set_in(MIXED_SPACE_LOCATION, 0, pos, &space);
-    //mixed_segment_set_in(MIXED_SPACE_VELOCITY, 0, vel, &space);
+    mixed_segment_set_in(MIXED_SPACE_VELOCITY, 0, vel, &space);
     
     if(!mixed_mixer_mix(samples, &mixer)){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
