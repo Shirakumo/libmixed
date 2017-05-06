@@ -63,12 +63,30 @@ extern inline float dist(float a[3], float b[3]){
   return mag(r);
 }
 
+extern inline float *norm(float a[3]){
+  float Mag = mag(a);
+  a[0] /= Mag; a[1] /= Mag; a[2] /= Mag;
+  return a;
+}
+
+extern inline float *cross(float a[3], float b[3], float r[3]){
+  r[0] = (a[1] * b[2]) - (a[2] * b[1]);
+  r[1] = (a[2] * b[1]) - (a[0] * b[2]);
+  r[2] = (a[0] * b[1]) - (a[1] * b[0]);
+  return r;
+}
+
 extern inline float min(float a, float b){
   return (a < b)? a : b;
 }
 
 extern inline float clamp(float l, float v, float r){
   return (v < l)? l : ((v < r)? v : r);
+}
+
+float calculate_pan(float S[3], float L[3], float D[3], float U[3]){
+  float t1[3], t2[3] = {S[0] - L[0], S[1] - L[1], S[2] - L[2]};
+  return dot(norm(cross(D, U, t1)), norm(t2));
 }
 
 float calculate_pitch_shift(struct space_segment_data *listener, struct space_source *source){
@@ -90,37 +108,6 @@ float calculate_pitch_shift(struct space_segment_data *listener, struct space_so
   return (SS - DF*vls) / (SS - DF*vss);
 }
 
-void space_mix_channel(float *out, size_t samples, float *location, struct space_segment_data *data){
-  if(!data->count){
-    memset(out, 0, samples*sizeof(float));
-  }else{
-    // FIXME: move listener location as needed for ear location
-    float min = data->min_distance;
-    float max = data->max_distance;
-    float roll = data->rolloff;
-    float div = 1.0/((float)data->count);
-    // Mix the first source directly to avoid a clearing loop
-    struct space_source *source = data->sources[0];
-    float *in = source->buffer->data;
-    float distance = clamp(min, dist(source->location, data->location), max);
-    float attenuation = data->attenuation(min, max, distance, roll);
-    // FIXME: determine damping due to "ear direction"
-    for(size_t i=0; i<samples; ++i){
-      out[i] = in[i] * attenuation;
-    }
-    // Mix the rest of the sources additively.
-    for(size_t s=1; s<data->count; ++s){
-      source = data->sources[s];
-      in = source->buffer->data;
-      distance = dist(source->location, data->location);
-      attenuation = data->attenuation(min, max, distance, roll);
-      for(size_t i=0; i<samples; ++i){
-        out[i] += in[i] * attenuation;
-      }
-    }
-  }
-}
-
 int space_segment_mix(size_t samples, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
   // Shift frequencies
@@ -134,12 +121,45 @@ int space_segment_mix(size_t samples, struct mixed_segment *segment){
       pitch_shift(pitch, buffer->data, buffer->data, buffer->size, &data->pitch_data);
     }
   }
-  // FIXME: allow an arbitrary number of speakers.
-  // Head is usually ~15cm
-  float left[3] = {-7.5, 0.0, 0.0};
-  space_mix_channel(data->left->data, samples, left, data);
-  float right[3] = {7.5, 0.0, 0.0};
-  space_mix_channel(data->right->data, samples, right, data);
+
+  float *left = data->left->data;
+  float *right = data->right->data;
+  size_t count = data->count;
+  if(count == 0){
+    memset(left, 0, samples*sizeof(float));
+    memset(right, 0, samples*sizeof(float));
+  }else{
+    float min = data->min_distance;
+    float max = data->max_distance;
+    float roll = data->rolloff;
+    float div = 1.0/((float)count);
+    // Mix the first source directly to avoid a clearing loop
+    struct space_source *source = data->sources[0];
+    float *in = source->buffer->data;
+    float distance = clamp(min, dist(source->location, data->location), max);
+    float volume = div * data->attenuation(min, max, distance, roll);
+    float pan = calculate_pan(source->location, data->location, data->direction, data->up);
+    float lvolume = volume * ((0.0<pan)?(1.0f-pan):1.0f);
+    float rvolume = volume * ((pan<0.0)?(1.0f+pan):1.0f);
+    for(size_t i=0; i<samples; ++i){
+      left[i] = in[i] * lvolume;
+      right[i] = in[i] * rvolume;
+    }
+    // Mix the rest of the sources additively.
+    for(size_t s=1; s<count; ++s){
+      source = data->sources[s];
+      in = source->buffer->data;
+      distance = dist(source->location, data->location);
+      volume = div* data->attenuation(min, max, distance, roll);
+      pan = calculate_pan(source->location, data->location, data->direction, data->up);
+      lvolume = volume * ((0.0<pan)?(1.0f-pan):1.0f);
+      rvolume = volume * ((pan<0.0)?(1.0f+pan):1.0f);
+      for(size_t i=0; i<samples; ++i){
+        left[i] += in[i] * lvolume;
+        right[i] += in[i] * rvolume;
+      }
+    }
+  }
 }
 
 int space_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
