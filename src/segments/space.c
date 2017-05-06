@@ -324,64 +324,6 @@ int space_segment_set(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-int space_segment_set_source(size_t field, size_t location, void *value, struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
-  float *parts = *(float **)value;
-  
-  if(data->count <= location){
-    mixed_err(MIXED_INVALID_LOCATION);
-    return 0;
-  }
-
-  struct space_source *source = data->sources[location];
-  
-  switch(field){
-  case MIXED_SPACE_LOCATION:
-    source->location[0] = parts[0];
-    source->location[1] = parts[1];
-    source->location[2] = parts[2];
-    break;
-  case MIXED_SPACE_VELOCITY:
-    source->velocity[0] = parts[0];
-    source->velocity[1] = parts[1];
-    source->velocity[2] = parts[2];
-    break;
-  default:
-    mixed_err(MIXED_INVALID_FIELD);
-    return 0;
-  }
-  return 1;
-}
-
-int space_segment_get_source(size_t field, size_t location, void *value, struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
-  float *parts = *(float **)value;
-  
-  if(data->count <= location){
-    mixed_err(MIXED_INVALID_LOCATION);
-    return 0;
-  }
-
-  struct space_source *source = data->sources[location];
-  
-  switch(field){
-  case MIXED_SPACE_LOCATION:
-    source->location[0] = parts[0];
-    source->location[1] = parts[1];
-    source->location[2] = parts[2];
-    break;
-  case MIXED_SPACE_VELOCITY:
-    source->velocity[0] = parts[0];
-    source->velocity[1] = parts[1];
-    source->velocity[2] = parts[2];
-    break;
-  default:
-    mixed_err(MIXED_INVALID_FIELD);
-    return 0;
-  }
-  return 1;
-}
-
 struct mixed_segment_info space_segment_info(struct mixed_segment *segment){
   struct mixed_segment_info info = {0};
   info.name = "space";
