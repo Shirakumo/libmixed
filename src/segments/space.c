@@ -86,7 +86,12 @@ extern inline float clamp(float l, float v, float r){
 
 float calculate_pan(float S[3], float L[3], float D[3], float U[3]){
   float t1[3], t2[3] = {S[0] - L[0], S[1] - L[1], S[2] - L[2]};
-  return dot(norm(cross(D, U, t1)), norm(t2));
+  return dot(norm(cross(U, D, t1)), norm(t2));
+}
+
+float calculate_phase(float S[3], float L[3], float D[3]){
+  float t1[3] = {D[0], D[1], D[2]}, t2[3] = {S[0] - L[0], S[1] - L[1], S[2] - L[2]};
+  return dot(norm(D), norm(t2));
 }
 
 float calculate_pitch_shift(struct space_segment_data *listener, struct space_source *source){
@@ -141,6 +146,10 @@ int space_segment_mix(size_t samples, struct mixed_segment *segment){
     float pan = calculate_pan(source->location, data->location, data->direction, data->up);
     float lvolume = volume * ((0.0<pan)?(1.0f-pan):1.0f);
     float rvolume = volume * ((pan<0.0)?(1.0f+pan):1.0f);
+    // If the sound source is behind us, invert the phase to simulate front/back.
+    if(calculate_phase(source->location, data->location, data->direction) < 0){
+      rvolume *= -1.0;
+    }
     for(size_t i=0; i<samples; ++i){
       left[i] = in[i] * lvolume;
       right[i] = in[i] * rvolume;
@@ -154,6 +163,9 @@ int space_segment_mix(size_t samples, struct mixed_segment *segment){
       pan = calculate_pan(source->location, data->location, data->direction, data->up);
       lvolume = volume * ((0.0<pan)?(1.0f-pan):1.0f);
       rvolume = volume * ((pan<0.0)?(1.0f+pan):1.0f);
+      if(calculate_phase(source->location, data->location, data->direction) < 0){
+        rvolume *= -1.0;
+      }
       for(size_t i=0; i<samples; ++i){
         left[i] += in[i] * lvolume;
         right[i] += in[i] * rvolume;
