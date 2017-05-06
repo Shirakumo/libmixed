@@ -37,7 +37,7 @@ int main(int argc, char **argv){
 
   if(4 <= argc){
     char *end;
-    r = strtod(argv[2], &end);
+    r = strtod(argv[3], &end);
     if(*end != '\0'){
       printf("Cannot use '%s' as a radius.\n", argv[3]);
       goto cleanup;
