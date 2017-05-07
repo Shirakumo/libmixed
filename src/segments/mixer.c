@@ -34,6 +34,7 @@ int mixer_segment_set_in(size_t field, size_t location, void *buffer, struct mix
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
 
   switch(field){
+  case MIXED_BUFFER:
     if(buffer){ // Add or set an element
       if(location < data->count){
         data->in[location] = (struct mixed_buffer *)buffer;
