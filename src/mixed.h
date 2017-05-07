@@ -331,6 +331,30 @@ extern "C" {
     size_t size;
   };
 
+  // Note that while this API deals with sound and you will probably
+  // want to use threads to handle the playback, it is in itself not
+  // thread safe and does not do any kind of locking or mutual
+  // exclusion for you. Calling any combination of functions on the
+  // same instance in parallel is very likely going to land you in a
+  // world of pain very quickly.
+
+  // Most functions in this API return an int, which will be either
+  // 1 for success, or 0 for failure. In the case of failure you
+  // should immediately call mixed_err to get the corresponding error
+  // code.
+
+  // All of the make* functions in this API expect to be passed a
+  // pointer to a struct. This struct has to be alloced by you and it
+  // must be zeroed out. Failure to zero the struct out will lead to
+  // problems very quickly.
+
+  // All of the free* functions in this API should be safe to call
+  // multiple times on the same instance. Performing any other kind
+  // of operation on the instance after it has been freed will lead
+  // to undefined behaviour. If you want to recycle the instance, you
+  // will have to zero out the struct and call the correct make
+  // function again.
+
   // Allocate the buffer's internal storage array.
   //
   // You must set the size field in the struct to the desired
