@@ -408,7 +408,7 @@ struct mixed_segment_info space_segment_info(struct mixed_segment *segment){
   struct mixed_segment_info info = {0};
   info.name = "space";
   info.description = "Mixes multiple sources while simulating 3D space.";
-  info.flags = MIXED_MODIFIES_SOURCE;
+  info.flags = MIXED_MODIFIES_INPUT;
   info.min_inputs = 0;
   info.max_inputs = -1;
   info.outputs = 2;
