@@ -1,7 +1,7 @@
 #include <dlfcn.h>
-#include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 #include "mixed.h"
 #define BASE_VECTOR_SIZE 32
 

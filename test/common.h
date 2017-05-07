@@ -1,11 +1,12 @@
-#include <time.h>
 #include <math.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <signal.h>
 #include <mpg123.h>
 #include <out123.h>
+#include <signal.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #include "mixed.h"
 
 char volatile interrupted = 0;
