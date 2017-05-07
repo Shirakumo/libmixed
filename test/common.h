@@ -110,10 +110,8 @@ int load_out_segment(size_t samples, struct out **_out){
     goto cleanup;
   }
 
-  out->left.size = samples;
-  out->right.size = samples;
-  if(!mixed_make_buffer(&out->left) ||
-     !mixed_make_buffer(&out->right)){
+  if(!mixed_make_buffer(samples, &out->left) ||
+     !mixed_make_buffer(samples, &out->right)){
     printf("Failed to allocate mixer buffers: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -216,10 +214,8 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
     goto cleanup;
   }
 
-  mp3->left.size = samples;
-  mp3->right.size = samples;
-  if(!mixed_make_buffer(&mp3->left) ||
-     !mixed_make_buffer(&mp3->right)){
+  if(!mixed_make_buffer(samples, &mp3->left) ||
+     !mixed_make_buffer(samples, &mp3->right)){
     printf("Failed to allocate mixer buffers: %s\n", mixed_error_string(-1));
     goto cleanup;
   }

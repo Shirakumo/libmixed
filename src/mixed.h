@@ -356,10 +356,7 @@ extern "C" {
   // function again.
 
   // Allocate the buffer's internal storage array.
-  //
-  // You must set the size field in the struct to the desired
-  // number of samples beforehand.
-  int mixed_make_buffer(struct mixed_buffer *buffer);
+  int mixed_make_buffer(size_t size, struct mixed_buffer *buffer);
 
   // Free the buffer's internal storage array.
   void mixed_free_buffer(struct mixed_buffer *buffer);

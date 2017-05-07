@@ -1,16 +1,12 @@
 #include "internal.h"
 
-int mixed_make_buffer(struct mixed_buffer *buffer){
-  if(!buffer->size){
-    mixed_err(MIXED_NOT_INITIALIZED);
-    return 0;
-  }
-  
-  buffer->data = calloc(buffer->size, sizeof(float));
+int mixed_make_buffer(size_t size, struct mixed_buffer *buffer){
+  buffer->data = calloc(size, sizeof(float));
   if(!buffer->data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
+  buffer->size = size;
   return 1;
 }
 
