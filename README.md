@@ -67,6 +67,8 @@ mixed_free_buffer(&right);
 // Clean up source and drain
 ```
 
+If your pipeline gets large enough you'll probably want to use a graph library to compute the topological sorting and the buffer allocation for you, rather than having to do it manually. Doing so is outside of the scope of libmixed though.
+
 ## Compilation
 In order to compile the library, you will need:
 
