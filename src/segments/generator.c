@@ -29,29 +29,31 @@ int generator_segment_set_out(size_t field, size_t location, void *buffer, struc
   }
 }
 
-float sine_wave(size_t position, size_t length){
-  return sinf(2 * M_PI * ((float)position) / ((float)length));
+float sine_wave(float frequency, float phase, float samplerate){
+  return sinf(2 * M_PI * frequency * phase / samplerate);
 }
 
-float square_wave(size_t position, size_t length){
-  return (position < length/2)? 1.0f : -1.0f;
+float square_wave(float frequency, float phase, float samplerate){
+  float length = samplerate / frequency;
+  return (fmod(phase, length) < length/2)? 1.0f : -1.0f;
 }
 
-float triangle_wave(size_t position, size_t length){
-  float temp = ((float)position) / ((float)length);
+float triangle_wave(float frequency, float phase, float samplerate){
+  float length = samplerate / frequency;
+  float temp = fmod(phase, length) / length;
   float abs  = (0.5 < temp)? 1.0-temp : temp;
   return abs*4.0 - 1.0;
 }
 
-float sawtooth_wave(size_t position, size_t length){
-  return ((float)position) / ((float)length)*2.0 - 1.0;
+float sawtooth_wave(float frequency, float phase, float samplerate){
+  float length = samplerate / frequency;
+  return fmod(phase, length) / length * 2.0 - 1.0;
 }
 
 int generator_segment_mix(size_t samples, struct mixed_segment *segment){
   struct generator_segment_data *data = (struct generator_segment_data *)segment->data;
-  size_t length = data->samplerate / data->frequency;
-  size_t position = data->phase;
-  float (*generator)(size_t position, size_t length) = 0;
+  size_t phase = data->phase;
+  float (*generator)(float frequency, float phase, float samplerate) = 0;
   float *out = data->out->data;
 
   switch(data->type){
@@ -61,12 +63,18 @@ int generator_segment_mix(size_t samples, struct mixed_segment *segment){
   case MIXED_SAWTOOTH: generator = sawtooth_wave; break;
   }
   
-  for(size_t i=0; i<samples; ++i){
-    out[i] = generator(position, length);
-    position = (position+1) % length;
+  for(size_t i=0; i<samples/2; ++i){
+    out[i] = generator(data->frequency, phase, data->samplerate);
+    phase = (phase+1) % data->samplerate;
+  }
+  // For whatever reason you need to have the second half
+  // set to 0.0 and only then the tones actually play proper.
+  // Don't ask me why.
+  for(size_t i=samples/2; i<samples; ++i){
+    out[i] = 0.0;
   }
 
-  data->phase = position;
+  data->phase = phase;
   return 1;
 }
 
