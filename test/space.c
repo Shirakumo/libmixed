@@ -128,6 +128,7 @@ int main(int argc, char **argv){
   exit = 0;
 
  cleanup:
+  mixed_free_mixer(&mixer);
   mixed_free_segment(&space);
   
   free_out(out);

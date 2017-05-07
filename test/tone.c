@@ -82,6 +82,7 @@ int main(int argc, char **argv){
 
  cleanup:
   
+  mixed_free_mixer(&mixer);
   mixed_free_segment(&generator);
   mixed_free_segment(&fade);
   free_out(out);

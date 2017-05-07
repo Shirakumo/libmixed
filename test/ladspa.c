@@ -90,6 +90,7 @@ int main(int argc, char **argv){
   exit = 0;
 
  cleanup:
+  mixed_free_mixer(&mixer);
   mixed_free_segment(&ladspa);
   
   free_mp3(mp3);
