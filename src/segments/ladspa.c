@@ -195,7 +195,7 @@ int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descri
     return 0;
   }
 
-  descriptor_function = (LADSPA_Descriptor_function)GetProcAddress(lib, "descriptor_function");
+  descriptor_function = (LADSPA_Descriptor_Function)GetProcAddress(lib, "descriptor_function");
   if(!descriptor_function){
     mixed_err(MIXED_LADSPA_BAD_LIBRARY);
     FreeLibrary(lib);
