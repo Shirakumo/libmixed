@@ -10,7 +10,7 @@ double mtime(){
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 8192;
+  size_t samples = 100;
   size_t samplerate = 44100;
   struct mixed_mixer mixer = {0};
   struct mixed_segment space = {0};
