@@ -8,8 +8,8 @@ MIXED_EXPORT inline float mixed_from_float(float sample){
 }
 
 MIXED_EXPORT inline float mixed_from_double(double sample){
-  return (1.0d<sample)? 1.0f
-    : (-1.0d<sample)? (float)sample
+  return (1.0<sample)? 1.0f
+    : (-1.0<sample)? (float)sample
     : -1.0f;
 }
 
@@ -52,9 +52,9 @@ MIXED_EXPORT inline float mixed_to_float(float sample){
 }
 
 MIXED_EXPORT inline double mixed_to_double(float sample){
-  return (1.0f<sample)? 1.0d
+  return (1.0f<sample)? 1.0
     : (-1.0f<sample)? (double)sample
-    : -1.0d;
+    : -1.0;
 }
 
 MIXED_EXPORT inline int8_t mixed_to_int8(float sample){
