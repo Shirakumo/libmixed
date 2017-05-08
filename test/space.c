@@ -78,11 +78,10 @@ int main(int argc, char **argv){
 
   mixed_mixer_start(&mixer);
 
-  float t = mtime();
-  float dt = 0.0;
+  double dt = ((double)samples) / ((double)samplerate);
   float phi = 0.0;
   float vel[3] = {0.0, 0.0, 0.0};
-  float pos[3] = {0.0, 0.0, 0.0};
+  float pos[3] = {r, 0.0, 0.0};
   float rad;
   
   size_t read, played;
@@ -95,15 +94,11 @@ int main(int argc, char **argv){
     for(size_t j=read; j<mp3->channel.size; ++j){
       ((uint8_t *)mp3->channel.data)[j] = 0;
     }
-
-    // Calculate passage of time.
-    dt = t-mtime();
-    t = mtime();
     
     // Calculate new position
     phi += dphi * dt;
     rad = phi * M_PI / 180.0;
-    vel[0] = r*2*cos(rad) - pos[0];
+    vel[0] = r*2.0*cos(rad) - pos[0];
     vel[2] = r*sin(rad) - pos[2];
     pos[0] = pos[0] + vel[0];
     pos[2] = pos[2] + vel[2];
