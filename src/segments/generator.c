@@ -63,15 +63,9 @@ int generator_segment_mix(size_t samples, struct mixed_segment *segment){
   case MIXED_SAWTOOTH: generator = sawtooth_wave; break;
   }
   
-  for(size_t i=0; i<samples/2; ++i){
+  for(size_t i=0; i<samples; ++i){
     out[i] = generator(data->frequency, phase, data->samplerate);
     phase = (phase+1) % data->samplerate;
-  }
-  // For whatever reason you need to have the second half
-  // set to 0.0 and only then the tones actually play proper.
-  // Don't ask me why.
-  for(size_t i=samples/2; i<samples; ++i){
-    out[i] = 0.0;
   }
 
   data->phase = phase;

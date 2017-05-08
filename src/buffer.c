@@ -68,29 +68,25 @@ extern inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t i
 //        Probably will want to conver to an internal float buffer first.
 int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples){
   mixed_err(MIXED_NO_ERROR);
+  size_t channels = in->channels;
   switch(in->layout){
   case MIXED_ALTERNATING:{
-    uint8_t channel = 0;
     size_t i = 0;
-    for(size_t sample=0; sample<samples; ++sample){
+    for(uint8_t channel=0; channel<channels; ++channel){
       struct mixed_buffer *out = outs[channel];
-      mixed_transfer_sample_from(in, sample, out, i);
-      ++channel;
-      if(in->channels == channel){
-        channel = 0;
-        ++i;
+      for(size_t sample=0; sample<samples; ++sample){
+        mixed_transfer_sample_from(in, sample*channels+channel, out, sample);
       }
     }}
     break;
   case MIXED_SEQUENTIAL:{
-    size_t chansize = samples / in->channels;
-    size_t sample = 0;
-    for(uint8_t channel=0; channel<in->channels; ++channel){
+    size_t offset = 0;
+    for(uint8_t channel=0; channel<channels; ++channel){
       struct mixed_buffer *out = outs[channel];
-      for(size_t i=0; i<chansize; ++i){
-        mixed_transfer_sample_from(in, sample, out, i);
-        ++sample;
+      for(size_t sample=0; sample<samples; ++sample){
+        mixed_transfer_sample_from(in, sample+offset, out, sample);
       }
+      offset += samples;
     }}
     break;
   default:
@@ -148,29 +144,25 @@ extern inline void mixed_transfer_sample_to(struct mixed_buffer *in, size_t is, 
 
 int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples){
   mixed_err(MIXED_NO_ERROR);
+  size_t channels = out->channels;
   switch(out->layout){
   case MIXED_ALTERNATING:{
-    uint8_t channel = 0;
-    size_t i = 0;
-    for(size_t sample=0; sample<samples; ++sample){
+    for(size_t channel=0; channel<channels; ++channel){
       struct mixed_buffer *in = ins[channel];
-      mixed_transfer_sample_to(in, i, out, sample);
-      ++channel;
-      if(out->channels == channel){
-        channel = 0;
-        ++i;
+      for(size_t sample=0; sample<samples; ++sample){
+        mixed_transfer_sample_to(in, sample, out, sample*channels+channel);
       }
     }}
     break;
   case MIXED_SEQUENTIAL:{
-    size_t chansize = samples / out->channels;
-    size_t sample = 0;
-    for(uint8_t channel=0; channel<out->channels; ++channel){
+    size_t offset = 0;
+    for(uint8_t channel=0; channel<channels; ++channel){
       struct mixed_buffer *in = ins[channel];
-      for(size_t i=0; i<chansize; ++i){
-        mixed_transfer_sample_to(in, i, out, sample);
+      for(size_t sample=0; sample<samples; ++sample){
+        mixed_transfer_sample_to(in, sample, out, sample+offset);
         ++sample;
       }
+      offset += samples;
     }}
     break;
   default:

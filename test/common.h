@@ -98,8 +98,8 @@ int load_out_segment(size_t samples, struct out **_out){
   out->channel.layout = MIXED_ALTERNATING;
   out->channel.samplerate = out_samplerate;
   out_samplesize = mixed_samplesize(out->channel.encoding);
-  out->channel.data = calloc(samples*out_samplesize, sizeof(uint8_t));
-  out->channel.size = samples*out_samplesize;
+  out->channel.size = samples*out_samplesize*out_channels;
+  out->channel.data = calloc(out->channel.size, sizeof(uint8_t));
 
   if(!out->channel.data){
     printf("Couldn't allocate output buffer.\n");
@@ -207,8 +207,8 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
   mp3->channel.layout = MIXED_ALTERNATING;
   mp3->channel.samplerate = mp3_samplerate;
   mp3_samplesize = mixed_samplesize(mp3->channel.encoding);
-  mp3->channel.data = calloc(samples*mp3_samplesize, sizeof(uint8_t));
-  mp3->channel.size = samples*mp3_samplesize;
+  mp3->channel.size = samples*mp3_samplesize*mp3_channels;
+  mp3->channel.data = calloc(mp3->channel.size, sizeof(uint8_t));
 
   if(!mixed_make_segment_source(&mp3->channel, &mp3->segment)){
     printf("Failed to create segment for %s: %s\n", file, mixed_error_string(-1));
