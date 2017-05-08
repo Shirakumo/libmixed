@@ -63,7 +63,6 @@ int main(int argc, char **argv){
   mixed_mixer_start(&mixer);
 
   size_t read, played;
-  uint8_t samplesize = mixed_samplesize(out->channel.encoding);
   do{
     if(mpg123_read(mp3->handle, mp3->channel.data, mp3->channel.size, &read) != MPG123_OK){
       printf("Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
@@ -80,7 +79,7 @@ int main(int argc, char **argv){
     }
     
     played = out123_play(out->handle, out->channel.data, out->channel.size);
-    if(played < samples*samplesize){
+    if(played < out->channel.size){
       printf("Warning: device not catching up with input (%i vs %i)\n", played, samples);
     }
   }while(read && !interrupted);

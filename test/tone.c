@@ -61,7 +61,6 @@ int main(int argc, char **argv){
   mixed_mixer_start(&mixer);
 
   size_t played;
-  uint8_t samplesize = mixed_samplesize(out->channel.encoding);
   do{
     if(!mixed_mixer_mix(samples, &mixer)){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
@@ -69,7 +68,7 @@ int main(int argc, char **argv){
     }
     
     played = out123_play(out->handle, out->channel.data, out->channel.size);
-    if(played < samples*samplesize){
+    if(played < out->channel.size){
       printf("Warning: device not catching up with input (%i vs %i)\n", played, samples);
     }
   }while(!interrupted);

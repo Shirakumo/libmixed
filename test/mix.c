@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 1024;
+  size_t samples = 100;
   struct mixed_mixer mixer = {0};
   struct mixed_segment lmix_segment = {0};
   struct mixed_segment rmix_segment = {0};
@@ -72,20 +72,18 @@ int main(int argc, char **argv){
   mixed_mixer_start(&mixer);
 
   size_t read = 0, read_total = 0, played = 0;
-  uint8_t samplesize = mixed_samplesize(out->channel.encoding);
   do{
     read_total = 0;
     for(size_t i=0; i<argc-1; ++i){
-      if(mpg123_read(mp3s[i]->handle, mp3s[i]->channel.data, mp3s[i]->channel.size, &read) != MPG123_OK){
-        printf("Failure during MP3 decoding: %s\n", mpg123_strerror(mp3s[i]->handle));
+      struct mp3 *mp3 = mp3s[i];
+      if(mpg123_read(mp3->handle, mp3->channel.data, mp3->channel.size, &read) != MPG123_OK){
+        printf("Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
         goto cleanup;
       }
       // Make sure we play until everything's done.
       if(read_total < read) read_total = read;
       // Make sure to zero out empty regions.
-      for(size_t j=read; j<mp3s[i]->channel.size; ++j){
-        ((uint8_t *)mp3s[i]->channel.data)[j] = 0;
-      }
+      memset(((uint8_t *)mp3->channel.data)+read, 0, mp3->channel.size-read);
     }
     
     if(!mixed_mixer_mix(samples, &mixer)){
@@ -94,7 +92,7 @@ int main(int argc, char **argv){
     }
     
     played = out123_play(out->handle, out->channel.data, out->channel.size);
-    if(played < samples*samplesize){
+    if(played < out->channel.size){
       printf("Warning: device not catching up with input (%i vs %i)\n", played, samples);
     }
   }while(read_total && !interrupted);
