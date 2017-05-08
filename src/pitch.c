@@ -18,8 +18,6 @@
 
 #include "internal.h"
 
-#define M_PI 3.14159265358979323846
-
 void fft(float *fftBuffer, long framesize, long sign){
   float wr, wi, arg, *p1, *p2, temp;
   float tr, ti, ur, ui, *p1r, *p1i, *p2r, *p2i;
