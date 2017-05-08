@@ -182,7 +182,11 @@ int ladspa_segment_set(size_t field, void *value, struct mixed_segment *segment)
 int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descriptor){
   int exit = 0;
   // Nodelete so that we can close the handle after this.
-  void *lib = dlopen(file, RTLD_NOW | RTLD_NODELETE);
+  void *lib = dlopen(file, RTLD_NOW
+#ifdef __linux__
+                     | RTLD_NODELETE
+#endif
+                     );
   if(!lib){
     fprintf(stderr, "MIXED: DYLD error: %s\n", dlerror());
     mixed_err(MIXED_LADSPA_OPEN_FAILED);
