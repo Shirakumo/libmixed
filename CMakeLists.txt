@@ -8,7 +8,12 @@ file(GLOB lib_src "src/*.c" "src/segments/*.c")
 add_library(mixed SHARED ${lib_src})
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(mixed dl m)
+if(WIN32)
+  target_link_libraries(mixed m)
+else()
+  target_link_libraries(mixed dl m)
+endif()
+  
 
 ## Test Programs
 find_package(mpg123)

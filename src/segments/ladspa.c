@@ -1,3 +1,8 @@
+#ifndef _WIN32
+#  include <dlfcn.h>
+#else
+#  include <windows.h>
+#endif
 #include "ladspa.h"
 #include "internal.h"
 
@@ -180,41 +185,57 @@ int ladspa_segment_set(size_t field, void *value, struct mixed_segment *segment)
 }
 
 int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descriptor){
-  int exit = 0;
-  // Nodelete so that we can close the handle after this.
-  void *lib = dlopen(file, RTLD_NOW
-#ifdef __linux__
-                     | RTLD_NODELETE
-#endif
-                     );
+  LADSPA_Descriptor_Function descriptor_function;
+  const LADSPA_Descriptor *descriptor;
+  
+#ifdef _WIN32
+  HINSTANCE lib = LoadLibrary(file);
+  if(!lib){
+    mixed_err(MIXED_LADSPA_OPEN_FAILED);
+    return 0;
+  }
+
+  descriptor_function = GetProcAddress(lib, "descriptor_function");
+  if(!descriptor_function){
+    mixed_err(MIXED_LADSPA_BAD_LIBRARY);
+    FreeLibrary(lib);
+    return 0;
+  }
+
+  descriptor = descriptor_function(index);
+  if(!descriptor){
+    mixed_err(MIXED_LADSPA_NO_PLUGIN_AT_INDEX);
+    return 0;
+  }
+  
+#else
+
+  void *lib = dlopen(file, RTLD_NOW);
   if(!lib){
     fprintf(stderr, "MIXED: DYLD error: %s\n", dlerror());
     mixed_err(MIXED_LADSPA_OPEN_FAILED);
-    goto cleanup;
+    return 0;
   }
 
   dlerror();
-  LADSPA_Descriptor_Function ladspa_descriptor = dlsym(lib, "ladspa_descriptor");
+  descriptor_function = dlsym(lib, "descriptor_function");
   char *error = dlerror();
   if(error != 0){
     fprintf(stderr, "MIXED: DYLD error: %s\n", error);
+    dlclose(lib);
     mixed_err(MIXED_LADSPA_BAD_LIBRARY);
-    goto cleanup;
+    return 0;
   }
   
-  const LADSPA_Descriptor *descriptor = ladspa_descriptor(index);
+  descriptor = descriptor_function(index);
   if(!descriptor){
     mixed_err(MIXED_LADSPA_NO_PLUGIN_AT_INDEX);
-    goto cleanup;
+    return 0;
   }
+#endif
 
   *_descriptor = (LADSPA_Descriptor *)descriptor;
-  exit = 1;
-  
- cleanup:
-  if(lib)
-    dlclose(lib);
-  return exit;
+  return 1;
 }
 
 int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment){
