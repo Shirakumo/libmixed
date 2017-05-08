@@ -207,7 +207,17 @@ extern "C" {
     // This means that the segment will modify the samples in
     // its input buffers, making them potentially unusable for
     // an input buffer for other segments.
-    MIXED_MODIFIES_INPUT = 0x2
+    MIXED_MODIFIES_INPUT = 0x2,
+    // The field is available for inputs.
+    MIXED_IN = 0x1,
+    // The field is available for outputs.
+    MIXED_OUT = 0x2,
+    // The field is available for segments.
+    MIXED_SEGMENT = 0x4,
+    // The field can be set.
+    MIXED_SET = 0x8,
+    // The field can be get.
+    MIXED_GET = 0x10
   };
 
   // Convenience enum to map common speaker channels to buffer locations.
@@ -259,6 +269,23 @@ extern "C" {
     size_t samplerate;
   };
 
+  // Metadata struct for a segment's field.
+  //
+  // This struct can be used to figure out what kind of
+  // fields are recognised on the segment and what you can
+  // do with it.
+  struct mixed_segment_field_info{
+    // The actual field index.
+    size_t field;
+    // A human-readable description of the data accessed.
+    char *description;
+    // An OR-combination of flags that describe the field's
+    // properties, usually about whether it is valid for
+    // inputs, outputs, or the segment itself, and whether
+    // it can be set or get.
+    enum mixed_segment_info_flags flags;
+  };
+
   // Metadata struct for a segment.
   //
   // This struct contains useful information that describes
@@ -280,7 +307,9 @@ extern "C" {
     size_t max_inputs;
     // The number of outputs that this segment provides.
     size_t outputs;
-    // FIXME: fields
+    // A null-terminated array of possible fields that this
+    // segment supports.
+    struct mixed_segment_field_info fields[32];
   };
 
   // The primary segment struct.

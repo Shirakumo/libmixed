@@ -412,6 +412,51 @@ struct mixed_segment_info space_segment_info(struct mixed_segment *segment){
   info.min_inputs = 0;
   info.max_inputs = -1;
   info.outputs = 2;
+  
+  info.fields[0].field = MIXED_BUFFER;
+  info.fields[0].description = "The buffer for audio data attached to the location.";
+  info.fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
+
+  info.fields[1].field = MIXED_SPACE_LOCATION;
+  info.fields[1].description = "The location of the source or segment (listener) in space.";
+  info.fields[1].flags = MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info.fields[2].field = MIXED_SPACE_VELOCITY;
+  info.fields[2].description = "The velocity of the source or segment (listener) in space.";
+  info.fields[2].flags = MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info.fields[3].field = MIXED_SPACE_DIRECTION;
+  info.fields[3].description = "The direction the segment is facing in space.";
+  info.fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info.fields[4].field = MIXED_SPACE_UP;
+  info.fields[4].description = "The vector designating 'upwards' in space.";
+  info.fields[4].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info.fields[5].field = MIXED_SPACE_SOUNDSPEED;
+  info.fields[5].description = "The speed of sound. This also implicitly declares the unit size.";
+  info.fields[5].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info.fields[6].field = MIXED_SPACE_DOPPLER_FACTOR;
+  info.fields[6].description = "The doppler factor. You can use this to exaggerate or dampen the effect.";
+  info.fields[6].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info.fields[7].field = MIXED_SPACE_MIN_DISTANCE;
+  info.fields[7].description = "Any distance lower than this will make the sound appear at its maximal volume.";
+  info.fields[7].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info.fields[8].field = MIXED_SPACE_MAX_DISTANCE;
+  info.fields[8].description = "Any distance greater than this will make the sound appear at its minimal volume.";
+  info.fields[8].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info.fields[9].field = MIXED_SPACE_ROLLOFF;
+  info.fields[9].description = "This factor influences the curve of the attenuation function.";
+  info.fields[9].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info.fields[10].field = MIXED_SPACE_ATTENUATION;
+  info.fields[10].description = "The function that calculates the attenuation curve that defines the volume of a source by its distance.";
+  info.fields[10].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
   return info;
 }
 

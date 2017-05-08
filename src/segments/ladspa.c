@@ -132,7 +132,9 @@ struct mixed_segment_info ladspa_segment_info(struct mixed_segment *segment){
       }else{
         ++info.outputs;
       }
-    }  
+    }
+
+    
   }
   return info;
 }
