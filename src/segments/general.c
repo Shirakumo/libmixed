@@ -102,7 +102,7 @@ int general_segment_set(size_t field, void *value, struct mixed_segment *segment
   return 1;
 }
 
-int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment){
   struct general_segment_data *data = calloc(1, sizeof(struct general_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);

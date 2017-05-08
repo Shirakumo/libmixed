@@ -70,7 +70,7 @@ struct mixed_segment_info drain_segment_info(struct mixed_segment *segment){
   return info;
 }
 
-int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segment *segment){
   struct channel_segment_data *data = calloc(1, sizeof(struct channel_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -94,7 +94,7 @@ int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segmen
   return 1;
 }
 
-int mixed_make_segment_drain(struct mixed_channel *channel, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_drain(struct mixed_channel *channel, struct mixed_segment *segment){
   struct channel_segment_data *data = calloc(1, sizeof(struct channel_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);

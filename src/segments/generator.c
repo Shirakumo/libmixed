@@ -115,7 +115,7 @@ int generator_segment_set(size_t field, void *value, struct mixed_segment *segme
   return 1;
 }
 
-int mixed_make_segment_generator(enum mixed_generator_type type, size_t frequency, size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, size_t frequency, size_t samplerate, struct mixed_segment *segment){
   struct generator_segment_data *data = calloc(1, sizeof(struct generator_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);

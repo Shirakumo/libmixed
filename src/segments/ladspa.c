@@ -195,7 +195,7 @@ int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descri
     return 0;
   }
 
-  descriptor_function = GetProcAddress(lib, "descriptor_function");
+  descriptor_function = (LADSPA_Descriptor_function)GetProcAddress(lib, "descriptor_function");
   if(!descriptor_function){
     mixed_err(MIXED_LADSPA_BAD_LIBRARY);
     FreeLibrary(lib);
@@ -238,7 +238,7 @@ int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descri
   return 1;
 }
 
-int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment){
   struct ladspa_segment_data *data = 0;
 
   data = calloc(1, sizeof(struct ladspa_segment_data));

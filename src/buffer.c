@@ -1,6 +1,6 @@
 #include "internal.h"
 
-int mixed_make_buffer(size_t size, struct mixed_buffer *buffer){
+MIXED_EXPORT int mixed_make_buffer(size_t size, struct mixed_buffer *buffer){
   buffer->data = calloc(size, sizeof(float));
   if(!buffer->data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -10,7 +10,7 @@ int mixed_make_buffer(size_t size, struct mixed_buffer *buffer){
   return 1;
 }
 
-void mixed_free_buffer(struct mixed_buffer *buffer){
+MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer){
   if(buffer->data)
     free(buffer->data);
   buffer->data = 0;
@@ -72,7 +72,7 @@ extern inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t i
 // FIXME: We currently don't do any resampling because doing so is a
 //        huge pain and I currently don't want to think about it.
 //        Probably will want to convert to an internal float buffer first.
-int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples){
+MIXED_EXPORT int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples){
   mixed_err(MIXED_NO_ERROR);
   size_t channels = in->channels;
   switch(in->layout){
@@ -149,7 +149,7 @@ extern inline void mixed_transfer_sample_to(struct mixed_buffer *in, size_t is, 
   }
 }
 
-int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples){
+MIXED_EXPORT int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples){
   mixed_err(MIXED_NO_ERROR);
   size_t channels = out->channels;
   switch(out->layout){
@@ -179,7 +179,7 @@ int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out
   return (mixed_error() == MIXED_NO_ERROR);
 }
 
-int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to){
+MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to){
   if(from != to){
     size_t size = (to->size<from->size)? from->size : to->size;
     memcpy(to->data, from->data, sizeof(float)*size);

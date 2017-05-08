@@ -1,6 +1,6 @@
 #include "internal.h"
 
-uint8_t mixed_samplesize(enum mixed_encoding encoding){
+MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
   switch(encoding){
   case MIXED_INT8: return 1;
   case MIXED_UINT8: return 1;
@@ -22,11 +22,11 @@ void mixed_err(int code){
   errorcode = code;
 }
 
-int mixed_error(){
+MIXED_EXPORT int mixed_error(){
   return errorcode;
 }
 
-char *mixed_error_string(int code){
+MIXED_EXPORT char *mixed_error_string(int code){
   if(code < 0) code = errorcode;
   switch(code){
   case MIXED_NO_ERROR:
