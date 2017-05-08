@@ -130,14 +130,14 @@ float calculate_pitch_shift(struct space_segment_data *listener, struct space_so
 
 int space_segment_mix(size_t samples, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
-  
+
   // Shift frequencies
   for(size_t s=0; s<data->count; ++s){
     struct space_source *source = data->sources[s];
     float pitch = clamp(0.5, calculate_pitch_shift(data, source), 2.0);
     if(pitch != 1.0){
       struct mixed_buffer *buffer = source->buffer;
-      pitch_shift(pitch, buffer->data, buffer->data, buffer->size, &data->pitch_data);
+      pitch_shift(pitch, buffer->data, buffer->data, samples, &data->pitch_data);
     }
   }
 
