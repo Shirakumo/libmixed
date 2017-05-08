@@ -51,7 +51,6 @@ int general_segment_mix(size_t samples, struct mixed_segment *segment){
   float lvolume = data->volume * ((0.0<data->pan)?(1.0f-data->pan):1.0f);
   float rvolume = data->volume * ((data->pan<0.0)?(1.0f+data->pan):1.0f);
 
-  // FIXME: cap to range
   for(size_t i=0; i<samples; ++i){
     data->out[MIXED_LEFT]->data[i] = data->in[MIXED_LEFT]->data[i]*lvolume;
     data->out[MIXED_RIGHT]->data[i] = data->in[MIXED_RIGHT]->data[i]*rvolume;

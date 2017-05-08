@@ -58,7 +58,6 @@ int mixer_segment_set_in(size_t field, size_t location, void *buffer, struct mix
 int mixer_segment_mix(size_t samples, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
   size_t count = data->count;
-  // FIXME: could optimise this test out.
   if(0 < count){
     float div = 1.0f/count;
     for(size_t i=0; i<samples; ++i){

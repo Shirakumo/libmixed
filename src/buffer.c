@@ -31,9 +31,15 @@ extern inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t i
     out->data[os] = mixed_from_uint16(((uint16_t *)in->data)[is]);
     break;
   case MIXED_INT24:{
-      // FIXME
-      int24_t sample = 0;
-      out->data[os] = mixed_from_int24(sample);
+      int8_t *data = (int8_t *)in->data;
+      // Read in as uint
+      uint32_t temp = (data[3*is] << 16) + (data[3*is+1] << 8) + (data[3*is+2]);
+      // Shift up to fill 32 bit range
+      temp = temp << 8;
+      // Convert to signed, this is actually not standards compliant.
+      int32_t sample = (int32_t)temp;
+      // Shift down again to get back to 24 bit range.
+      out->data[os] = mixed_from_int24(sample >> 8);
     }
     break;
   case MIXED_UINT24:{
@@ -65,7 +71,7 @@ extern inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t i
 //        would be much faster, but I ain't doin' any o dat.
 // FIXME: We currently don't do any resampling because doing so is a
 //        huge pain and I currently don't want to think about it.
-//        Probably will want to conver to an internal float buffer first.
+//        Probably will want to convert to an internal float buffer first.
 int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples){
   mixed_err(MIXED_NO_ERROR);
   size_t channels = in->channels;
@@ -112,9 +118,10 @@ extern inline void mixed_transfer_sample_to(struct mixed_buffer *in, size_t is, 
     ((uint16_t *)out->data)[os] = mixed_to_uint16(in->data[is]);
     break;
   case MIXED_INT24:{
-    // FIXME
     int24_t sample = mixed_to_int24(in->data[is]);
-    ((int8_t *)out->data)[os];
+    ((uint8_t *)out->data)[os+2] = (sample >> 16) & 0xFF;
+    ((uint8_t *)out->data)[os+1] = (sample >>  8) & 0xFF;
+    ((uint8_t *)out->data)[os+0] = (sample >>  0) & 0xFF;
   }
     break;
   case MIXED_UINT24:{

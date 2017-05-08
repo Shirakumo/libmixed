@@ -179,8 +179,6 @@ int ladspa_segment_set(size_t field, void *value, struct mixed_segment *segment)
 
 int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descriptor){
   int exit = 0;
-  // FIXME: Check LADSPA_PATH
-  
   // Nodelete so that we can close the handle after this.
   void *lib = dlopen(file, RTLD_NOW | RTLD_NODELETE);
   if(!lib){
