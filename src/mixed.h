@@ -20,7 +20,7 @@ extern "C" {
 #include "encoding.h"
 
   // This enum describes all possible error codes.
-  enum mixed_error{
+  MIXED_EXPORT enum mixed_error{
     // No error has occurred yet.
     MIXED_NO_ERROR,
     // An allocation failed. It's likely that you
@@ -67,7 +67,7 @@ extern "C" {
   };
 
   // This enum describes the possible sample encodings.
-  enum mixed_encoding{
+  MIXED_EXPORT enum mixed_encoding{
     MIXED_INT8,
     MIXED_UINT8,
     MIXED_INT16,
@@ -81,7 +81,7 @@ extern "C" {
   };
 
   // This enum describes the possible channel layouts.
-  enum mixed_layout{
+  MIXED_EXPORT enum mixed_layout{
     // Channels are stored in alternating format.
     // Essentially: (C₁C₂...)ⁿ
     MIXED_ALTERNATING,
@@ -92,7 +92,7 @@ extern "C" {
 
   // This enum describes all possible flags of the
   // standard segments this library provides.
-  enum mixed_segment_fields{
+  MIXED_EXPORT enum mixed_segment_fields{
     // Access the backing buffer for this in/out.
     MIXED_BUFFER,
     // Access the volume of the general segment.
@@ -175,7 +175,7 @@ extern "C" {
   };
 
   // This enum describes the possible preset attenuation functions.
-  enum mixed_attenuation{
+  MIXED_EXPORT enum mixed_attenuation{
     MIXED_NO_ATTENUATION,
     MIXED_INVERSE_ATTENUATION,
     MIXED_LINEAR_ATTENUATION,
@@ -183,7 +183,7 @@ extern "C" {
   };
 
   // This enum describes the possible fade easing function types.
-  enum mixed_fade_type{
+  MIXED_EXPORT enum mixed_fade_type{
     MIXED_LINEAR,
     MIXED_CUBIC_IN,
     MIXED_CUBIC_OUT,
@@ -191,7 +191,7 @@ extern "C" {
   };
 
   // This enum describes the possible generator wave types.
-  enum mixed_generator_type{
+  MIXED_EXPORT enum mixed_generator_type{
     MIXED_SINE,
     MIXED_SQUARE,
     MIXED_TRIANGLE,
@@ -199,7 +199,7 @@ extern "C" {
   };
 
   // This enum holds property flags for segments.
-  enum mixed_segment_info_flags{
+  MIXED_EXPORT enum mixed_segment_info_flags{
     // This means that the segment's output and input
     // buffers may be the same, as it processes the samples
     // in place.
@@ -224,7 +224,7 @@ extern "C" {
   //
   // It is not required that a segment follow this channel
   // layout scheme, but it is heavily recommended.
-  enum mixed_location{
+  MIXED_EXPORT enum mixed_location{
     MIXED_MONO = 0,
     MIXED_LEFT = 0,
     MIXED_RIGHT = 1,
@@ -239,7 +239,7 @@ extern "C" {
   // An internal audio data buffer.
   //
   // The sample array is always stored in floats.
-  struct mixed_buffer{
+  MIXED_EXPORT struct mixed_buffer{
     float *data;
     size_t size;
   };
@@ -253,7 +253,7 @@ extern "C" {
   //
   // Using this struct you can then create a converter
   // segment to include the external audio into the mix.
-  struct mixed_channel{
+  MIXED_EXPORT struct mixed_channel{
     // Pointer to the encoded sample data that this channel
     // consumes or provides.
     void *data;
@@ -274,7 +274,7 @@ extern "C" {
   // This struct can be used to figure out what kind of
   // fields are recognised on the segment and what you can
   // do with it.
-  struct mixed_segment_field_info{
+  MIXED_EXPORT struct mixed_segment_field_info{
     // The actual field index.
     size_t field;
     // A human-readable description of the data accessed.
@@ -292,7 +292,7 @@ extern "C" {
   // the behaviour and capabilities of the segment. You may
   // want to look at this if you want to provide a generic
   // interface to segments.
-  struct mixed_segment_info{
+  MIXED_EXPORT struct mixed_segment_info{
     // The name of the segment type as a string.
     // Must be alphanumeric ASCII.
     const char *name;
@@ -331,7 +331,7 @@ extern "C" {
   // either the set_in or set_out method. For the documentation
   // of each of the methods, see the corresponding shorthand
   // function below.
-  struct mixed_segment{
+  MIXED_EXPORT struct mixed_segment{
     int (*free)(struct mixed_segment *segment);
     struct mixed_segment_info (*info)(struct mixed_segment *segment);
     int (*start)(struct mixed_segment *segment);
@@ -354,7 +354,7 @@ extern "C" {
   // on them like starting, mixing, or ending.
   //
   // You should not modify any of its fields directly.
-  struct mixed_mixer{
+  MIXED_EXPORT struct mixed_mixer{
     struct mixed_segment **segments;
     size_t count;
     size_t size;
@@ -385,31 +385,31 @@ extern "C" {
   // function again.
 
   // Allocate the buffer's internal storage array.
-  int mixed_make_buffer(size_t size, struct mixed_buffer *buffer);
+  MIXED_EXPORT int mixed_make_buffer(size_t size, struct mixed_buffer *buffer);
 
   // Free the buffer's internal storage array.
-  void mixed_free_buffer(struct mixed_buffer *buffer);
+  MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer);
 
   // Convert the channel data to buffer data.
   //
   // This appropriately converts sample format and channel layout.
   // You are responsible for passing in an array of buffers that is
   // at least as long as the channel's channel count.
-  int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples);
+  MIXED_EXPORT int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples);
 
   // Convert buffer data to the channel data.
   //
   // This appropriately converts sample format and channel layout.
   // You are responsible for passing in an array of buffers that is
   // at least as long as the channel's channel count.
-  int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples);
+  MIXED_EXPORT int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples);
 
   // Copy a buffer to another.
   //
   // This only copies as many samples as viable, meaning that if
   // one buffer is smaller than the other, only as many samples as
   // the smaller buffer can carry are copied.
-  int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
+  MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
 
   // Free the segment's internal data.
   //
@@ -420,7 +420,7 @@ extern "C" {
   // useless and must be discarded. Using any other segment
   // method after it has been freed results in undefined
   // behaviour.
-  int mixed_free_segment(struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_free_segment(struct mixed_segment *segment);
   
   // Start the segment's mixing process.
   //
@@ -428,12 +428,12 @@ extern "C" {
   // MIXED_NOT_IMPLEMENTED.
   //
   // See mixed_mixer_start
-  int mixed_segment_start(struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_start(struct mixed_segment *segment);
 
   // Run the segment for the given number of samples.
   //
   // See mixed_mixer_mix
-  int mixed_segment_mix(size_t samples, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_mix(size_t samples, struct mixed_segment *segment);
 
   // End the segment's mixing process.
   // 
@@ -441,7 +441,7 @@ extern "C" {
   // MIXED_NOT_IMPLEMENTED.
   //
   // See mixed_mixer_end
-  int mixed_segment_end(struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_end(struct mixed_segment *segment);
 
   // Set the value of an input buffer field.
   //
@@ -453,7 +453,7 @@ extern "C" {
   // MIXED_NOT_IMPLEMENTED.
   //
   // See mixed_segment_set
-  int mixed_segment_set_in(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_set_in(size_t field, size_t location, void *value, struct mixed_segment *segment);
 
   // Set the value of an output buffer field.
   //
@@ -465,7 +465,7 @@ extern "C" {
   // MIXED_NOT_IMPLEMENTED.
   //
   // See mixed_segment_set
-  int mixed_segment_set_out(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_set_out(size_t field, size_t location, void *value, struct mixed_segment *segment);
 
   // Get the value of an input buffer field.
   //
@@ -475,7 +475,7 @@ extern "C" {
   // MIXED_NOT_IMPLEMENTED.
   //
   // See mixed_segment_get
-  int mixed_segment_get_in(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_get_in(size_t field, size_t location, void *value, struct mixed_segment *segment);
 
   // Get the value of an output buffer field.
   //
@@ -485,7 +485,7 @@ extern "C" {
   // MIXED_NOT_IMPLEMENTED.
   // 
   // See mixed_segment_get.
-  int mixed_segment_get_out(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_get_out(size_t field, size_t location, void *value, struct mixed_segment *segment);
 
   // Return a struct containing general information about the segment.
   //
@@ -493,7 +493,7 @@ extern "C" {
   //
   // If the method is not implemented, the error is set to
   // MIXED_NOT_IMPLEMENTED.
-  struct mixed_segment_info mixed_segment_info(struct mixed_segment *segment);
+  MIXED_EXPORT struct mixed_segment_info mixed_segment_info(struct mixed_segment *segment);
 
   // Set the value of a field in the segment.
   //
@@ -507,7 +507,7 @@ extern "C" {
   // MIXED_INVALID_FIELD.
   // If the method is not implemented, the error is set to
   // MIXED_NOT_IMPLEMENTED.
-  int mixed_segment_set(size_t field, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_set(size_t field, void *value, struct mixed_segment *segment);
 
   // Get the value of a field in the segment.
   //
@@ -521,7 +521,7 @@ extern "C" {
   // MIXED_INVALID_FIELD.
   // If the method is not implemented, the error is set to
   // MIXED_NOT_IMPLEMENTED.
-  int mixed_segment_get(size_t field, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_get(size_t field, void *value, struct mixed_segment *segment);
   
   // A source channel converter
   //
@@ -531,7 +531,7 @@ extern "C" {
   // sample format conversion.
   //
   // Libmixed is currently not capable of sample rate conversion.
-  int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segment *segment);
   
   // A drain channel converter
   //
@@ -541,7 +541,7 @@ extern "C" {
   // conversion.
   //
   // Libmixed is currently not capable of sample rate conversion.
-  int mixed_make_segment_drain(struct mixed_channel *channel, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_drain(struct mixed_channel *channel, struct mixed_segment *segment);
   
   // A linear mixer
   //
@@ -561,7 +561,7 @@ extern "C" {
   // The buffers argument can be a null-delimited array of pointers
   // to buffers, or null if you want to add the buffers later. The
   // array is not shared.
-  int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment *segment);
   
   // A very basic effect segment
   //
@@ -570,7 +570,7 @@ extern "C" {
   // inputs and two outputs.
   //
   // The fields of this segment may be changed at any time.
-  int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment);
   
   // A volume fade in/out effect
   //
@@ -587,7 +587,7 @@ extern "C" {
   // there is thus little reason to ever do this, aside from perhaps
   // re-using the same segment to fade the input out again at the
   // appropriate moment.
-  int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, size_t samplerate, struct mixed_segment *segment);
   
   // A simple wave generator source
   //
@@ -595,7 +595,7 @@ extern "C" {
   // frequency and wave form type. You may change the frequency and
   // wave form type at any time. Potentially this could be used to
   // create a very primitive synthesizer.
-  int mixed_make_segment_generator(enum mixed_generator_type type, size_t frequency, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, size_t frequency, size_t samplerate, struct mixed_segment *segment);
   
   // A LADSPA plugin segment
   //
@@ -643,7 +643,7 @@ extern "C" {
   // requires you to stop mixing before being able to change any property
   // but some plugins may nevertheless work despite that. Thus, consult
   // your plugin's source or documentation.
-  int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment);
   
   // A space (3D) processed effect
   // 
@@ -674,22 +674,22 @@ extern "C" {
   // See the MIXED_FIELDS enum for the documentation of each field.
   // This segment does allow you to change fields and buffers while the
   // mixing has already been started.
-  int mixed_make_segment_space(size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_space(size_t samplerate, struct mixed_segment *segment);
 
   // Free the associated mixer data.
-  void mixed_free_mixer(struct mixed_mixer *mixer);
+  MIXED_EXPORT void mixed_free_mixer(struct mixed_mixer *mixer);
   
   // Add a new segment to the mixer.
   //
   // This always adds to the end of the queue. You are responsible for
   // adding the segments in the proper order to ensure that their inputs
   // are satisfied.
-  int mixed_mixer_add(struct mixed_segment *segment, struct mixed_mixer *mixer);
+  MIXED_EXPORT int mixed_mixer_add(struct mixed_segment *segment, struct mixed_mixer *mixer);
 
   // Remove a segment from the mixer.
   //
   // Segments after it will be shifted down as necessary.
-  int mixed_mixer_remove(struct mixed_segment *segment, struct mixed_mixer *mixer);
+  MIXED_EXPORT int mixed_mixer_remove(struct mixed_segment *segment, struct mixed_mixer *mixer);
   
   // Start the mixing process.
   //
@@ -702,33 +702,33 @@ extern "C" {
   // Note that some segments may optionally support changing their in/outs
   // or flags while mixing has already been started, but this property is
   // not guaranteed. See the documentation of the individual segment.
-  int mixed_mixer_start(struct mixed_mixer *mixer);
+  MIXED_EXPORT int mixed_mixer_start(struct mixed_mixer *mixer);
   
   // Performs the mixing of the given number of samples.
   //
   // In effect this calls the mix function of every segment in the mixer
   // in sequence. The mixing is aborted on the first segment whose mix
   // function returns false.
-  int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer);
+  MIXED_EXPORT int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer);
 
   // End the mixing process.
   //
   // This function must be called after you are done mixing elements.
   // Once you have called end, you must call mixed_mixer_start again
   // before you are allowed to mix.
-  int mixed_mixer_end(struct mixed_mixer *mixer);
+  MIXED_EXPORT int mixed_mixer_end(struct mixed_mixer *mixer);
 
   // Return the size of a sample in the given encoding in bytes.
-  uint8_t mixed_samplesize(enum mixed_encoding encoding);
+  MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding);
 
   // Return the current error code.
-  int mixed_error();
+  MIXED_EXPORT int mixed_error();
 
   // Return the error string for the given error code.
   //
   // If the error code is less than zero, the error string for the
   // error code returned by mixed_error(); is returned instead.
-  char *mixed_error_string(int error_code);
+  MIXED_EXPORT char *mixed_error_string(int error_code);
 
 #ifdef __cplusplus
 }
