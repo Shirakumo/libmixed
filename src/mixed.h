@@ -557,6 +557,10 @@ extern "C" {
   // adding more sources might involve allocations, which may not
   // be suitable for real-time behaviour. Aside from this caveat,
   // sources can be added or changed at any point in time.
+  //
+  // The buffers argument can be a null-delimited array of pointers
+  // to buffers, or null if you want to add the buffers later. The
+  // array is not shared.
   int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment *segment);
   
   // A very basic effect segment
@@ -673,7 +677,7 @@ extern "C" {
   int mixed_make_segment_space(size_t samplerate, struct mixed_segment *segment);
 
   // Free the associated mixer data.
-  int mixed_free_mixer(struct mixed_mixer *mixer);
+  void mixed_free_mixer(struct mixed_mixer *mixer);
   
   // Add a new segment to the mixer.
   //

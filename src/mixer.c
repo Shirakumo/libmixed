@@ -1,6 +1,6 @@
 #include "internal.h"
 
-int mixed_free_mixer(struct mixed_mixer *mixer){
+void mixed_free_mixer(struct mixed_mixer *mixer){
   if(mixer->segments)
     free(mixer->segments);
   mixer->segments = 0;
