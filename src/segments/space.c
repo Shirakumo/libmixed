@@ -168,6 +168,8 @@ int space_segment_mix(size_t samples, struct mixed_segment *segment){
       }
     }
   }
+
+  return 1;
 }
 
 int space_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
