@@ -333,7 +333,7 @@ extern "C" {
   // function below.
   MIXED_EXPORT struct mixed_segment{
     int (*free)(struct mixed_segment *segment);
-    struct mixed_segment_info (*info)(struct mixed_segment *segment);
+    struct mixed_segment_info *(*info)(struct mixed_segment *segment);
     int (*start)(struct mixed_segment *segment);
     void (*mix)(size_t samples, struct mixed_segment *segment);
     int (*end)(struct mixed_segment *segment);
@@ -487,13 +487,14 @@ extern "C" {
   // See mixed_segment_get.
   MIXED_EXPORT int mixed_segment_get_out(size_t field, size_t location, void *value, struct mixed_segment *segment);
 
-  // Return a struct containing general information about the segment.
+  // Return a pointer to a struct containing general information about the segment.
   //
   // This is mostly useful for introspective / reflective purposes.
+  // You must free the returned struct yourself.
   //
   // If the method is not implemented, the error is set to
-  // MIXED_NOT_IMPLEMENTED.
-  MIXED_EXPORT struct mixed_segment_info mixed_segment_info(struct mixed_segment *segment);
+  // MIXED_NOT_IMPLEMENTED and a null pointer is returned.
+  MIXED_EXPORT struct mixed_segment_info *mixed_segment_info(struct mixed_segment *segment);
 
   // Set the value of a field in the segment.
   //

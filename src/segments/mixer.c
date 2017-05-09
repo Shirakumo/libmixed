@@ -70,17 +70,17 @@ void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
   }
 }
 
-struct mixed_segment_info mixer_segment_info(struct mixed_segment *segment){
-  struct mixed_segment_info info = {0};
-  info.name = "mixer";
-  info.description = "Mixes multiple buffers together";
-  info.min_inputs = 0;
-  info.max_inputs = -1;
-  info.outputs = 1;
+struct mixed_segment_info *mixer_segment_info(struct mixed_segment *segment){
+  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
+  info->name = "mixer";
+  info->description = "Mixes multiple buffers together";
+  info->min_inputs = 0;
+  info->max_inputs = -1;
+  info->outputs = 1;
   
-  info.fields[0].field = MIXED_BUFFER;
-  info.fields[0].description = "The buffer for audio data attached to the location.";
-  info.fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
+  info->fields[0].field = MIXED_BUFFER;
+  info->fields[0].description = "The buffer for audio data attached to the location.";
+  info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
 
   return info;
 }

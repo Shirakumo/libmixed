@@ -57,26 +57,26 @@ void general_segment_mix(size_t samples, struct mixed_segment *segment){
   }
 }
 
-struct mixed_segment_info general_segment_info(struct mixed_segment *segment){
-  struct mixed_segment_info info = {0};
-  info.name = "general";
-  info.description = "General segment for volume adjustment and panning.";
-  info.flags = MIXED_INPLACE;
-  info.min_inputs = 2;
-  info.max_inputs = 2;
-  info.outputs = 2;
+struct mixed_segment_info *general_segment_info(struct mixed_segment *segment){
+  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
+  info->name = "general";
+  info->description = "General segment for volume adjustment and panning.";
+  info->flags = MIXED_INPLACE;
+  info->min_inputs = 2;
+  info->max_inputs = 2;
+  info->outputs = 2;
   
-  info.fields[0].field = MIXED_BUFFER;
-  info.fields[0].description = "The buffer for audio data attached to the location.";
-  info.fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
+  info->fields[0].field = MIXED_BUFFER;
+  info->fields[0].description = "The buffer for audio data attached to the location.";
+  info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
 
-  info.fields[1].field = MIXED_GENERAL_VOLUME;
-  info.fields[1].description = "The volume scaling factor for the input.";
-  info.fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  info->fields[1].field = MIXED_GENERAL_VOLUME;
+  info->fields[1].description = "The volume scaling factor for the input.";
+  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info.fields[2].field = MIXED_GENERAL_PAN;
-  info.fields[2].description = "The left/right stereo panning.";
-  info.fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  info->fields[2].field = MIXED_GENERAL_PAN;
+  info->fields[2].description = "The left/right stereo panning.";
+  info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
   
   return info;
 }

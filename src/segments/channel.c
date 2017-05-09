@@ -42,30 +42,32 @@ void drain_segment_mix(size_t samples, struct mixed_segment *segment){
   mixed_buffer_to_channel(data->buffers, data->channel, samples);
 }
 
-struct mixed_segment_info source_segment_info(struct mixed_segment *segment){
-  struct mixed_segment_info info = {0};
-  info.name = "source";
-  info.description = "Segment acting as an audio source.";
-  info.min_inputs = 0;
-  info.max_inputs = 0;
-  info.outputs = ((struct channel_segment_data *)segment->data)->channel->channels;
-  info.fields[0].field = MIXED_BUFFER;
-  info.fields[0].description = "The buffer to attach to the port.";
-  info.fields[0].flags = MIXED_OUT | MIXED_SET;
+struct mixed_segment_info *source_segment_info(struct mixed_segment *segment){
+  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
+  info->name = "source";
+  info->description = "Segment acting as an audio source.";
+  info->min_inputs = 0;
+  info->max_inputs = 0;
+  info->outputs = ((struct channel_segment_data *)segment->data)->channel->channels;
+  
+  info->fields[0].field = MIXED_BUFFER;
+  info->fields[0].description = "The buffer to attach to the port.";
+  info->fields[0].flags = MIXED_OUT | MIXED_SET;
+  
   return info;
 }
 
-struct mixed_segment_info drain_segment_info(struct mixed_segment *segment){
-  struct mixed_segment_info info = {0};
-  info.name = "drain";
-  info.description = "Segment acting as an audio drain.";
-  info.min_inputs = ((struct channel_segment_data *)segment->data)->channel->channels;
-  info.max_inputs = info.min_inputs;
-  info.outputs = 0;
+struct mixed_segment_info *drain_segment_info(struct mixed_segment *segment){
+  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
+  info->name = "drain";
+  info->description = "Segment acting as an audio drain.";
+  info->min_inputs = ((struct channel_segment_data *)segment->data)->channel->channels;
+  info->max_inputs = info->min_inputs;
+  info->outputs = 0;
 
-  info.fields[0].field = MIXED_BUFFER;
-  info.fields[0].description = "The buffer for audio data attached to the location.";
-  info.fields[0].flags = MIXED_IN | MIXED_SET;
+  info->fields[0].field = MIXED_BUFFER;
+  info->fields[0].description = "The buffer for audio data attached to the location.";
+  info->fields[0].flags = MIXED_IN | MIXED_SET;
 
   return info;
 }
