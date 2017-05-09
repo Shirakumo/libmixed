@@ -14,11 +14,8 @@ MIXED_EXPORT int mixed_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-MIXED_EXPORT int mixed_segment_mix(size_t samples, struct mixed_segment *segment){
-  if(segment->mix)
-    return segment->mix(samples, segment);
-  mixed_err(MIXED_NOT_IMPLEMENTED);
-  return 0;
+MIXED_EXPORT void mixed_segment_mix(size_t samples, struct mixed_segment *segment){
+  segment->mix(samples, segment);
 }
 
 MIXED_EXPORT int mixed_segment_end(struct mixed_segment *segment){

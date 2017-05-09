@@ -106,7 +106,8 @@ int main(int argc, char **argv){
     mixed_segment_set_in(MIXED_SPACE_LOCATION, 0, pos, &space);
     mixed_segment_set_in(MIXED_SPACE_VELOCITY, 0, vel, &space);
     
-    if(!mixed_mixer_mix(samples, &mixer)){
+    mixed_mixer_mix(samples, &mixer);
+    if(mixed_error() != MIXED_NO_ERROR){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }

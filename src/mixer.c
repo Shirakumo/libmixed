@@ -28,16 +28,13 @@ MIXED_EXPORT int mixed_mixer_start(struct mixed_mixer *mixer){
   return 1;
 }
 
-MIXED_EXPORT int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer){
+MIXED_EXPORT void mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer){
   size_t count = mixer->count;
+  struct mixed_segment **segments = mixer->segments;
   for(size_t i=0; i<count; ++i){
-    struct mixed_segment *segment = mixer->segments[i];
-    if(!segment->mix(samples, segment)){
-      mixed_err(MIXED_MIXING_FAILED);
-      return 0;
-    }
+    struct mixed_segment *segment = segments[i];
+    segment->mix(samples, segment);
   }
-  return 1;
 }
 
 MIXED_EXPORT int mixed_mixer_end(struct mixed_mixer *mixer){

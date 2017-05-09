@@ -335,7 +335,7 @@ extern "C" {
     int (*free)(struct mixed_segment *segment);
     struct mixed_segment_info (*info)(struct mixed_segment *segment);
     int (*start)(struct mixed_segment *segment);
-    int (*mix)(size_t samples, struct mixed_segment *segment);
+    void (*mix)(size_t samples, struct mixed_segment *segment);
     int (*end)(struct mixed_segment *segment);
     int (*set_in)(size_t field, size_t location, void *value, struct mixed_segment *segment);
     int (*set_out)(size_t field, size_t location, void *value, struct mixed_segment *segment);
@@ -433,7 +433,7 @@ extern "C" {
   // Run the segment for the given number of samples.
   //
   // See mixed_mixer_mix
-  MIXED_EXPORT int mixed_segment_mix(size_t samples, struct mixed_segment *segment);
+  MIXED_EXPORT void mixed_segment_mix(size_t samples, struct mixed_segment *segment);
 
   // End the segment's mixing process.
   // 
@@ -707,9 +707,8 @@ extern "C" {
   // Performs the mixing of the given number of samples.
   //
   // In effect this calls the mix function of every segment in the mixer
-  // in sequence. The mixing is aborted on the first segment whose mix
-  // function returns false.
-  MIXED_EXPORT int mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer);
+  // in sequence. This function does not check for errors in any way.
+  MIXED_EXPORT void mixed_mixer_mix(size_t samples, struct mixed_mixer *mixer);
 
   // End the mixing process.
   //

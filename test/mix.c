@@ -85,8 +85,9 @@ int main(int argc, char **argv){
       // Make sure to zero out empty regions.
       memset(((uint8_t *)mp3->channel.data)+read, 0, mp3->channel.size-read);
     }
-    
-    if(!mixed_mixer_mix(samples, &mixer)){
+
+    mixed_mixer_mix(samples, &mixer);
+    if(mixed_error() != MIXED_NO_ERROR){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }

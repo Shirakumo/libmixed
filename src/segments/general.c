@@ -46,7 +46,7 @@ int general_segment_set_out(size_t field, size_t location, void *buffer, struct 
   }
 }
 
-int general_segment_mix(size_t samples, struct mixed_segment *segment){
+void general_segment_mix(size_t samples, struct mixed_segment *segment){
   struct general_segment_data *data = (struct general_segment_data *)segment->data;
   float lvolume = data->volume * ((0.0<data->pan)?(1.0f-data->pan):1.0f);
   float rvolume = data->volume * ((data->pan<0.0)?(1.0f+data->pan):1.0f);
@@ -55,7 +55,6 @@ int general_segment_mix(size_t samples, struct mixed_segment *segment){
     data->out[MIXED_LEFT]->data[i] = data->in[MIXED_LEFT]->data[i]*lvolume;
     data->out[MIXED_RIGHT]->data[i] = data->in[MIXED_RIGHT]->data[i]*rvolume;
   }
-  return 1;
 }
 
 struct mixed_segment_info general_segment_info(struct mixed_segment *segment){

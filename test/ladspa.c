@@ -73,7 +73,8 @@ int main(int argc, char **argv){
       ((uint8_t *)mp3->channel.data)[j] = 0;
     }
     
-    if(!mixed_mixer_mix(samples, &mixer)){
+    mixed_mixer_mix(samples, &mixer);
+    if(mixed_error() != MIXED_NO_ERROR){
       printf("Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
