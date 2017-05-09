@@ -331,7 +331,17 @@ int space_segment_get(size_t field, void *value, struct mixed_segment *segment){
     *(float *)value = data->rolloff;
     break;
   case MIXED_SPACE_ATTENUATION:
-    *(float (**)(float min, float max, float dist, float roll))value = data->attenuation;
+    if(data->attenuation == attenuation_none){
+      *(int *)value = MIXED_NO_ATTENUATION;
+    }else if(data->attenuation == attenuation_inverse){
+      *(int *)value = MIXED_INVERSE_ATTENUATION;
+    }else if(data->attenuation == attenuation_linear){
+      *(int *)value = MIXED_LINEAR_ATTENUATION;
+    }else if(data->attenuation == attenuation_exponential){
+      *(int *)value = MIXED_EXPONENTIAL_ATTENUATION;
+    }else{
+      *(float (**)(float min, float max, float dist, float roll))value = data->attenuation;
+    }
     break;
   default:
     mixed_err(MIXED_INVALID_FIELD);
