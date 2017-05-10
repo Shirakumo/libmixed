@@ -1,5 +1,7 @@
 #include "internal.h"
 
+// FIXME: resampling
+
 struct channel_segment_data{
   struct mixed_channel *channel;
   struct mixed_buffer **buffers;
