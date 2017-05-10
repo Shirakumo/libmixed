@@ -67,7 +67,9 @@ extern inline float dist(float a[3], float b[3]){
 
 extern inline float *norm(float a[3]){
   float Mag = mag(a);
-  a[0] /= Mag; a[1] /= Mag; a[2] /= Mag;
+  if(Mag != 0.0){
+    a[0] /= Mag; a[1] /= Mag; a[2] /= Mag;
+  }
   return a;
 }
 
