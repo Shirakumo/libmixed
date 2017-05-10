@@ -52,20 +52,20 @@ float attenuation_exponential(float min, float max, float dist, float roll){
   return 1.0/pow(dist / min, roll);
 }
 
-extern inline float dot(float a[3], float b[3]){
+static inline float dot(float a[3], float b[3]){
   return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 }
 
-extern inline float mag(float a[3]){
+static inline float mag(float a[3]){
   return sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 }
 
-extern inline float dist(float a[3], float b[3]){
+static inline float dist(float a[3], float b[3]){
   float r[3] = {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
   return mag(r);
 }
 
-extern inline float *norm(float a[3]){
+static inline float *norm(float a[3]){
   float Mag = mag(a);
   if(Mag != 0.0){
     a[0] /= Mag; a[1] /= Mag; a[2] /= Mag;
@@ -73,32 +73,32 @@ extern inline float *norm(float a[3]){
   return a;
 }
 
-extern inline float *cross(float a[3], float b[3], float r[3]){
+static inline float *cross(float a[3], float b[3], float r[3]){
   r[0] = (a[1] * b[2]) - (a[2] * b[1]);
   r[1] = (a[2] * b[1]) - (a[0] * b[2]);
   r[2] = (a[0] * b[1]) - (a[1] * b[0]);
   return r;
 }
 
-extern inline float min(float a, float b){
+static inline float min(float a, float b){
   return (a < b)? a : b;
 }
 
-extern inline float clamp(float l, float v, float r){
+static inline float clamp(float l, float v, float r){
   return (v < l)? l : ((v < r)? v : r);
 }
 
-extern inline float calculate_pan(float S[3], float L[3], float D[3], float U[3]){
+static inline float calculate_pan(float S[3], float L[3], float D[3], float U[3]){
   float t1[3], t2[3] = {S[0] - L[0], S[1] - L[1], S[2] - L[2]};
   return dot(norm(cross(U, D, t1)), norm(t2));
 }
 
-extern inline float calculate_phase(float S[3], float L[3], float D[3]){
+static inline float calculate_phase(float S[3], float L[3], float D[3]){
   float t1[3] = {D[0], D[1], D[2]}, t2[3] = {S[0] - L[0], S[1] - L[1], S[2] - L[2]};
   return dot(norm(D), norm(t2));
 }
 
-extern inline void calculate_volumes(float *lvolume, float *rvolume, struct space_source *source, struct space_segment_data *data){
+static inline void calculate_volumes(float *lvolume, float *rvolume, struct space_source *source, struct space_segment_data *data){
   float min = data->min_distance;
   float max = data->max_distance;
   float roll = data->rolloff;

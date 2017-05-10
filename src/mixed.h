@@ -4,13 +4,19 @@
 extern "C" {
 #endif
 
-#ifdef _MSC_VER
-#  ifdef MIXED_STATIC_DEFINE
-#    define MIXED_EXPORT
+#if defined MIXED_STATIC
+#  define MIXED_EXPORT
+#elif defined _MSC_VER
+#  if defined MIXED_BUILD
+#    define MIXED_EXPORT __declspec(dllexport)
 #  else
-#    ifndef MIXED_EXPORT
-#      define MIXED_EXPORT __declspec(dllexport)
-#    endif
+#    define MIXED_EXPORT __declspec(dllimport)
+#  endif
+#elif defined __GNUC__
+#  if defined MIXED_BUILD
+#    define MIXED_EXPORT __attribute__((visibility("default")))
+#  else
+#    define MIXED_EXPORT
 #  endif
 #else
 #  define MIXED_EXPORT
