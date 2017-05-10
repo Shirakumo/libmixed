@@ -26,9 +26,11 @@ struct space_segment_data{
 };
 
 int space_segment_free(struct mixed_segment *segment){
-  if(segment->data){
-    free(((struct space_segment_data *)segment->data)->sources);
-    free(segment->data);
+  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+  if(data){
+    free_pitch_data(&data->pitch_data);
+    free(data->sources);
+    free(data);
   }
   segment->data = 0;
   return 1;
