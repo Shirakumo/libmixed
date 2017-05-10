@@ -1,6 +1,7 @@
 #include "internal.h"
 
 MIXED_EXPORT int mixed_make_buffer(size_t size, struct mixed_buffer *buffer){
+  mixed_err(MIXED_NO_ERROR);
   buffer->data = calloc(size, sizeof(float));
   if(!buffer->data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -180,6 +181,7 @@ MIXED_EXPORT int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed
 }
 
 MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to){
+  mixed_err(MIXED_NO_ERROR);
   if(from != to){
     size_t size = (to->size<from->size)? from->size : to->size;
     memcpy(to->data, from->data, sizeof(float)*size);

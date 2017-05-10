@@ -7,10 +7,12 @@ MIXED_EXPORT void mixed_free_mixer(struct mixed_mixer *mixer){
 }
 
 MIXED_EXPORT int mixed_mixer_add(struct mixed_segment *segment, struct mixed_mixer *mixer){
+  mixed_err(MIXED_NO_ERROR);
   return vector_add(segment, (struct vector *)mixer);
 }
 
 MIXED_EXPORT int mixed_mixer_remove(struct mixed_segment *segment, struct mixed_mixer *mixer){
+  mixed_err(MIXED_NO_ERROR);
   return vector_remove_item(segment, (struct vector *)mixer);
 }
 
@@ -20,7 +22,6 @@ MIXED_EXPORT int mixed_mixer_start(struct mixed_mixer *mixer){
     struct mixed_segment *segment = mixer->segments[i];
     if(segment->start){
       if(!segment->start(segment)){
-        mixed_err(MIXED_MIXING_FAILED);
         return 0;
       }
     }
@@ -43,7 +44,6 @@ MIXED_EXPORT int mixed_mixer_end(struct mixed_mixer *mixer){
     struct mixed_segment *segment = mixer->segments[i];
     if(segment->end){
       if(!segment->end(segment)){
-        mixed_err(MIXED_MIXING_FAILED);
         return 0;
       }
     }
