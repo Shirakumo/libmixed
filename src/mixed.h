@@ -101,6 +101,8 @@ extern "C" {
   MIXED_EXPORT enum mixed_segment_fields{
     // Access the backing buffer for this in/out.
     MIXED_BUFFER,
+    // Access to the resampling function of the channel.
+    MIXED_CHANNEL_RESAMPLER,
     // Access the volume of the general segment.
     // The volume should be positive. Setting the volume
     // to values higher than one will result in distortion.
