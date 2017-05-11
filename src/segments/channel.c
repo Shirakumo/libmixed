@@ -215,6 +215,7 @@ MIXED_EXPORT int mixed_make_segment_drain(struct mixed_channel *channel, size_t 
   data->buffers = buffers;
   data->channel = channel;
   data->samplerate = samplerate;
+  data->resampler = mixed_resample_linear;
 
   segment->free = channel_segment_free;
   segment->mix = drain_segment_mix;
