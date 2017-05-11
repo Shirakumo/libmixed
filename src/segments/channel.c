@@ -4,7 +4,7 @@ struct channel_segment_data{
   struct mixed_channel *channel;
   struct mixed_buffer **buffers;
   struct mixed_buffer **resample_buffers;
-  void (*resampler)(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples);
+  int (*resampler)(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples);
   size_t samplerate;
 };
 
@@ -31,7 +31,7 @@ int channel_segment_set_buffer(size_t field, size_t location, void *buffer, stru
 
   switch(field){
   case MIXED_CHANNEL_RESAMPLER:
-    data->resampler = (void (*)(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples))buffer;
+    data->resampler = (int (*)(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples))buffer;
     return 1;
   case MIXED_BUFFER:
     if(location<data->channel->channels){
