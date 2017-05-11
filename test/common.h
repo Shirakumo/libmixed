@@ -106,7 +106,7 @@ int load_out_segment(size_t samples, struct out **_out){
     goto cleanup;
   }
   
-  if(!mixed_make_segment_drain(&out->channel, &out->segment)){
+  if(!mixed_make_segment_drain(&out->channel, 44100, &out->segment)){
     printf("Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -210,7 +210,7 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
   mp3->channel.size = samples*mp3_samplesize*mp3_channels;
   mp3->channel.data = calloc(mp3->channel.size, sizeof(uint8_t));
 
-  if(!mixed_make_segment_source(&mp3->channel, &mp3->segment)){
+  if(!mixed_make_segment_source(&mp3->channel, 44100, &mp3->segment)){
     printf("Failed to create segment for %s: %s\n", file, mixed_error_string(-1));
     goto cleanup;
   }

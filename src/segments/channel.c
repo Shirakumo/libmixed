@@ -1,16 +1,26 @@
 #include "internal.h"
 
-// FIXME: resampling
-
 struct channel_segment_data{
   struct mixed_channel *channel;
   struct mixed_buffer **buffers;
+  struct mixed_buffer **resample_buffers;
+  void (*resampler)(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples);
+  size_t samplerate;
 };
 
 int channel_segment_free(struct mixed_segment *segment){
-  if(segment->data){
-    free(((struct channel_segment_data *)segment->data)->buffers);
-    free(segment->data);
+  struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
+  if(data){
+    if(data->resample_buffers){
+      for(size_t i=0; i<data->channel->channels; ++i){
+        struct mixed_buffer *buffer = data->resample_buffers[i];
+        mixed_free_buffer(buffer);
+        free(buffer);
+      }
+      free(data->resample_buffers);
+    }
+    free(data->buffers);
+    free(data);
   }
   segment->data = 0;
   return 1;
@@ -36,12 +46,28 @@ int channel_segment_set_buffer(size_t field, size_t location, void *buffer, stru
 
 void source_segment_mix(size_t samples, struct mixed_segment *segment){
   struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
-  mixed_buffer_from_channel(data->channel, data->buffers, samples);
+  if(data->resample_buffers){
+    size_t source_samples = samples * data->samplerate / data->channel->samplerate;
+    mixed_buffer_from_channel(data->channel, data->resample_buffers, source_samples);
+    for(size_t i=0; i<data->channel->channels; ++i){
+      data->resampler(data->resample_buffers[i], data->channel->samplerate, data->buffers[i], data->samplerate, samples);
+    }
+  }else{
+    mixed_buffer_from_channel(data->channel, data->buffers, samples);
+  }
 }
 
 void drain_segment_mix(size_t samples, struct mixed_segment *segment){
   struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
-  mixed_buffer_to_channel(data->buffers, data->channel, samples);
+  if(data->resample_buffers){
+    for(size_t i=0; i<data->channel->channels; ++i){
+      data->resampler(data->buffers[i], data->samplerate, data->resample_buffers[i], data->channel->samplerate, samples);
+    }
+    size_t drain_samples = samples * data->samplerate / data->channel->samplerate;
+    mixed_buffer_to_channel(data->resample_buffers, data->channel, drain_samples);
+  }else{
+    mixed_buffer_to_channel(data->buffers, data->channel, samples);
+  }
 }
 
 struct mixed_segment_info *source_segment_info(struct mixed_segment *segment){
@@ -74,21 +100,75 @@ struct mixed_segment_info *drain_segment_info(struct mixed_segment *segment){
   return info;
 }
 
-MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segment *segment){
-  struct channel_segment_data *data = calloc(1, sizeof(struct channel_segment_data));
-  if(!data){
+int initialize_resample_buffers(struct mixed_channel *channel, struct channel_segment_data *data){
+  struct mixed_buffer **resample_buffers = 0;
+  
+  resample_buffers = calloc(channel->channels, sizeof(struct mixed_buffer *));
+  if(!resample_buffers){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
 
-  struct mixed_buffer **buffers = calloc(channel->channels, sizeof(struct mixed_buffer *));
+  // Determine max number of samples in source array
+  size_t samples = channel->size / channel->channels / mixed_samplesize(channel->encoding);
+
+  size_t i;
+  for(i=0; i<channel->channels; ++i){
+    struct mixed_buffer *buffer = calloc(1, sizeof(struct mixed_buffer));
+    resample_buffers[i] = buffer;
+      
+    if(!buffer){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      goto cleanup;
+    }
+      
+    if(!mixed_make_buffer(samples, buffer)){
+      goto cleanup;
+    }
+  }
+
+  data->resample_buffers = resample_buffers;
+  return 1;
+  
+ cleanup:
+  if(resample_buffers){
+    do{ --i;
+      struct mixed_buffer *buffer = resample_buffers[i];
+      if(buffer){
+        mixed_free_buffer(buffer);
+        free(buffer);
+      }
+    }while(i > 0);
+    free(resample_buffers);
+  }
+  return 0;
+}
+
+MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, size_t samplerate, struct mixed_segment *segment){
+  struct channel_segment_data *data;
+  struct mixed_buffer **buffers;
+
+  data = calloc(1, sizeof(struct channel_segment_data));
+  if(!data){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+
+  buffers = calloc(channel->channels, sizeof(struct mixed_buffer *));
   if(!buffers){
-    free(data);
-    return 0;
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+
+  if(samplerate != 0 && samplerate != channel->samplerate){
+    if(!initialize_resample_buffers(channel, data)){
+      goto cleanup;
+    }
   }
 
   data->buffers = buffers;
   data->channel = channel;
+  data->samplerate = samplerate;
 
   segment->free = channel_segment_free;
   segment->mix = source_segment_mix;
@@ -96,23 +176,42 @@ MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, struct
   segment->info = source_segment_info;
   segment->data = data;
   return 1;
+
+ cleanup:
+  if(data)
+    free(data);
+
+  if(buffers)
+    free(buffers);
+  return 0;
 }
 
-MIXED_EXPORT int mixed_make_segment_drain(struct mixed_channel *channel, struct mixed_segment *segment){
-  struct channel_segment_data *data = calloc(1, sizeof(struct channel_segment_data));
+MIXED_EXPORT int mixed_make_segment_drain(struct mixed_channel *channel, size_t samplerate, struct mixed_segment *segment){
+  struct channel_segment_data *data = 0;
+  struct mixed_buffer **buffers = 0;
+  size_t bufs = 0;
+
+  data = calloc(1, sizeof(struct channel_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
-    return 0;
+    goto cleanup;
   }
 
-  struct mixed_buffer **buffers = calloc(channel->channels, sizeof(struct mixed_buffer *));
+  buffers = calloc(channel->channels, sizeof(struct mixed_buffer *));
   if(!buffers){
-    free(data);
-    return 0;
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+  
+  if(samplerate != 0 && samplerate != channel->samplerate){
+    if(!initialize_resample_buffers(channel, data)){
+      goto cleanup;
+    }
   }
 
   data->buffers = buffers;
   data->channel = channel;
+  data->samplerate = samplerate;
 
   segment->free = channel_segment_free;
   segment->mix = drain_segment_mix;
@@ -120,4 +219,12 @@ MIXED_EXPORT int mixed_make_segment_drain(struct mixed_channel *channel, struct 
   segment->info = drain_segment_info;
   segment->data = data;
   return 1;
+
+ cleanup:
+  if(data)
+    free(data);
+
+  if(buffers)
+    free(buffers);
+  return 0;
 }

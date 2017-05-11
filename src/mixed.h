@@ -559,8 +559,10 @@ extern "C" {
   // mixing buffers. This involves channel layout separation and
   // sample format conversion.
   //
-  // Libmixed is currently not capable of sample rate conversion.
-  MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, struct mixed_segment *segment);
+  // The sample rate given denotes the target sample rate of the
+  // buffers connected to the outputs of this segment. The source
+  // sample rate is the sample rate stored in the channel.
+  MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, size_t samplerate, struct mixed_segment *segment);
   
   // A drain channel converter
   //
@@ -569,8 +571,10 @@ extern "C" {
   // This involves channel layout packing and sample format
   // conversion.
   //
-  // Libmixed is currently not capable of sample rate conversion.
-  MIXED_EXPORT int mixed_make_segment_drain(struct mixed_channel *channel, struct mixed_segment *segment);
+  // The sample rate given denotes the source sample rate of the
+  // buffers connected to the inputs of this segment. The target
+  // sample rate is the sample rate stored in the channel.
+  MIXED_EXPORT int mixed_make_segment_drain(struct mixed_channel *channel, size_t samplerate, struct mixed_segment *segment);
   
   // A linear mixer
   //
