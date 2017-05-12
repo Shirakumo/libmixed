@@ -147,7 +147,7 @@ int initialize_resample_buffers(struct mixed_channel *channel, struct channel_se
   return 0;
 }
 
-MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, size_t samplerate, struct mixed_segment *segment){
+int make_channel_internal(struct mixed_channel *channel, size_t samplerate, struct mixed_segment *segment){
   struct channel_segment_data *data;
   struct mixed_buffer **buffers;
 
@@ -172,11 +172,9 @@ MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, size_t
   data->buffers = buffers;
   data->channel = channel;
   data->samplerate = samplerate;
+  data->resampler = mixed_resample_linear;
 
   segment->free = channel_segment_free;
-  segment->mix = source_segment_mix;
-  segment->set_out = channel_segment_set_buffer;
-  segment->info = source_segment_info;
   segment->data = data;
   return 1;
 
@@ -189,46 +187,16 @@ MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, size_t
   return 0;
 }
 
+MIXED_EXPORT int mixed_make_segment_source(struct mixed_channel *channel, size_t samplerate, struct mixed_segment *segment){
+  segment->mix = source_segment_mix;
+  segment->info = source_segment_info;
+  segment->set_out = channel_segment_set_buffer;
+  return make_channel_internal(channel, samplerate, segment);
+}
+
 MIXED_EXPORT int mixed_make_segment_drain(struct mixed_channel *channel, size_t samplerate, struct mixed_segment *segment){
-  struct channel_segment_data *data = 0;
-  struct mixed_buffer **buffers = 0;
-  size_t bufs = 0;
-
-  data = calloc(1, sizeof(struct channel_segment_data));
-  if(!data){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    goto cleanup;
-  }
-
-  buffers = calloc(channel->channels, sizeof(struct mixed_buffer *));
-  if(!buffers){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    goto cleanup;
-  }
-  
-  if(samplerate != 0 && samplerate != channel->samplerate){
-    if(!initialize_resample_buffers(channel, data)){
-      goto cleanup;
-    }
-  }
-
-  data->buffers = buffers;
-  data->channel = channel;
-  data->samplerate = samplerate;
-  data->resampler = mixed_resample_linear;
-
-  segment->free = channel_segment_free;
   segment->mix = drain_segment_mix;
-  segment->set_in = channel_segment_set_buffer;
   segment->info = drain_segment_info;
-  segment->data = data;
-  return 1;
-
- cleanup:
-  if(data)
-    free(data);
-
-  if(buffers)
-    free(buffers);
-  return 0;
+  segment->set_in = channel_segment_set_buffer;
+  return make_channel_internal(channel, samplerate, segment);
 }
