@@ -79,7 +79,42 @@ int load_out_segment(size_t samples, struct out **_out){
     goto cleanup;
   }
 
-  if(out123_start(out->handle, out_samplerate, out_channels, MPG123_ENC_FLOAT_32)){
+  // Find suitable configuration
+  struct mpg123_fmt *fmts;
+  long rates[1] = {out_samplerate};
+  int count = out123_formats(out->handle, rates, 1, 2, 2, &fmts);
+  int fmt_index = 0;
+
+  for(int i=0; i<count; ++i){
+    if(fmts[i].rate != -1){
+      fmt_index = i;
+      const char *encname = out123_enc_longname(fmts[i].encoding);
+      fprintf(stderr, "OUT %i: %i channels @ %li Hz, %s\n",
+              i, fmts[i].channels, fmts[i].rate, encname);
+    }
+  }
+  
+  if(fmt_index == count){
+    fprintf(stderr, "No suitable playback format configuration found on the device.\n");
+    goto cleanup;
+  }
+  // Extract encoding
+  int encoding = 0;
+  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_FLOAT_32;
+  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_FLOAT_64;
+  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_UNSIGNED_32;
+  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_SIGNED_32;
+  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_UNSIGNED_24;
+  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_SIGNED_24;
+  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_UNSIGNED_16;
+  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_SIGNED_16;
+
+  if(!encoding){
+    fprintf(stderr, "No suitable encoding could be found on the device.\n");
+    goto cleanup;
+  }
+
+  if(out123_start(out->handle, fmts[fmt_index].rate, fmts[fmt_index].channels, encoding)){
     fprintf(stderr, "Failed to start playback on device: %s\n", out123_strerror(out->handle));
     goto cleanup;
   }
@@ -89,11 +124,11 @@ int load_out_segment(size_t samples, struct out **_out){
     goto cleanup;
   }
 
-  out_encname = (char *)out123_enc_longname(out_encoding);
+  out_encname = (char *)out123_enc_longname(encoding);
   fprintf(stderr, "OUT: %i channels @ %li Hz, %s\n", out_channels, out_samplerate, out_encname);
   
   // Prepare pipeline segments
-  out->channel.encoding = fmt123_to_mixed(out_encoding);
+  out->channel.encoding = fmt123_to_mixed(encoding);
   out->channel.channels = out_channels;
   out->channel.layout = MIXED_ALTERNATING;
   out->channel.samplerate = out_samplerate;
