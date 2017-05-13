@@ -156,8 +156,8 @@ int initialize_resample_buffers(struct mixed_channel *channel, struct channel_se
 }
 
 int make_channel_internal(struct mixed_channel *channel, size_t samplerate, struct mixed_segment *segment){
-  struct channel_segment_data *data;
-  struct mixed_buffer **buffers;
+  struct channel_segment_data *data = 0;
+  struct mixed_buffer **buffers = 0;
 
   if(channel->encoding < MIXED_INT8 || MIXED_DOUBLE < channel->encoding){
     mixed_err(MIXED_UNKNOWN_ENCODING);
