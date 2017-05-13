@@ -84,6 +84,10 @@ struct mixed_segment_info *source_segment_info(struct mixed_segment *segment){
   info->fields[0].field = MIXED_BUFFER;
   info->fields[0].description = "The buffer to attach to the port.";
   info->fields[0].flags = MIXED_OUT | MIXED_SET;
+
+  info->fields[1].field = MIXED_CHANNEL_RESAMPLER;
+  info->fields[1].description = "The function used to resample the audio if necessary.";
+  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET;
   
   return info;
 }
@@ -99,6 +103,10 @@ struct mixed_segment_info *drain_segment_info(struct mixed_segment *segment){
   info->fields[0].field = MIXED_BUFFER;
   info->fields[0].description = "The buffer for audio data attached to the location.";
   info->fields[0].flags = MIXED_IN | MIXED_SET;
+
+  info->fields[1].field = MIXED_CHANNEL_RESAMPLER;
+  info->fields[1].description = "The function used to resample the audio if necessary.";
+  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET;
 
   return info;
 }
