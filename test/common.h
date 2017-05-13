@@ -54,6 +54,34 @@ void free_out(struct out *out){
   free(out);
 }
 
+int extract_encoding(int encodings){
+  if((encodings & MPG123_ENC_FLOAT_32) == MPG123_ENC_FLOAT_32) 
+    return MPG123_ENC_FLOAT_32;
+
+  if((encodings & MPG123_ENC_FLOAT_64) == MPG123_ENC_FLOAT_64) 
+    return MPG123_ENC_FLOAT_64;
+
+  if((encodings & MPG123_ENC_UNSIGNED_32) == MPG123_ENC_UNSIGNED_32) 
+    return MPG123_ENC_UNSIGNED_32;
+
+  if((encodings & MPG123_ENC_SIGNED_32) == MPG123_ENC_SIGNED_32) 
+    return MPG123_ENC_SIGNED_32;
+
+  if((encodings & MPG123_ENC_UNSIGNED_24) == MPG123_ENC_UNSIGNED_24) 
+    return MPG123_ENC_UNSIGNED_24;
+
+  if((encodings & MPG123_ENC_SIGNED_24) == MPG123_ENC_SIGNED_24) 
+    return MPG123_ENC_SIGNED_24;
+
+  if((encodings & MPG123_ENC_UNSIGNED_16) == MPG123_ENC_UNSIGNED_16) 
+    return MPG123_ENC_UNSIGNED_16;
+
+  if((encodings & MPG123_ENC_SIGNED_16) == MPG123_ENC_SIGNED_16) 
+    return MPG123_ENC_SIGNED_16;
+
+  return -1;
+}
+
 int load_out_segment(size_t samples, struct out **_out){
   long out_samplerate = 44100;
   int out_channels = 2;
@@ -98,17 +126,8 @@ int load_out_segment(size_t samples, struct out **_out){
     fprintf(stderr, "No suitable playback format configuration found on the device.\n");
     goto cleanup;
   }
-  // Extract encoding
-  int encoding = 0;
-  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_FLOAT_32;
-  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_FLOAT_64;
-  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_UNSIGNED_32;
-  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_SIGNED_32;
-  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_UNSIGNED_24;
-  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_SIGNED_24;
-  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_UNSIGNED_16;
-  if(!encoding) encoding = fmts[fmt_index].encoding & MPG123_ENC_SIGNED_16;
 
+  int encoding = extract_encoding(fmts[fmt_index].encoding);
   if(!encoding){
     fprintf(stderr, "No suitable encoding could be found on the device.\n");
     goto cleanup;
@@ -125,7 +144,7 @@ int load_out_segment(size_t samples, struct out **_out){
   }
 
   out_encname = (char *)out123_enc_longname(out_encoding);
-  fprintf(stderr, "OUT: %i channels @ %li Hz, %s %i\n", out_channels, out_samplerate, out_encname, fmt123_to_mixed(out_encoding));
+  fprintf(stderr, "OUT: %i channels @ %li Hz, %s %i\n", out_channels, out_samplerate, out_encname);
   
   // Prepare pipeline segments
   out->channel.encoding = fmt123_to_mixed(out_encoding);
