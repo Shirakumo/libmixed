@@ -13,7 +13,7 @@ int main(int argc, char **argv){
   size_t frequency = 440;
 
   if(argc < 3){
-    printf("Usage: ./test_tone wave-type frequency \n");
+    fprintf(stderr, "Usage: ./test_tone wave-type frequency \n");
     return 0;
   }
 
@@ -22,13 +22,13 @@ int main(int argc, char **argv){
   else if(0 == strcmp("triangle", argv[1])) wave_type = MIXED_TRIANGLE;
   else if(0 == strcmp("sawtooth", argv[1])) wave_type = MIXED_SAWTOOTH;
   else{
-    printf("Invalid wave type. Must be one of sine, square, triangle, sawtooth.\n");
+    fprintf(stderr, "Invalid wave type. Must be one of sine, square, triangle, sawtooth.\n");
     goto cleanup;
   }
   
   frequency = strtol(argv[2], 0, 10);
   if(frequency <= 0){
-    printf("Invalid frequency. Must be an integer above 0.\n");
+    fprintf(stderr, "Invalid frequency. Must be an integer above 0.\n");
     goto cleanup;
   }
   
@@ -40,21 +40,21 @@ int main(int argc, char **argv){
 
   if(!mixed_make_segment_generator(wave_type, frequency, samplerate, &generator) ||
      !mixed_make_segment_fade(0.0, 1.0, 5.0, MIXED_CUBIC_IN_OUT, samplerate, &fade)){
-    printf("Failed to create segments: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   if(!mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &generator) ||
      !mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &out->left, &fade) ||
      !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &fade)){
-    printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   if(!mixed_mixer_add(&generator, &mixer) ||
      !mixed_mixer_add(&fade, &mixer) ||
      !mixed_mixer_add(&out->segment, &mixer)){
-    printf("Failed to assemble mixer: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to assemble mixer: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
@@ -64,13 +64,13 @@ int main(int argc, char **argv){
   do{
     mixed_mixer_mix(samples, &mixer);
     if(mixed_error() != MIXED_NO_ERROR){
-      printf("Failure during mixing: %s\n", mixed_error_string(-1));
+      fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
     
     played = out123_play(out->handle, out->channel.data, out->channel.size);
     if(played < out->channel.size){
-      printf("Warning: device not catching up with input (%i vs %i)\n", played, samples);
+      fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, samples);
     }
   }while(!interrupted);
   

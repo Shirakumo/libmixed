@@ -414,6 +414,13 @@ extern "C" {
   // at least as long as the channel's channel count.
   MIXED_EXPORT int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples);
 
+  // Copy a buffer to another.
+  //
+  // This only copies as many samples as viable, meaning that if
+  // one buffer is smaller than the other, only as many samples as
+  // the smaller buffer can carry are copied.
+  MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
+
   // Resample the buffer using nearest-neighbor.
   //
   // This is the fastest and most primitive resampling you could
@@ -435,13 +442,6 @@ extern "C" {
   // CSI enhance. This resampling will become costly at large
   // buffer sizes and might not be suitable for real-time systems.
   MIXED_EXPORT int mixed_resample_cubic(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples);
-
-  // Copy a buffer to another.
-  //
-  // This only copies as many samples as viable, meaning that if
-  // one buffer is smaller than the other, only as many samples as
-  // the smaller buffer can carry are copied.
-  MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
 
   // Free the segment's internal data.
   //

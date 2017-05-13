@@ -64,33 +64,33 @@ int load_out_segment(size_t samples, struct out **_out){
   struct out *out = calloc(1, sizeof(struct out));
 
   if(!out){
-    printf("Failed to allocate mixer data.\n");
+    fprintf(stderr, "Failed to allocate mixer data.\n");
     goto cleanup;
   }
   
   out->handle = out123_new();
   if(out->handle == 0){
-    printf("Failed to create OUT123 handle.\n");
+    fprintf(stderr, "Failed to create OUT123 handle.\n");
     goto cleanup;
   }
 
   if(out123_open(out->handle, 0, 0) != OUT123_OK){
-    printf("Failed to open sound device: %s\n", out123_strerror(out->handle));
+    fprintf(stderr, "Failed to open sound device: %s\n", out123_strerror(out->handle));
     goto cleanup;
   }
 
   if(out123_start(out->handle, out_samplerate, out_channels, MPG123_ENC_FLOAT_32)){
-    printf("Failed to start playback on device: %s\n", out123_strerror(out->handle));
+    fprintf(stderr, "Failed to start playback on device: %s\n", out123_strerror(out->handle));
     goto cleanup;
   }
   
   if(out123_getformat(out->handle, &out_samplerate, &out_channels, &out_encoding, &out_framesize) != OUT123_OK){
-    printf("Failed to get format properties of your device: %s\n", out123_strerror(out->handle));
+    fprintf(stderr, "Failed to get format properties of your device: %s\n", out123_strerror(out->handle));
     goto cleanup;
   }
 
   out_encname = (char *)out123_enc_longname(out_encoding);
-  printf("OUT: %i channels @ %li Hz, %s\n", out_channels, out_samplerate, out_encname);
+  fprintf(stderr, "OUT: %i channels @ %li Hz, %s\n", out_channels, out_samplerate, out_encname);
   
   // Prepare pipeline segments
   out->channel.encoding = fmt123_to_mixed(out_encoding);
@@ -102,24 +102,24 @@ int load_out_segment(size_t samples, struct out **_out){
   out->channel.data = calloc(out->channel.size, sizeof(uint8_t));
 
   if(!out->channel.data){
-    printf("Couldn't allocate output buffer.\n");
+    fprintf(stderr, "Couldn't allocate output buffer.\n");
     goto cleanup;
   }
   
   if(!mixed_make_segment_drain(&out->channel, 44100, &out->segment)){
-    printf("Failed to create segments: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   if(!mixed_make_buffer(samples, &out->left) ||
      !mixed_make_buffer(samples, &out->right)){
-    printf("Failed to allocate mixer buffers: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to allocate mixer buffers: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &out->left, &out->segment) ||
      !mixed_segment_set_in(MIXED_BUFFER, MIXED_RIGHT, &out->right, &out->segment)){
-    printf("Failed to set buffers for out: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to set buffers for out: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
@@ -168,39 +168,39 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
   struct mp3 *mp3 = calloc(1, sizeof(struct mp3));
 
   if(!mp3){
-    printf("Failed to allocate mixer data.\n");
+    fprintf(stderr, "Failed to allocate mixer data.\n");
     goto cleanup;
   }
 
   mp3->handle = mpg123_new(NULL, 0);
   if(mp3->handle == 0){
-    printf("Failed to create MPG123 handle.\n");
+    fprintf(stderr, "Failed to create MPG123 handle.\n");
     goto cleanup;
   }
 
   if(mpg123_open(mp3->handle, file) != MPG123_OK){
-    printf("Failed to open %s: %s\n", file, mpg123_strerror(mp3->handle));
+    fprintf(stderr, "Failed to open %s: %s\n", file, mpg123_strerror(mp3->handle));
     goto cleanup;
   }
   
   if(mpg123_getformat(mp3->handle, &mp3_samplerate, &mp3_channels, &mp3_encoding) != MPG123_OK){
-    printf("Failed to get format properties of %s: %s\n", file, mpg123_strerror(mp3->handle));
+    fprintf(stderr, "Failed to get format properties of %s: %s\n", file, mpg123_strerror(mp3->handle));
     goto cleanup;
   }
 
   // test app limitation for now
   if(mp3_channels != 2){
-    printf("File %s has %i channels instead of 2. I can't deal with this.\n", file, mp3_channels);
+    fprintf(stderr, "File %s has %i channels instead of 2. I can't deal with this.\n", file, mp3_channels);
     goto cleanup;
   }
   // libmixed limitation for now
   if(mp3_samplerate != 44100){
-    printf("File %s has a sample rate of %i Hz instead of 44100. I can't deal with this.\n", file, mp3_samplerate);
+    fprintf(stderr, "File %s has a sample rate of %i Hz instead of 44100. I can't deal with this.\n", file, mp3_samplerate);
     goto cleanup;
   }
   
   mp3_encname = (char *)out123_enc_longname(mp3_encoding);
-  printf("MP3: %i channels @ %li Hz, %s\n", mp3_channels, mp3_samplerate, mp3_encname);
+  fprintf(stderr, "MP3: %i channels @ %li Hz, %s\n", mp3_channels, mp3_samplerate, mp3_encname);
 
   mp3->channel.encoding = fmt123_to_mixed(mp3_encoding);
   mp3->channel.channels = mp3_channels;
@@ -211,19 +211,19 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
   mp3->channel.data = calloc(mp3->channel.size, sizeof(uint8_t));
 
   if(!mixed_make_segment_source(&mp3->channel, 44100, &mp3->segment)){
-    printf("Failed to create segment for %s: %s\n", file, mixed_error_string(-1));
+    fprintf(stderr, "Failed to create segment for %s: %s\n", file, mixed_error_string(-1));
     goto cleanup;
   }
 
   if(!mixed_make_buffer(samples, &mp3->left) ||
      !mixed_make_buffer(samples, &mp3->right)){
-    printf("Failed to allocate mixer buffers: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to allocate mixer buffers: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   if(!mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &mp3->left, &mp3->segment) ||
      !mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &mp3->right, &mp3->segment)){
-    printf("Failed to set buffers for %s: %s\n", file, mixed_error_string(-1));
+    fprintf(stderr, "Failed to set buffers for %s: %s\n", file, mixed_error_string(-1));
     goto cleanup;
   }
 

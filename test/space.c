@@ -22,7 +22,7 @@ int main(int argc, char **argv){
   signal(SIGINT, interrupt_handler);
 
   if(argc < 2 || 4 < argc){
-    printf("Usage: ./test_space mp3-file [speed] [radius]\n");
+    fprintf(stderr, "Usage: ./test_space mp3-file [speed] [radius]\n");
     return 0;
   }
 
@@ -30,7 +30,7 @@ int main(int argc, char **argv){
     char *end;
     dphi = strtod(argv[2], &end);
     if(*end != '\0'){
-      printf("Cannot use '%s' as an angle speed.\n", argv[2]);
+      fprintf(stderr, "Cannot use '%s' as an angle speed.\n", argv[2]);
       goto cleanup;
     }
   }
@@ -39,13 +39,13 @@ int main(int argc, char **argv){
     char *end;
     r = strtod(argv[3], &end);
     if(*end != '\0'){
-      printf("Cannot use '%s' as a radius.\n", argv[3]);
+      fprintf(stderr, "Cannot use '%s' as a radius.\n", argv[3]);
       goto cleanup;
     }
   }
 
   if(mpg123_init() != MPG123_OK){
-    printf("Failed to init MPG123.\n");
+    fprintf(stderr, "Failed to init MPG123.\n");
     goto cleanup;
   }
 
@@ -58,21 +58,21 @@ int main(int argc, char **argv){
   }
 
   if(!mixed_make_segment_space(samplerate, &space)){
-    printf("Failed to create segments: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   if(!mixed_segment_set_in(MIXED_BUFFER, 0, &mp3->left, &space) ||
      !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &space) ||
      !mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &out->right, &space)){
-    printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   if(!mixed_mixer_add(&mp3->segment, &mixer) ||
      !mixed_mixer_add(&space, &mixer) ||
      !mixed_mixer_add(&out->segment, &mixer)){
-    printf("Failed to assemble mixer: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to assemble mixer: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
@@ -87,7 +87,7 @@ int main(int argc, char **argv){
   size_t read, played;
   do{
     if(mpg123_read(mp3->handle, mp3->channel.data, mp3->channel.size, &read) != MPG123_OK){
-      printf("Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
+      fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
       goto cleanup;
     }
     
@@ -108,13 +108,13 @@ int main(int argc, char **argv){
     
     mixed_mixer_mix(samples, &mixer);
     if(mixed_error() != MIXED_NO_ERROR){
-      printf("Failure during mixing: %s\n", mixed_error_string(-1));
+      fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
     
     played = out123_play(out->handle, out->channel.data, out->channel.size);
     if(played < out->channel.size){
-      printf("Warning: device not catching up with input (%i vs %i)\n", played, samples);
+      fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, samples);
     }
   }while(read && !interrupted);
   

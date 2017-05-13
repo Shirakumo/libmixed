@@ -12,12 +12,12 @@ int main(int argc, char **argv){
   signal(SIGINT, interrupt_handler);
   
   if(argc<2){
-    printf("Usage: ./test_mix mp3-file mp3-file* \n");
+    fprintf(stderr, "Usage: ./test_mix mp3-file mp3-file* \n");
     return 0;
   }
 
   if(mpg123_init() != MPG123_OK){
-    printf("Failed to init MPG123.\n");
+    fprintf(stderr, "Failed to init MPG123.\n");
     goto cleanup;
   }
 
@@ -27,14 +27,14 @@ int main(int argc, char **argv){
   
   if(!mixed_make_segment_mixer(0, &lmix_segment) ||
      !mixed_make_segment_mixer(0, &rmix_segment)){
-    printf("Failed to create segments: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
   
   if(// The mixer segment's 0th buffer is its output.
      !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &lmix_segment) ||
      !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->right, &rmix_segment)){
-    printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
@@ -48,12 +48,12 @@ int main(int argc, char **argv){
     // Attach to combining segments
     if(!mixed_segment_set_in(MIXED_BUFFER, i, &mp3->left, &lmix_segment) ||
        !mixed_segment_set_in(MIXED_BUFFER, i, &mp3->right, &rmix_segment)){
-      printf("Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
+      fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
     // Register with mixer.
     if(!mixed_mixer_add(&mp3->segment, &mixer)){
-      printf("Failed to assemble mixer: %s\n", mixed_error_string(-1));
+      fprintf(stderr, "Failed to assemble mixer: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
   }
@@ -64,7 +64,7 @@ int main(int argc, char **argv){
   if(!mixed_mixer_add(&lmix_segment, &mixer) ||
      !mixed_mixer_add(&rmix_segment, &mixer) ||
      !mixed_mixer_add(&out->segment, &mixer)){
-    printf("Failed to assemble mixer: %s\n", mixed_error_string(-1));
+    fprintf(stderr, "Failed to assemble mixer: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
@@ -77,7 +77,7 @@ int main(int argc, char **argv){
     for(size_t i=0; i<argc-1; ++i){
       struct mp3 *mp3 = mp3s[i];
       if(mpg123_read(mp3->handle, mp3->channel.data, mp3->channel.size, &read) != MPG123_OK){
-        printf("Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
+        fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
         goto cleanup;
       }
       // Make sure we play until everything's done.
@@ -88,13 +88,13 @@ int main(int argc, char **argv){
 
     mixed_mixer_mix(samples, &mixer);
     if(mixed_error() != MIXED_NO_ERROR){
-      printf("Failure during mixing: %s\n", mixed_error_string(-1));
+      fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
     
     played = out123_play(out->handle, out->channel.data, out->channel.size);
     if(played < out->channel.size){
-      printf("Warning: device not catching up with input (%i vs %i)\n", played, samples);
+      fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, samples);
     }
   }while(read_total && !interrupted);
 
@@ -104,7 +104,7 @@ int main(int argc, char **argv){
   exit = 0;
   
  cleanup:
-  printf("\nCleaning up.\n");
+  fprintf(stderr, "\nCleaning up.\n");
   
   mixed_free_segment(&lmix_segment);
   mixed_free_segment(&rmix_segment);
