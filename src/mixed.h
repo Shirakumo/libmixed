@@ -28,7 +28,7 @@ extern "C" {
   // This enum describes all possible error codes.
   MIXED_EXPORT enum mixed_error{
     // No error has occurred yet.
-    MIXED_NO_ERROR,
+    MIXED_NO_ERROR = 0,
     // An allocation failed. It's likely that you
     // are out of memory and it is game over.
     MIXED_OUT_OF_MEMORY,
@@ -74,7 +74,7 @@ extern "C" {
 
   // This enum describes the possible sample encodings.
   MIXED_EXPORT enum mixed_encoding{
-    MIXED_INT8,
+    MIXED_INT8 = 1,
     MIXED_UINT8,
     MIXED_INT16,
     MIXED_UINT16,
@@ -90,7 +90,7 @@ extern "C" {
   MIXED_EXPORT enum mixed_layout{
     // Channels are stored in alternating format.
     // Essentially: (C₁C₂...)ⁿ
-    MIXED_ALTERNATING,
+    MIXED_ALTERNATING = 1,
     // Channels are stored in sequential format.
     // Essentially: C₁ⁿC₂ⁿ...
     MIXED_SEQUENTIAL
@@ -186,7 +186,7 @@ extern "C" {
 
   // This enum describes the possible preset attenuation functions.
   MIXED_EXPORT enum mixed_attenuation{
-    MIXED_NO_ATTENUATION,
+    MIXED_NO_ATTENUATION = 1,
     MIXED_INVERSE_ATTENUATION,
     MIXED_LINEAR_ATTENUATION,
     MIXED_EXPONENTIAL_ATTENUATION
@@ -194,7 +194,7 @@ extern "C" {
 
   // This enum describes the possible fade easing function types.
   MIXED_EXPORT enum mixed_fade_type{
-    MIXED_LINEAR,
+    MIXED_LINEAR = 1,
     MIXED_CUBIC_IN,
     MIXED_CUBIC_OUT,
     MIXED_CUBIC_IN_OUT
@@ -202,7 +202,7 @@ extern "C" {
 
   // This enum describes the possible generator wave types.
   MIXED_EXPORT enum mixed_generator_type{
-    MIXED_SINE,
+    MIXED_SINE = 1,
     MIXED_SQUARE,
     MIXED_TRIANGLE,
     MIXED_SAWTOOTH

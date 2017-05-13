@@ -159,6 +159,16 @@ int make_channel_internal(struct mixed_channel *channel, size_t samplerate, stru
   struct channel_segment_data *data;
   struct mixed_buffer **buffers;
 
+  if(channel->encoding < MIXED_INT8 || MIXED_DOUBLE < channel->encoding){
+    mixed_err(MIXED_UNKNOWN_ENCODING);
+    goto cleanup;
+  }
+
+  if(channel->layout < MIXED_ALTERNATING || MIXED_SEQUENTIAL < channel->layout){
+    mixed_err(MIXED_UNKNOWN_LAYOUT);
+    goto cleanup;
+  }
+
   data = calloc(1, sizeof(struct channel_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);

@@ -124,11 +124,11 @@ int load_out_segment(size_t samples, struct out **_out){
     goto cleanup;
   }
 
-  out_encname = (char *)out123_enc_longname(encoding);
-  fprintf(stderr, "OUT: %i channels @ %li Hz, %s\n", out_channels, out_samplerate, out_encname);
+  out_encname = (char *)out123_enc_longname(out_encoding);
+  fprintf(stderr, "OUT: %i channels @ %li Hz, %s %i\n", out_channels, out_samplerate, out_encname, fmt123_to_mixed(out_encoding));
   
   // Prepare pipeline segments
-  out->channel.encoding = fmt123_to_mixed(encoding);
+  out->channel.encoding = fmt123_to_mixed(out_encoding);
   out->channel.channels = out_channels;
   out->channel.layout = MIXED_ALTERNATING;
   out->channel.samplerate = out_samplerate;
