@@ -17,90 +17,116 @@ MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer){
   buffer->data = 0;
 }
 
-extern inline void mixed_transfer_sample_from(struct mixed_channel *in, size_t is, struct mixed_buffer *out, size_t os){
+#define DEF_MIXED_TRANSFER_SAMPLE_FROM(name, datatype) \
+inline void mixed_transfer_sample_from_##name(struct mixed_channel *in, size_t is, struct mixed_buffer *out, size_t os) { \
+  out->data[os] = mixed_from_##name(((datatype *)in->data)[is]); \
+}
+
+DEF_MIXED_TRANSFER_SAMPLE_FROM(int8, int8_t);
+DEF_MIXED_TRANSFER_SAMPLE_FROM(uint8, uint8_t);
+DEF_MIXED_TRANSFER_SAMPLE_FROM(int16, int16_t);
+DEF_MIXED_TRANSFER_SAMPLE_FROM(uint16, uint16_t);
+DEF_MIXED_TRANSFER_SAMPLE_FROM(int32, int32_t);
+DEF_MIXED_TRANSFER_SAMPLE_FROM(uint32, uint32_t);
+DEF_MIXED_TRANSFER_SAMPLE_FROM(float, float);
+DEF_MIXED_TRANSFER_SAMPLE_FROM(double, double);
+
+extern inline void mixed_transfer_sample_from_int24(struct mixed_channel *in, size_t is, struct mixed_buffer *out, size_t os) {
+  int8_t *data = (int8_t *)in->data;
+  // Read in as uint
+  uint32_t temp = (data[3*is] << 16) + (data[3*is+1] << 8) + (data[3*is+2]);
+  // Shift up to fill 32 bit range
+  temp = temp << 8;
+  // Convert to signed, this is actually not standards compliant.
+  int32_t sample = (int32_t)temp;
+  // Shift down again to get back to 24 bit range.
+  out->data[os] = mixed_from_int24(sample >> 8);
+}
+
+extern inline void mixed_transfer_sample_from_uint24(struct mixed_channel *in, size_t is, struct mixed_buffer *out, size_t os) {
+  int8_t *data = (int8_t *)in->data;
+  uint24_t sample = (data[3*is] << 16) + (data[3*is+1] << 8) + (data[3*is+2]);
+  out->data[os] = mixed_from_uint24(sample);
+}
+
+#define DEF_MIXED_BUFFER_FROM_CHANNEL(name) \
+MIXED_EXPORT int mixed_buffer_from_##name##_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples) { \
+  mixed_err(MIXED_NO_ERROR); \
+  size_t channels = in->channels; \
+  switch(in->layout){ \
+  case MIXED_ALTERNATING:{ \
+    size_t i = 0; \
+    for(uint8_t channel=0; channel<channels; ++channel){ \
+      struct mixed_buffer *out = outs[channel]; \
+      for(size_t sample=0; sample<samples; ++sample){ \
+        mixed_transfer_sample_from_##name(in, sample*channels+channel, out, sample); \
+      } \
+    }} \
+    break; \
+  case MIXED_SEQUENTIAL:{ \
+    size_t offset = 0; \
+    for(uint8_t channel=0; channel<channels; ++channel){ \
+      struct mixed_buffer *out = outs[channel]; \
+      for(size_t sample=0; sample<samples; ++sample){ \
+        mixed_transfer_sample_from_##name(in, sample+offset, out, sample); \
+      } \
+      offset += samples; \
+    }} \
+    break; \
+  default: \
+    mixed_err(MIXED_UNKNOWN_LAYOUT); \
+    break; \
+  } \
+  return (mixed_error() == MIXED_NO_ERROR); \
+}
+
+DEF_MIXED_BUFFER_FROM_CHANNEL(int8);
+DEF_MIXED_BUFFER_FROM_CHANNEL(uint8);
+DEF_MIXED_BUFFER_FROM_CHANNEL(int16);
+DEF_MIXED_BUFFER_FROM_CHANNEL(uint16);
+DEF_MIXED_BUFFER_FROM_CHANNEL(int24);
+DEF_MIXED_BUFFER_FROM_CHANNEL(uint24);
+DEF_MIXED_BUFFER_FROM_CHANNEL(int32);
+DEF_MIXED_BUFFER_FROM_CHANNEL(uint32);
+DEF_MIXED_BUFFER_FROM_CHANNEL(float);
+DEF_MIXED_BUFFER_FROM_CHANNEL(double);
+
+MIXED_EXPORT int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples){
   switch(in->encoding){
   case MIXED_INT8:
-    out->data[os] = mixed_from_int8(((int8_t *)in->data)[is]);
+    mixed_buffer_from_int8_channel(in, outs, samples);
     break;
   case MIXED_UINT8:
-    out->data[os] = mixed_from_uint8(((uint8_t *)in->data)[is]);
+    mixed_buffer_from_uint8_channel(in, outs, samples);
     break;
   case MIXED_INT16:
-    out->data[os] = mixed_from_int16(((int16_t *)in->data)[is]);
+    mixed_buffer_from_int16_channel(in, outs, samples);
     break;
   case MIXED_UINT16:
-    out->data[os] = mixed_from_uint16(((uint16_t *)in->data)[is]);
+    mixed_buffer_from_uint16_channel(in, outs, samples);
     break;
-  case MIXED_INT24:{
-      int8_t *data = (int8_t *)in->data;
-      // Read in as uint
-      uint32_t temp = (data[3*is] << 16) + (data[3*is+1] << 8) + (data[3*is+2]);
-      // Shift up to fill 32 bit range
-      temp = temp << 8;
-      // Convert to signed, this is actually not standards compliant.
-      int32_t sample = (int32_t)temp;
-      // Shift down again to get back to 24 bit range.
-      out->data[os] = mixed_from_int24(sample >> 8);
-    }
+  case MIXED_INT24:
+    mixed_buffer_from_int24_channel(in, outs, samples);
     break;
-  case MIXED_UINT24:{
-      int8_t *data = (int8_t *)in->data;
-      uint24_t sample = (data[3*is] << 16) + (data[3*is+1] << 8) + (data[3*is+2]);
-      out->data[os] = mixed_from_uint24(sample);
-    }
+  case MIXED_UINT24:
+    mixed_buffer_from_uint24_channel(in, outs, samples);
     break;
   case MIXED_INT32:
-    out->data[os] = mixed_from_int32(((int32_t *)in->data)[is]);
+    mixed_buffer_from_int32_channel(in, outs, samples);
     break;
   case MIXED_UINT32:
-    out->data[os] = mixed_from_uint32(((uint32_t *)in->data)[is]);
+    mixed_buffer_from_uint32_channel(in, outs, samples);
     break;
   case MIXED_FLOAT:
-    out->data[os] = mixed_from_float(((float *)in->data)[is]);
+    mixed_buffer_from_float_channel(in, outs, samples);
     break;
   case MIXED_DOUBLE:
-    out->data[os] = mixed_from_double(((double *)in->data)[is]);
+    mixed_buffer_from_double_channel(in, outs, samples);
     break;
   default:
     mixed_err(MIXED_UNKNOWN_ENCODING);
     break;
   }
-}
-
-// FIXME: Naturally, rolling the transfer functions out into the outer
-//        loops so that we don't need to do the swich for every sample
-//        would be much faster, but I ain't doin' any o dat.
-// FIXME: We currently don't do any resampling because doing so is a
-//        huge pain and I currently don't want to think about it.
-//        Probably will want to convert to an internal float buffer first.
-MIXED_EXPORT int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples){
-  mixed_err(MIXED_NO_ERROR);
-  size_t channels = in->channels;
-  switch(in->layout){
-  case MIXED_ALTERNATING:{
-    size_t i = 0;
-    for(uint8_t channel=0; channel<channels; ++channel){
-      struct mixed_buffer *out = outs[channel];
-      for(size_t sample=0; sample<samples; ++sample){
-        mixed_transfer_sample_from(in, sample*channels+channel, out, sample);
-      }
-    }}
-    break;
-  case MIXED_SEQUENTIAL:{
-    size_t offset = 0;
-    for(uint8_t channel=0; channel<channels; ++channel){
-      struct mixed_buffer *out = outs[channel];
-      for(size_t sample=0; sample<samples; ++sample){
-        mixed_transfer_sample_from(in, sample+offset, out, sample);
-      }
-      offset += samples;
-    }}
-    break;
-  default:
-    mixed_err(MIXED_UNKNOWN_LAYOUT);
-    break;
-  }
-  return (mixed_error() == MIXED_NO_ERROR);
 }
 
 // We assume little endian for all formats.
