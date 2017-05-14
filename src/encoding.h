@@ -58,27 +58,27 @@ MIXED_EXPORT inline double mixed_to_double(float sample){
 }
 
 MIXED_EXPORT inline int8_t mixed_to_int8(float sample){
-  return roundf(sample*0x80);
+  return sample*0x80;
 }
 
 MIXED_EXPORT inline uint8_t mixed_to_uint8(float sample){
-  return roundf(sample*0x80)+0x80;
+  return ((int32_t)(sample*0x80))+0x80;
 }
 
 MIXED_EXPORT inline int16_t mixed_to_int16(float sample){
-  return roundf(sample*0x8000);
+  return sample*0x8000;
 }
 
 MIXED_EXPORT inline uint16_t mixed_to_uint16(float sample){
-  return roundf(sample*0x8000)+0x8000;
+  return ((uint16_t)(sample*0x8000))+0x8000;
 }
 
 MIXED_EXPORT inline int24_t mixed_to_int24(float sample){
-  return roundf(sample*0x800000);
+  return sample*0x800000;
 }
 
 MIXED_EXPORT inline uint24_t mixed_to_uint24(float sample){
-  return roundf(sample*0x800000)+0x800000;
+  return (int32_t)(sample*0x800000)+0x800000;
 }
 
 MIXED_EXPORT inline int32_t mixed_to_int32(float sample){
