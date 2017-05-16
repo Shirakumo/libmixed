@@ -107,7 +107,14 @@ int generator_segment_get(size_t field, void *value, struct mixed_segment *segme
 int generator_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct generator_segment_data *data = (struct generator_segment_data *)segment->data;
   switch(field){
-  case MIXED_GENERATOR_FREQUENCY: data->frequency = *(float *)value; break;
+  case MIXED_GENERATOR_FREQUENCY:
+    if(*(float *)value < 0.0 ||
+       data->samplerate < *(float *)value){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->frequency = *(float *)value;
+    break;
   case MIXED_GENERATOR_TYPE:
     if(*(enum mixed_generator_type *)value < MIXED_SINE ||
        MIXED_SAWTOOTH < *(enum mixed_generator_type *)value){

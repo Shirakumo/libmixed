@@ -18,6 +18,12 @@ int fade_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
+int fade_segment_start(struct mixed_segment *segment){
+  struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
+  data->time_passed = 0.0;
+  return 1;
+}
+
 int fade_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
 
@@ -206,6 +212,7 @@ MIXED_EXPORT int mixed_make_segment_fade(float from, float to, float time, enum 
   data->samplerate = samplerate;
   
   segment->free = fade_segment_free;
+  segment->start = fade_segment_start;
   segment->mix = fade_segment_mix;
   segment->set_in = fade_segment_set_in;
   segment->set_out = fade_segment_set_out;
