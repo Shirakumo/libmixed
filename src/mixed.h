@@ -52,6 +52,9 @@ extern "C" {
     // The field you tried to set is invalid for this
     // segment and/or buffer of this segment.
     MIXED_INVALID_FIELD,
+    // The value given for the field is in an invalid
+    // range.
+    MIXED_INVALID_VALUE,
     // You tried to start a segment again after it had
     // already been started before.
     MIXED_SEGMENT_ALREADY_STARTED,

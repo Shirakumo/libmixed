@@ -156,11 +156,38 @@ int fade_segment_get(size_t field, void *value, struct mixed_segment *segment){
 int fade_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
   switch(field){
-  case MIXED_FADE_FROM: data->from = *(float *)value; break;
-  case MIXED_FADE_TO: data->to = *(float *)value; break;
-  case MIXED_FADE_TIME: data->time = *(float *)value; break;
-  case MIXED_FADE_TYPE: data->type = *(enum mixed_fade_type *)value; break;
-  default: mixed_err(MIXED_INVALID_FIELD); return 0;
+  case MIXED_FADE_FROM:
+    if(*(float *)value < 0.0){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->from = *(float *)value;
+    break;
+  case MIXED_FADE_TO:
+    if(*(float *)value < 0.0){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->to = *(float *)value;
+    break;
+  case MIXED_FADE_TIME:
+    if(*(float *)value < 0.0){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->time = *(float *)value;
+    break;
+  case MIXED_FADE_TYPE:
+    if(*(enum mixed_fade_type *)value < MIXED_LINEAR ||
+       MIXED_CUBIC_IN_OUT < *(enum mixed_fade_type *)value){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->type = *(enum mixed_fade_type *)value;
+    break;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
   }
   return 1;
 }

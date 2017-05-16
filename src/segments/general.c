@@ -94,8 +94,19 @@ int general_segment_get(size_t field, void *value, struct mixed_segment *segment
 int general_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct general_segment_data *data = (struct general_segment_data *)segment->data;
   switch(field){
-  case MIXED_GENERAL_VOLUME: data->volume = *(float *)value; break;
-  case MIXED_GENERAL_PAN: data->pan = *(float *)value; break;
+  case MIXED_GENERAL_VOLUME:
+    if(*(float *)value < 0.0){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->volume = *(float *)value; break;
+  case MIXED_GENERAL_PAN: 
+    if(*(float *)value < -1.0 ||
+       1.0 < *(float *)value){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->pan = *(float *)value; break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
