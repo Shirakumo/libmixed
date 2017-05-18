@@ -40,5 +40,6 @@ if(CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake)")
 elseif(CMAKE_BUILD_TOOL MATCHES "(gcc|clang)")
   add_definitions(-W -Wall -Wextra -pedantic)
 endif()
+add_definitions(-Wno-ignored-attributes)
 
 install(TARGETS mixed DESTINATION /usr/local/lib)
