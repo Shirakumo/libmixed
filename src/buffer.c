@@ -243,8 +243,8 @@ MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffe
   if(from != to){
     size_t size = (to->size<from->size)? from->size : to->size;
     memcpy(to->data, from->data, sizeof(float)*size);
-    for(size_t i=size; size<to->size; ++i){
-      to->data[i] = 0.0f;
+    if(size < to->size){
+      memset(to->data+size, 0, sizeof(float)*(to->size-size));
     }
   }
   return 1;
