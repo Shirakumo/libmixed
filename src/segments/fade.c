@@ -114,6 +114,12 @@ void fade_segment_mix(size_t samples, struct mixed_segment *segment){
   data->time_passed = time;
 }
 
+void fade_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+  struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
+  
+  mixed_buffer_copy(data->in, data->out);
+}
+
 struct mixed_segment_info *fade_segment_info(struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
@@ -144,6 +150,10 @@ struct mixed_segment_info *fade_segment_info(struct mixed_segment *segment){
   info->fields[4].description = "The type of easing function used to fade.";
   info->fields[4].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
+  info->fields[5].field = MIXED_BYPASS;
+  info->fields[5].description = "Bypass the segment's processing.";
+  info->fields[5].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
   return info;
 }
 
@@ -154,6 +164,7 @@ int fade_segment_get(size_t field, void *value, struct mixed_segment *segment){
   case MIXED_FADE_TO: *((float *)value) = data->to; break;
   case MIXED_FADE_TIME: *((float *)value) = data->time; break;
   case MIXED_FADE_TYPE: *((enum mixed_fade_type *)value) = data->type; break;
+  case MIXED_BYPASS: *((bool *)value) = (segment->mix == fade_segment_mix_bypass);
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
@@ -190,6 +201,13 @@ int fade_segment_set(size_t field, void *value, struct mixed_segment *segment){
       return 0;
     }
     data->type = *(enum mixed_fade_type *)value;
+    break;
+  case MIXED_BYPASS:
+    if(*(bool *)value){
+      segment->mix = fade_segment_mix_bypass;
+    }else{
+      segment->mix = fade_segment_mix;
+    }
     break;
   default:
     mixed_err(MIXED_INVALID_FIELD);

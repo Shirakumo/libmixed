@@ -57,6 +57,13 @@ void general_segment_mix(size_t samples, struct mixed_segment *segment){
   }
 }
 
+void general_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+  struct general_segment_data *data = (struct general_segment_data *)segment->data;
+
+  mixed_buffer_copy(data->in[MIXED_LEFT], data->out[MIXED_LEFT]);
+  mixed_buffer_copy(data->in[MIXED_RIGHT], data->out[MIXED_RIGHT]);
+}
+
 struct mixed_segment_info *general_segment_info(struct mixed_segment *segment){
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
   info->name = "general";
@@ -77,6 +84,10 @@ struct mixed_segment_info *general_segment_info(struct mixed_segment *segment){
   info->fields[2].field = MIXED_GENERAL_PAN;
   info->fields[2].description = "The left/right stereo panning.";
   info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info->fields[3].field = MIXED_BYPASS;
+  info->fields[3].description = "Bypass the segment's processing.";
+  info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
   
   return info;
 }
@@ -86,6 +97,7 @@ int general_segment_get(size_t field, void *value, struct mixed_segment *segment
   switch(field){
   case MIXED_GENERAL_VOLUME: *((float *)value) = data->volume; break;
   case MIXED_GENERAL_PAN: *((float *)value) = data->pan; break;
+  case MIXED_BYPASS: *((bool *)value) = (segment->mix == general_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
@@ -99,15 +111,25 @@ int general_segment_set(size_t field, void *value, struct mixed_segment *segment
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    data->volume = *(float *)value; break;
+    data->volume = *(float *)value;
+    break;
   case MIXED_GENERAL_PAN: 
     if(*(float *)value < -1.0 ||
        1.0 < *(float *)value){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    data->pan = *(float *)value; break;
-  default: mixed_err(MIXED_INVALID_FIELD); return 0;
+    data->pan = *(float *)value;
+    break;
+  case MIXED_BYPASS:
+    if(*(bool *)value){
+      segment->mix = general_segment_mix_bypass;
+    }else{
+      segment->mix = general_segment_mix;
+    }
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
   }
   return 1;
 }

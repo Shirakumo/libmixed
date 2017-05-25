@@ -106,6 +106,9 @@ extern "C" {
   MIXED_EXPORT enum mixed_segment_fields{
     // Access the backing buffer for this in/out.
     MIXED_BUFFER,
+    // Whether to bypass the segment and effectively
+    // disable its effects. The value is a bool.
+    MIXED_BYPASS,
     // Access to the resampling function of the channel.
     // The resampling function must have the same signature
     // as mixed_resample_linear below.
