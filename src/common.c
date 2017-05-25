@@ -16,6 +16,9 @@ MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
   }
 }
 
+void mix_noop(size_t samples, struct mixed_segment *segment){
+}
+
 int errorcode = 0;
 
 void mixed_err(int code){
