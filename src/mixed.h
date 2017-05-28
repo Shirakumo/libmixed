@@ -429,6 +429,11 @@ extern "C" {
   // the smaller buffer can carry are copied.
   MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
 
+  // Clear the buffer to make it empty again.
+  // 
+  // This clears the entire buffer to hold samples of all zeroes.
+  MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer);
+  
   // Resample the buffer using nearest-neighbor.
   //
   // This is the fastest and most primitive resampling you could

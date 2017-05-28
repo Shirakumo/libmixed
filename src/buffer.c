@@ -17,6 +17,14 @@ MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer){
   buffer->data = 0;
 }
 
+MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer){
+  if(buffer->data){
+    memset(buffer->data, 0, sizeof(float)*buffer->size);
+    return 1;
+  }
+  return 0;
+}
+
 #define DEF_MIXED_TRANSFER_SAMPLE_FROM(name, datatype) \
 static inline void mixed_transfer_sample_from_##name(struct mixed_channel *in, size_t is, struct mixed_buffer *out, size_t os) { \
   out->data[os] = mixed_from_##name(((datatype *)in->data)[is]); \
