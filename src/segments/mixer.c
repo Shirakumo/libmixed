@@ -1,5 +1,7 @@
 #include "internal.h"
 
+// FIXME: allow specifying the number of channels to output.
+
 struct mixer_segment_data{
   struct mixed_buffer **in;
   size_t count;
