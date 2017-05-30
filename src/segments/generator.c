@@ -6,6 +6,7 @@ struct generator_segment_data{
   float frequency;
   size_t phase;
   size_t samplerate;
+  float volume;
 };
 
 int generator_segment_free(struct mixed_segment *segment){
@@ -55,6 +56,7 @@ void generator_segment_mix(size_t samples, struct mixed_segment *segment){
   size_t phase = data->phase;
   float (*generator)(float frequency, float phase, float samplerate) = 0;
   float *out = data->out->data;
+  float volume = data->volume;
 
   switch(data->type){
   case MIXED_SINE: generator = sine_wave; break;
@@ -64,7 +66,7 @@ void generator_segment_mix(size_t samples, struct mixed_segment *segment){
   }
   
   for(size_t i=0; i<samples; ++i){
-    out[i] = generator(data->frequency, phase, data->samplerate);
+    out[i] = generator(data->frequency, phase, data->samplerate) * volume;
     phase = (phase+1) % data->samplerate;
   }
 
@@ -82,23 +84,35 @@ struct mixed_segment_info *generator_segment_info(struct mixed_segment *segment)
   info->fields[0].field = MIXED_BUFFER;
   info->fields[0].description = "The buffer for audio data attached to the location.";
   info->fields[0].flags = MIXED_OUT | MIXED_SET;
-  
-  info->fields[1].field = MIXED_GENERATOR_FREQUENCY;
-  info->fields[1].description = "The frequency in Hz of the generated tone.";
+
+  info->fields[1].field = MIXED_VOLUME;
+  info->fields[1].description = "The volume scaling factor.";
   info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
   
-  info->fields[2].field = MIXED_GENERATOR_TYPE;
-  info->fields[2].description = "The type of wave form that is produced.";
+  info->fields[2].field = MIXED_GENERATOR_FREQUENCY;
+  info->fields[2].description = "The frequency in Hz of the generated tone.";
   info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  
+  info->fields[3].field = MIXED_GENERATOR_TYPE;
+  info->fields[3].description = "The type of wave form that is produced.";
+  info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
   
   return info;
 }
 
 int generator_segment_get(size_t field, void *value, struct mixed_segment *segment){
   struct generator_segment_data *data = (struct generator_segment_data *)segment->data;
+  
   switch(field){
-  case MIXED_GENERATOR_FREQUENCY: *((float *)value) = data->frequency; break;
-  case MIXED_GENERATOR_TYPE: *((enum mixed_generator_type *)value) = data->type; break;
+  case MIXED_VOLUME:
+    *((float *)value) = data->volume;
+    break;
+  case MIXED_GENERATOR_FREQUENCY:
+    *((float *)value) = data->frequency;
+    break;
+  case MIXED_GENERATOR_TYPE:
+    *((enum mixed_generator_type *)value) = data->type;
+    break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
@@ -106,7 +120,11 @@ int generator_segment_get(size_t field, void *value, struct mixed_segment *segme
 
 int generator_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct generator_segment_data *data = (struct generator_segment_data *)segment->data;
+
   switch(field){
+  case MIXED_VOLUME:
+    data->volume = *((float *)value);
+    break;
   case MIXED_GENERATOR_FREQUENCY:
     if(*(float *)value < 0.0 ||
        data->samplerate < *(float *)value){
@@ -138,6 +156,7 @@ MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, si
   data->frequency = frequency;
   data->type = type;
   data->samplerate = samplerate;
+  data->volume = 1.0f;
   
   segment->free = generator_segment_free;
   segment->mix = generator_segment_mix;
