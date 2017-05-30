@@ -117,12 +117,14 @@ int mixer_segment_get(size_t field, void *value, struct mixed_segment *segment){
 }
 
 struct mixed_segment_info *mixer_segment_info(struct mixed_segment *segment){
+  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
+  
   info->name = "mixer";
   info->description = "Mixes multiple buffers together";
   info->min_inputs = 0;
   info->max_inputs = -1;
-  info->outputs = 1;
+  info->outputs = data->channels;
   
   info->fields[0].field = MIXED_BUFFER;
   info->fields[0].description = "The buffer for audio data attached to the location.";
