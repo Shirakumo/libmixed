@@ -105,6 +105,7 @@ extern "C" {
   // standard segments this library provides.
   MIXED_EXPORT enum mixed_segment_fields{
     // Access the backing buffer for this in/out.
+    // The value must be a mixed_buffer struct.
     MIXED_BUFFER,
     // Whether to bypass the segment and effectively
     // disable its effects. The value is a bool.
@@ -112,30 +113,33 @@ extern "C" {
     // Access the volume of the segment.
     // The volume should be positive. Setting the volume
     // to values higher than one will result in distortion.
+    // The type of this field should be a float.
     MIXED_VOLUME,
     // Access to the resampling function of the channel.
     // The resampling function must have the same signature
     // as mixed_resample_linear below.
     MIXED_CHANNEL_RESAMPLER,
-    // Access the panning of the general segment.
+    // Access the panning of the general segment as a float.
     // The pan should be in the range of [-1.0, +1.0] where
     // -1 is all the way on the left and +1 is on the right.
     MIXED_GENERAL_PAN,
-    // Access the starting volume for the fading.
+    // Access the starting volume for the fading as a float.
     // See MIXED_GENERAL_VOLUME
     MIXED_FADE_FROM,
-    // Access the ending volume for the fading.
+    // Access the ending volume for the fading as a float.
     // See MIXED_GENERAL_VOLUME
     MIXED_FADE_TO,
     // Access the time (in seconds) it takes to fade
-    // between the FROM and TO values.
+    // between the FROM and TO values as a float.
     MIXED_FADE_TIME,
     // Acccess the type of fading function that is used.
     // See mixed_fade_type
     MIXED_FADE_TYPE,
     // Access the frequency (in Hz) of the wave produced.
+    // The type of this field must be a size_t.
     MIXED_GENERATOR_FREQUENCY,
     // Access the type of wave the generator produces.
+    // The type of this field must match the enum.
     // See mixed_generator_type
     MIXED_GENERATOR_TYPE,
     // Access the location of the source or listener.
@@ -158,21 +162,23 @@ extern "C" {
     // implicitly sets the units used for the calculations.
     // The default is 34330.0, meaning the unit is centi-
     // meters and the speed is for clean air at ~20°C.
+    // The type of this field must be a float.
     MIXED_SPACE_SOUNDSPEED,
-    // Access the doppler factor value. Changing this can
-    // exaggerate or dampen the doppler effect.
+    // Access the doppler factor value as a float.
+    // Changing this can exaggerate or dampen the doppler
+    // effect's potency.
     MIXED_SPACE_DOPPLER_FACTOR,
-    // Access the minimal distance.
+    // Access the minimal distance as a float.
     // Any distance lower than this will make the sound
     // appear at its maximal volume.
     MIXED_SPACE_MIN_DISTANCE,
-    // Access the maximal distance.
+    // Access the maximal distance as a float.
     // Any distance greater than this will make the sound
     // appear at its minimal volume.
     MIXED_SPACE_MAX_DISTANCE,
-    // Access the rolloff factor.
+    // Access the rolloff factor as a float.
     // This factor influences the curve of the attenuation
-    // function.
+    // function and should be in the range of [0.0, 1.0].
     MIXED_SPACE_ROLLOFF,
     // Access the attenuation function.
     // this function calculates how quickly the sound gets
