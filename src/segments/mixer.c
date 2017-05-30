@@ -7,6 +7,7 @@ struct mixer_segment_data{
   size_t count;
   size_t size;
   struct mixed_buffer *out;
+  float volume;
 };
 
 int mixer_segment_free(struct mixed_segment *segment){
@@ -60,8 +61,9 @@ int mixer_segment_set_in(size_t field, size_t location, void *buffer, struct mix
 void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
   size_t count = data->count;
+  float volume = data->volume;
   if(0 < count){
-    float div = 1.0f/count;
+    float div = volume/count;
     for(size_t i=0; i<samples; ++i){
       float out = 0.0f;
       for(size_t b=0; b<count; ++b){
@@ -69,6 +71,32 @@ void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
       }
       data->out->data[i] = out*div;
     }
+  }
+}
+
+int mixer_segment_set(size_t field, void *value, struct mixed_segment *segment){
+  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+  
+  switch(field){
+  case MIXED_VOLUME:
+    data->volume = *((float *)value);
+    return 1;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
+  }
+}
+
+int mixer_segment_get(size_t field, void *value, struct mixed_segment *segment){
+  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+  
+  switch(field){
+  case MIXED_VOLUME:
+    *((float *)value) = data->volume;
+    return 1;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
   }
 }
 
@@ -83,6 +111,10 @@ struct mixed_segment_info *mixer_segment_info(struct mixed_segment *segment){
   info->fields[0].field = MIXED_BUFFER;
   info->fields[0].description = "The buffer for audio data attached to the location.";
   info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
+
+  info->fields[1].field = MIXED_VOLUME;
+  info->fields[1].description = "The volume scaling factor for the input.";
+  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
   return info;
 }
@@ -114,8 +146,12 @@ MIXED_EXPORT int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct 
     }
   }
 
+  data->volume = 1.0f;
+
   segment->free = mixer_segment_free;
   segment->mix = mixer_segment_mix;
+  segment->set = mixer_segment_set;
+  segment->get = mixer_segment_get;
   segment->set_in = mixer_segment_set_in;
   segment->set_out = mixer_segment_set_out;
   segment->info = mixer_segment_info;
