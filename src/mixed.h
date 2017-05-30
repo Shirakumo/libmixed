@@ -413,14 +413,18 @@ extern "C" {
   // This appropriately converts sample format and channel layout.
   // You are responsible for passing in an array of buffers that is
   // at least as long as the channel's channel count.
-  MIXED_EXPORT int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples);
+  // The volume is a multiplier you can pass to adjust the volume
+  // in the resulting buffers.
+  MIXED_EXPORT int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples, float volume);
 
   // Convert buffer data to the channel data.
   //
   // This appropriately converts sample format and channel layout.
   // You are responsible for passing in an array of buffers that is
   // at least as long as the channel's channel count.
-  MIXED_EXPORT int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples);
+  // The volume is a multiplier you can pass to adjust the volume
+  // in the resulting channel.
+  MIXED_EXPORT int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples, float volume);
 
   // Copy a buffer to another.
   //

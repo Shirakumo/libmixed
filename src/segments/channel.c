@@ -6,6 +6,7 @@ struct channel_segment_data{
   struct mixed_buffer **resample_buffers;
   int (*resampler)(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples);
   size_t samplerate;
+  float volume;
 };
 
 int channel_segment_free(struct mixed_segment *segment){
@@ -49,27 +50,29 @@ int channel_segment_set_buffer(size_t field, size_t location, void *buffer, stru
 
 void source_segment_mix(size_t samples, struct mixed_segment *segment){
   struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
+
   if(data->resample_buffers){
     size_t source_samples = samples * data->samplerate / data->channel->samplerate;
-    mixed_buffer_from_channel(data->channel, data->resample_buffers, source_samples);
+    mixed_buffer_from_channel(data->channel, data->resample_buffers, source_samples, data->volume);
     for(size_t i=0; i<data->channel->channels; ++i){
       data->resampler(data->resample_buffers[i], data->channel->samplerate, data->buffers[i], data->samplerate, samples);
     }
   }else{
-    mixed_buffer_from_channel(data->channel, data->buffers, samples);
+    mixed_buffer_from_channel(data->channel, data->buffers, samples, data->volume);
   }
 }
 
 void drain_segment_mix(size_t samples, struct mixed_segment *segment){
   struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
+
   if(data->resample_buffers){
     for(size_t i=0; i<data->channel->channels; ++i){
       data->resampler(data->buffers[i], data->samplerate, data->resample_buffers[i], data->channel->samplerate, samples);
     }
     size_t drain_samples = samples * data->samplerate / data->channel->samplerate;
-    mixed_buffer_to_channel(data->resample_buffers, data->channel, drain_samples);
+    mixed_buffer_to_channel(data->resample_buffers, data->channel, drain_samples, data->volume);
   }else{
-    mixed_buffer_to_channel(data->buffers, data->channel, samples);
+    mixed_buffer_to_channel(data->buffers, data->channel, samples, data->volume);
   }
 }
 
@@ -77,6 +80,9 @@ int source_segment_set(size_t field, void *value, struct mixed_segment *segment)
   struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
   
   switch(field){
+  case MIXED_VOLUME:
+    data->volume = *((float *)value);
+    return 1;
   case MIXED_BYPASS:
     if(*(bool *)value){
       for(size_t i=0; i<data->channel->channels; ++i){
@@ -97,6 +103,9 @@ int drain_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
   
   switch(field){
+  case MIXED_VOLUME:
+    data->volume = *((float *)value);
+    return 1;
   case MIXED_BYPASS:
     if(*(bool *)value){
       memset(data->channel->data, 0, data->channel->size);
@@ -112,7 +121,12 @@ int drain_segment_set(size_t field, void *value, struct mixed_segment *segment){
 }
 
 int source_segment_get(size_t field, void *value, struct mixed_segment *segment){
+  struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
+  
   switch(field){
+  case MIXED_VOLUME:
+    *((float *)value) = data->volume;
+    return 1;
   case MIXED_BYPASS:
     *(bool *)value = (segment->mix == mix_noop);
     return 1;
@@ -134,13 +148,17 @@ struct mixed_segment_info *source_segment_info(struct mixed_segment *segment){
   info->fields[0].description = "The buffer to attach to the port.";
   info->fields[0].flags = MIXED_OUT | MIXED_SET;
 
-  info->fields[1].field = MIXED_CHANNEL_RESAMPLER;
-  info->fields[1].description = "The function used to resample the audio if necessary.";
-  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET;
+  info->fields[1].field = MIXED_VOLUME;
+  info->fields[1].description = "The volume scaling factor.";
+  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[2].field = MIXED_BYPASS;
-  info->fields[2].description = "Bypass the segment's processing.";
-  info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  info->fields[2].field = MIXED_CHANNEL_RESAMPLER;
+  info->fields[2].description = "The function used to resample the audio if necessary.";
+  info->fields[2].flags = MIXED_SEGMENT | MIXED_SET;
+
+  info->fields[3].field = MIXED_BYPASS;
+  info->fields[3].description = "Bypass the segment's processing.";
+  info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
   
   return info;
 }
@@ -157,13 +175,17 @@ struct mixed_segment_info *drain_segment_info(struct mixed_segment *segment){
   info->fields[0].description = "The buffer for audio data attached to the location.";
   info->fields[0].flags = MIXED_IN | MIXED_SET;
 
-  info->fields[1].field = MIXED_CHANNEL_RESAMPLER;
-  info->fields[1].description = "The function used to resample the audio if necessary.";
-  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET;
+  info->fields[1].field = MIXED_VOLUME;
+  info->fields[1].description = "The volume scaling factor.";
+  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[2].field = MIXED_BYPASS;
-  info->fields[2].description = "Bypass the segment's processing.";
-  info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  info->fields[2].field = MIXED_CHANNEL_RESAMPLER;
+  info->fields[2].description = "The function used to resample the audio if necessary.";
+  info->fields[2].flags = MIXED_SEGMENT | MIXED_SET;
+
+  info->fields[3].field = MIXED_BYPASS;
+  info->fields[3].description = "Bypass the segment's processing.";
+  info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
   return info;
 }
@@ -248,6 +270,7 @@ int make_channel_internal(struct mixed_channel *channel, size_t samplerate, stru
   data->channel = channel;
   data->samplerate = samplerate;
   data->resampler = mixed_resample_linear;
+  data->volume = 1.0;
 
   segment->free = channel_segment_free;
   segment->data = data;
