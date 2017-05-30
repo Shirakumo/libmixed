@@ -109,14 +109,14 @@ extern "C" {
     // Whether to bypass the segment and effectively
     // disable its effects. The value is a bool.
     MIXED_BYPASS,
+    // Access the volume of the segment.
+    // The volume should be positive. Setting the volume
+    // to values higher than one will result in distortion.
+    MIXED_VOLUME,
     // Access to the resampling function of the channel.
     // The resampling function must have the same signature
     // as mixed_resample_linear below.
     MIXED_CHANNEL_RESAMPLER,
-    // Access the volume of the general segment.
-    // The volume should be positive. Setting the volume
-    // to values higher than one will result in distortion.
-    MIXED_GENERAL_VOLUME,
     // Access the panning of the general segment.
     // The pan should be in the range of [-1.0, +1.0] where
     // -1 is all the way on the left and +1 is on the right.

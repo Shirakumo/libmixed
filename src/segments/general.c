@@ -77,7 +77,7 @@ struct mixed_segment_info *general_segment_info(struct mixed_segment *segment){
   info->fields[0].description = "The buffer for audio data attached to the location.";
   info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
 
-  info->fields[1].field = MIXED_GENERAL_VOLUME;
+  info->fields[1].field = MIXED_VOLUME;
   info->fields[1].description = "The volume scaling factor for the input.";
   info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
@@ -95,7 +95,7 @@ struct mixed_segment_info *general_segment_info(struct mixed_segment *segment){
 int general_segment_get(size_t field, void *value, struct mixed_segment *segment){
   struct general_segment_data *data = (struct general_segment_data *)segment->data;
   switch(field){
-  case MIXED_GENERAL_VOLUME: *((float *)value) = data->volume; break;
+  case MIXED_VOLUME: *((float *)value) = data->volume; break;
   case MIXED_GENERAL_PAN: *((float *)value) = data->pan; break;
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == general_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
@@ -106,7 +106,7 @@ int general_segment_get(size_t field, void *value, struct mixed_segment *segment
 int general_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct general_segment_data *data = (struct general_segment_data *)segment->data;
   switch(field){
-  case MIXED_GENERAL_VOLUME:
+  case MIXED_VOLUME:
     if(*(float *)value < 0.0){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
