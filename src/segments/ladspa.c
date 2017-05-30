@@ -29,6 +29,8 @@ int ladspa_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
+// FIXME: add start method that checks for buffer completeness.
+
 int ladspa_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
   size_t index = 0;

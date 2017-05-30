@@ -18,6 +18,8 @@ int fade_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
+// FIXME: add start method that checks for buffer completeness.
+
 int fade_segment_start(struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
   data->time_passed = 0.0;

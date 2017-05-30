@@ -26,6 +26,8 @@ struct space_segment_data{
   float (*attenuation)(float min, float max, float dist, float roll);
 };
 
+// FIXME: add start method that checks for buffer completeness.
+
 int space_segment_free(struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
   if(data){

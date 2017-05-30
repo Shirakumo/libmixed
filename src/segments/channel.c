@@ -120,6 +120,8 @@ int drain_segment_set(size_t field, void *value, struct mixed_segment *segment){
   }
 }
 
+// FIXME: add start method that checks for buffer completeness.
+
 int source_segment_get(size_t field, void *value, struct mixed_segment *segment){
   struct channel_segment_data *data = (struct channel_segment_data *)segment->data;
   
