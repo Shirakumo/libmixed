@@ -22,6 +22,7 @@ struct space_segment_data{
   float min_distance;
   float max_distance;
   float rolloff;
+  float volume;
   float (*attenuation)(float min, float max, float dist, float roll);
 };
 
@@ -102,7 +103,7 @@ static inline void calculate_volumes(float *lvolume, float *rvolume, struct spac
   float min = data->min_distance;
   float max = data->max_distance;
   float roll = data->rolloff;
-  float div = 1.0/((float)data->count);
+  float div = data->volume/((float)data->count);
   float distance = clamp(min, dist(source->location, data->location), max);
   float volume = div * data->attenuation(min, max, distance, roll);
   float pan = calculate_pan(source->location, data->location, data->direction, data->up);
@@ -299,6 +300,9 @@ int space_segment_get(size_t field, void *value, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
   float *parts = (float *)value;
   switch(field){
+  case MIXED_VOLUME:
+    *((float *)value) = data->volume;
+    break;
   case MIXED_SPACE_LOCATION:
     parts[0] = data->location[0];
     parts[1] = data->location[1];
@@ -358,6 +362,9 @@ int space_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
   float *parts = *(float **)value;
   switch(field){
+  case MIXED_VOLUME:
+    data->volume = *((float *)value);
+    break;
   case MIXED_SPACE_LOCATION:
     data->location[0] = parts[0];
     data->location[1] = parts[1];
@@ -431,45 +438,49 @@ struct mixed_segment_info *space_segment_info(struct mixed_segment *segment){
   info->fields[0].description = "The buffer for audio data attached to the location.";
   info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
 
-  info->fields[1].field = MIXED_SPACE_LOCATION;
-  info->fields[1].description = "The location of the source or segment (listener) in space.";
-  info->fields[1].flags = MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  info->fields[1].field = MIXED_VOLUME;
+  info->fields[1].description = "The volume scaling factor for the input.";
+  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[2].field = MIXED_SPACE_VELOCITY;
-  info->fields[2].description = "The velocity of the source or segment (listener) in space.";
+  info->fields[2].field = MIXED_SPACE_LOCATION;
+  info->fields[2].description = "The location of the source or segment (listener) in space.";
   info->fields[2].flags = MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[3].field = MIXED_SPACE_DIRECTION;
-  info->fields[3].description = "The direction the segment is facing in space.";
-  info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  info->fields[3].field = MIXED_SPACE_VELOCITY;
+  info->fields[3].description = "The velocity of the source or segment (listener) in space.";
+  info->fields[3].flags = MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[4].field = MIXED_SPACE_UP;
-  info->fields[4].description = "The vector designating 'upwards' in space.";
+  info->fields[4].field = MIXED_SPACE_DIRECTION;
+  info->fields[4].description = "The direction the segment is facing in space.";
   info->fields[4].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[5].field = MIXED_SPACE_SOUNDSPEED;
-  info->fields[5].description = "The speed of sound. This also implicitly declares the unit size.";
+  info->fields[5].field = MIXED_SPACE_UP;
+  info->fields[5].description = "The vector designating 'upwards' in space.";
   info->fields[5].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[6].field = MIXED_SPACE_DOPPLER_FACTOR;
-  info->fields[6].description = "The doppler factor. You can use this to exaggerate or dampen the effect.";
+  info->fields[5].field = MIXED_SPACE_SOUNDSPEED;
+  info->fields[6].description = "The speed of sound. This also implicitly declares the unit size.";
   info->fields[6].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[7].field = MIXED_SPACE_MIN_DISTANCE;
-  info->fields[7].description = "Any distance lower than this will make the sound appear at its maximal volume.";
+  info->fields[7].field = MIXED_SPACE_DOPPLER_FACTOR;
+  info->fields[7].description = "The doppler factor. You can use this to exaggerate or dampen the effect.";
   info->fields[7].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[8].field = MIXED_SPACE_MAX_DISTANCE;
-  info->fields[8].description = "Any distance greater than this will make the sound appear at its minimal volume.";
+  info->fields[8].field = MIXED_SPACE_MIN_DISTANCE;
+  info->fields[8].description = "Any distance lower than this will make the sound appear at its maximal volume.";
   info->fields[8].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[9].field = MIXED_SPACE_ROLLOFF;
-  info->fields[9].description = "This factor influences the curve of the attenuation function.";
+  info->fields[9].field = MIXED_SPACE_MAX_DISTANCE;
+  info->fields[9].description = "Any distance greater than this will make the sound appear at its minimal volume.";
   info->fields[9].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[10].field = MIXED_SPACE_ATTENUATION;
-  info->fields[10].description = "The function that calculates the attenuation curve that defines the volume of a source by its distance.";
+  info->fields[10].field = MIXED_SPACE_ROLLOFF;
+  info->fields[10].description = "This factor influences the curve of the attenuation function.";
   info->fields[10].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info->fields[11].field = MIXED_SPACE_ATTENUATION;
+  info->fields[11].description = "The function that calculates the attenuation curve that defines the volume of a source by its distance.";
+  info->fields[11].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
   return info;
 }
@@ -495,6 +506,7 @@ MIXED_EXPORT int mixed_make_segment_space(size_t samplerate, struct mixed_segmen
   data->max_distance = 10000.0;  // That's a 100 metres.
   data->rolloff = 0.5;
   data->attenuation = attenuation_exponential;
+  data->volume = 1.0;
   
   segment->free = space_segment_free;
   segment->mix = space_segment_mix;
