@@ -64,22 +64,21 @@ void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
   size_t buffers = data->count / data->channels;
   if(0 < buffers){
+    size_t channels = data->channels;
     float volume = data->volume;
-    float channels = data->channels;
     float div = volume/buffers;
-    
+
     for(size_t c=0; c<channels; ++c){
-      size_t offset = c*channels;
       float *out = data->out[c]->data;
 
       // Mix first buffer directly.
-      float *in = data->in[offset]->data;
+      float *in = data->in[c]->data;
       for(size_t i=0; i<samples; ++i){
         out[i] = in[i]*div;
       }
       // Mix other buffers additively.
       for(size_t b=1; b<buffers; ++b){
-        in = data->in[offset+b]->data;
+        in = data->in[b*channels+c]->data;
         for(size_t i=0; i<samples; ++i){
           out[i] += in[i]*div;
         }
