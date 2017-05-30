@@ -439,7 +439,7 @@ struct mixed_segment_info *space_segment_info(struct mixed_segment *segment){
   info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
 
   info->fields[1].field = MIXED_VOLUME;
-  info->fields[1].description = "The volume scaling factor for the input.";
+  info->fields[1].description = "The volume scaling factor for the output.";
   info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
   info->fields[2].field = MIXED_SPACE_LOCATION;
