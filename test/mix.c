@@ -4,8 +4,7 @@ int main(int argc, char **argv){
   int exit = 1;
   size_t samples = 100;
   struct mixed_mixer mixer = {0};
-  struct mixed_segment lmix_segment = {0};
-  struct mixed_segment rmix_segment = {0};
+  struct mixed_segment mix_segment = {0};
   struct mp3 *mp3s[argc-1];
   struct out *out = 0;
 
@@ -25,29 +24,27 @@ int main(int argc, char **argv){
     goto cleanup;
   }
   
-  if(!mixed_make_segment_mixer(0, &lmix_segment) ||
-     !mixed_make_segment_mixer(0, &rmix_segment)){
-    fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
+  if(!mixed_make_segment_mixer(2, &mix_segment)){
+    fprintf(stderr, "Failed to create segment: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
   
-  if(// The mixer segment's 0th buffer is its output.
-     !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &lmix_segment) ||
-     !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->right, &rmix_segment)){
+  if(!mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &mix_segment) ||
+     !mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &out->right, &mix_segment)){
     fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   // Initialize MP3 sources
-  for(size_t i=1; i<argc; ++i){
+  for(size_t i=0; i+1<argc; ++i){
     struct mp3 *mp3 = 0;
-    if(!load_mp3_segment(argv[i], samples, &mp3)){
+    if(!load_mp3_segment(argv[i+1], samples, &mp3)){
       goto cleanup;
     }
-    mp3s[i-1] = mp3;
+    mp3s[i] = mp3;
     // Attach to combining segments
-    if(!mixed_segment_set_in(MIXED_BUFFER, i, &mp3->left, &lmix_segment) ||
-       !mixed_segment_set_in(MIXED_BUFFER, i, &mp3->right, &rmix_segment)){
+    if(!mixed_segment_set_in(MIXED_BUFFER, i*2, &mp3->left, &mix_segment) ||
+       !mixed_segment_set_in(MIXED_BUFFER, i*2+1, &mp3->right, &mix_segment)){
       fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
@@ -61,8 +58,7 @@ int main(int argc, char **argv){
   // The order in which segments are added does matter, as the system
   // will not figure out on its own in which order the segments should
   // be called. We specify this here.
-  if(!mixed_mixer_add(&lmix_segment, &mixer) ||
-     !mixed_mixer_add(&rmix_segment, &mixer) ||
+  if(!mixed_mixer_add(&mix_segment, &mixer) ||
      !mixed_mixer_add(&out->segment, &mixer)){
     fprintf(stderr, "Failed to assemble mixer: %s\n", mixed_error_string(-1));
     goto cleanup;
@@ -106,8 +102,7 @@ int main(int argc, char **argv){
  cleanup:
   fprintf(stderr, "\nCleaning up.\n");
   
-  mixed_free_segment(&lmix_segment);
-  mixed_free_segment(&rmix_segment);
+  mixed_free_segment(&mix_segment);
   mixed_free_mixer(&mixer);
 
   for(size_t i=1; i<argc; ++i){

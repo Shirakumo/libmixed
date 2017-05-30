@@ -600,22 +600,21 @@ extern "C" {
   // A linear mixer
   //
   // This segment simply linearly mixes every input together into
-  // a single output. As such, it accepts an arbitrary number of
-  // inputs and a single output. The input buffers must be set in
-  // strictly monotonically increasing order. If you set a buffer
-  // to zero, the corresponding input is removed and all inputs
-  // above it are shifted down.
+  // output buffers. Each source must connect as many inputs as
+  // there are channels. This means that if you have a channel
+  // count of two and connect two sources A and B, the input
+  // buffers must be connected as follows: A⁰ A¹ B⁰ B¹
+  // The buffers must be set in a monotonically increasing order,
+  // meaning you cannot leave gaps in the input location.
+  // If you set a buffer to 0 it is removed and the buffers above
+  // it are shifted downwards.
   //
   // Depending on how many sources you have, adding and removing
   // sources at random locations may prove expensive. Especially
   // adding more sources might involve allocations, which may not
   // be suitable for real-time behaviour. Aside from this caveat,
   // sources can be added or changed at any point in time.
-  //
-  // The buffers argument can be a null-delimited array of pointers
-  // to buffers, or null if you want to add the buffers later. The
-  // array is not shared.
-  MIXED_EXPORT int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_mixer(size_t channels, struct mixed_segment *segment);
 
   // A very basic effect segment
   //

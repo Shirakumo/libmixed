@@ -1,12 +1,11 @@
 #include "internal.h"
 
-// FIXME: allow specifying the number of channels to output.
-
 struct mixer_segment_data{
   struct mixed_buffer **in;
   size_t count;
   size_t size;
-  struct mixed_buffer *out;
+  struct mixed_buffer **out;
+  size_t channels;
   float volume;
 };
 
@@ -21,12 +20,15 @@ int mixer_segment_free(struct mixed_segment *segment){
 
 int mixer_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+  
   switch(field){
   case MIXED_BUFFER:
-    switch(location){
-    case MIXED_MONO: data->out = (struct mixed_buffer *)buffer; return 1;
-    default: mixed_err(MIXED_INVALID_LOCATION); return 0;
+    if(data->channels <= location){
+      mixed_err(MIXED_INVALID_LOCATION);
+      return 0;
     }
+    data->out[location] = (struct mixed_buffer *)buffer;
+    return 1;
   default:
     mixed_err(MIXED_INVALID_FIELD);
     return 0;
@@ -60,19 +62,33 @@ int mixer_segment_set_in(size_t field, size_t location, void *buffer, struct mix
 
 void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
-  size_t count = data->count;
-  float volume = data->volume;
-  if(0 < count){
-    float div = volume/count;
-    for(size_t i=0; i<samples; ++i){
-      float out = 0.0f;
-      for(size_t b=0; b<count; ++b){
-        out += data->in[b]->data[i];
+  size_t buffers = data->count / data->channels;
+  if(0 < buffers){
+    float volume = data->volume;
+    float channels = data->channels;
+    float div = volume/buffers;
+    
+    for(size_t c=0; c<channels; ++c){
+      size_t offset = c*channels;
+      float *out = data->out[c]->data;
+
+      // Mix first buffer directly.
+      float *in = data->in[offset]->data;
+      for(size_t i=0; i<samples; ++i){
+        out[i] = in[i]*div;
       }
-      data->out->data[i] = out*div;
+      // Mix other buffers additively.
+      for(size_t b=1; b<buffers; ++b){
+        in = data->in[offset+b]->data;
+        for(size_t i=0; i<samples; ++i){
+          out[i] += in[i]*div;
+        }
+      }
     }
   }
 }
+
+// FIXME: add start method that checks for buffer completeness.
 
 int mixer_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
@@ -119,35 +135,22 @@ struct mixed_segment_info *mixer_segment_info(struct mixed_segment *segment){
   return info;
 }
 
-MIXED_EXPORT int mixed_make_segment_mixer(struct mixed_buffer **buffers, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_mixer(size_t channels, struct mixed_segment *segment){
   struct mixer_segment_data *data = calloc(1, sizeof(struct mixer_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
 
-  if(buffers){
-    size_t count = 0;
-    while(buffers[count]) ++count;
-    // Copy data over
-    if(0 < count){
-      data->out = buffers[0];
-      data->in = calloc(count-1, sizeof(struct mixed_buffer *));
-      if(!data->in){
-        mixed_err(MIXED_OUT_OF_MEMORY);
-        free(data);
-        return 0;
-      }
-      
-      data->size = count-1;
-      for(data->count = 0; data->count < data->size; ++data->count){
-        data->in[data->count] = buffers[data->count+1];
-      }
-    }
-  }
-
   data->volume = 1.0f;
-
+  data->channels = channels;
+  data->out = calloc(channels, sizeof(struct mixed_buffer *));
+  if(!data->out){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    free(data);
+    return 0;
+  }
+  
   segment->free = mixer_segment_free;
   segment->mix = mixer_segment_mix;
   segment->set = mixer_segment_set;
