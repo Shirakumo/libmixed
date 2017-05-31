@@ -27,8 +27,6 @@ struct space_segment_data{
   float (*attenuation)(float min, float max, float dist, float roll);
 };
 
-// FIXME: add start method that checks for buffer completeness.
-
 int space_segment_free(struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
   if(data){
@@ -37,6 +35,30 @@ int space_segment_free(struct mixed_segment *segment){
     free(data);
   }
   segment->data = 0;
+  return 1;
+}
+
+// FIXME: add start method that checks for buffer completeness.
+
+int space_segment_start(struct mixed_segment *segment){
+  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+  for(size_t i=0; i<data->count; ++i){
+    if(data->sources[i]->segment){
+      if(!mixed_segment_start(data->sources[i]->segment))
+        return 0;
+    }
+  }
+  return 1;
+}
+
+int space_segment_end(struct mixed_segment *segment){
+  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+  for(size_t i=0; i<data->count; ++i){
+    if(data->sources[i]->segment){
+      if(!mixed_segment_end(data->sources[i]->segment))
+        return 0;
+    }
+  }
   return 1;
 }
 
@@ -531,7 +553,9 @@ MIXED_EXPORT int mixed_make_segment_space(size_t samplerate, struct mixed_segmen
   data->volume = 1.0;
   
   segment->free = space_segment_free;
+  segment->start = space_segment_start;
   segment->mix = space_segment_mix;
+  segment->end = space_segment_end;
   segment->set_in = space_segment_set_in;
   segment->get_in = space_segment_get_in;
   segment->set_out = space_segment_set_out;

@@ -110,6 +110,28 @@ void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
 
 // FIXME: add start method that checks for buffer completeness.
 
+int mixer_segment_start(struct mixed_segment *segment){
+  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+  for(size_t i=0; i<data->count; ++i){
+    if(data->sources[i]->segment){
+      if(!mixed_segment_start(data->sources[i]->segment))
+        return 0;
+    }
+  }
+  return 1;
+}
+
+int mixer_segment_end(struct mixed_segment *segment){
+  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+  for(size_t i=0; i<data->count; ++i){
+    if(data->sources[i]->segment){
+      if(!mixed_segment_end(data->sources[i]->segment))
+        return 0;
+    }
+  }
+  return 1;
+}
+
 int mixer_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
   
@@ -178,7 +200,9 @@ MIXED_EXPORT int mixed_make_segment_mixer(size_t channels, struct mixed_segment 
   }
   
   segment->free = mixer_segment_free;
+  segment->start = mixer_segment_start;
   segment->mix = mixer_segment_mix;
+  segment->end = mixer_segment_end;
   segment->set = mixer_segment_set;
   segment->get = mixer_segment_get;
   segment->set_in = mixer_segment_set_in;
