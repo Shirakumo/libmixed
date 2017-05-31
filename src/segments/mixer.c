@@ -1,7 +1,12 @@
 #include "internal.h"
 
+struct mixer_source{
+  struct mixed_segment *segment;
+  struct mixed_buffer *buffer;
+};
+
 struct mixer_segment_data{
-  struct mixed_buffer **in;
+  struct mixer_source **sources;
   size_t count;
   size_t size;
   struct mixed_buffer **out;
@@ -10,11 +15,7 @@ struct mixer_segment_data{
 };
 
 int mixer_segment_free(struct mixed_segment *segment){
-  if(segment->data){
-    free(((struct mixer_segment_data *)segment->data)->in);
-    free(segment->data);
-  }
-  segment->data = 0;
+  free_vector((struct vector *)segment->data);
   return 1;
 }
 
@@ -42,18 +43,30 @@ int mixer_segment_set_in(size_t field, size_t location, void *buffer, struct mix
   case MIXED_BUFFER:
     if(buffer){ // Add or set an element
       if(location < data->count){
-        data->in[location] = (struct mixed_buffer *)buffer;
-    }else{
-        return vector_add(buffer, (struct vector *)data);
+        data->sources[location]->buffer = (struct mixed_buffer *)buffer;
+      }else{
+        struct mixer_source *source = calloc(1, sizeof(struct mixer_source));
+        if(!source){
+          mixed_err(MIXED_OUT_OF_MEMORY);
+          return 0;
+        }
+        source->buffer = (struct mixed_buffer *)buffer;
+        return vector_add(source, (struct vector *)data);
       }
     }else{ // Remove an element
       if(data->count <= location){
         mixed_err(MIXED_INVALID_LOCATION);
         return 0;
       }
-    return vector_remove_pos(location, (struct vector *)data);
+      return vector_remove_pos(location, (struct vector *)data);
     }
     return 1;
+  case MIXED_SOURCE:
+    if(data->count <= location){
+      mixed_err(MIXED_INVALID_LOCATION);
+      return 0;
+    }
+    data->sources[location]->segment = (struct mixed_segment *)buffer;
   default:
     mixed_err(MIXED_INVALID_FIELD);
     return 0;
@@ -72,13 +85,21 @@ void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
       float *out = data->out[c]->data;
 
       // Mix first buffer directly.
-      float *in = data->in[c]->data;
+      struct mixer_source *source = data->sources[c];
+      struct mixed_segment *segment = source->segment;
+      if(segment) segment->mix(samples, segment);
+      
+      float *in = source->buffer->data;
       for(size_t i=0; i<samples; ++i){
         out[i] = in[i]*div;
       }
       // Mix other buffers additively.
       for(size_t b=1; b<buffers; ++b){
-        in = data->in[b*channels+c]->data;
+        source = data->sources[b*channels+c];
+        segment = source->segment;
+        if(segment) segment->mix(samples, segment);
+        
+        in = source->buffer->data;
         for(size_t i=0; i<samples; ++i){
           out[i] += in[i]*div;
         }
@@ -132,6 +153,10 @@ struct mixed_segment_info *mixer_segment_info(struct mixed_segment *segment){
   info->fields[1].field = MIXED_VOLUME;
   info->fields[1].description = "The volume scaling factor for the output.";
   info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info->fields[2].field = MIXED_SOURCE;
+  info->fields[2].description = "The segment that needs to be mixed before its buffer has any useful data.";
+  info->fields[2].flags = MIXED_IN | MIXED_SET | MIXED_GET;
 
   return info;
 }

@@ -1,6 +1,7 @@
 #include "internal.h"
 
 struct space_source{
+  struct mixed_segment *segment;
   struct mixed_buffer *buffer;
   float location[3];
   float velocity[3];
@@ -156,8 +157,12 @@ void space_segment_mix(size_t samples, struct mixed_segment *segment){
     memset(right, 0, samples*sizeof(float));
   }else{
     float lvolume, rvolume;
-    // Mix the first source directly to avoid a clearing loop
+    // Mix the first source directly to avoid a clearing loop.
     struct space_source *source = data->sources[0];
+    // Invoke segment's mixing function if necessary.
+    struct mixed_segment *segment = source->segment;
+    if(segment) segment->mix(samples, segment);
+    // Perform mix.
     float *in = source->buffer->data;
     calculate_volumes(&lvolume, &rvolume, source, data);
     for(size_t i=0; i<samples; ++i){
@@ -167,6 +172,10 @@ void space_segment_mix(size_t samples, struct mixed_segment *segment){
     // Mix the rest of the sources additively.
     for(size_t s=1; s<count; ++s){
       source = data->sources[s];
+      // Invoke segment's mixing function if necessary.
+      segment = source->segment;
+      if(segment) segment->mix(samples, segment);
+      // Perform mix.
       in = source->buffer->data;
       calculate_volumes(&lvolume, &rvolume, source, data);
       for(size_t i=0; i<samples; ++i){
@@ -235,6 +244,7 @@ int space_segment_set_in(size_t field, size_t location, void *buffer, struct mix
       return vector_remove_pos(location, (struct vector *)data);
     }
     return 1;
+  case MIXED_SOURCE:
   case MIXED_SPACE_LOCATION:
   case MIXED_SPACE_VELOCITY:
     if(data->count <= location){
@@ -244,6 +254,9 @@ int space_segment_set_in(size_t field, size_t location, void *buffer, struct mix
     struct space_source *source = data->sources[location];
     float *value = (float *)buffer;
     switch(field){
+    case MIXED_SOURCE:
+      source->segment = (struct mixed_segment *)buffer;
+      break;
     case MIXED_SPACE_LOCATION:
       source->location[0] = value[0];
       source->location[1] = value[1];
@@ -273,6 +286,9 @@ int space_segment_get_in(size_t field, size_t location, void *buffer, struct mix
   struct space_source *source = data->sources[location];
 
   switch(field){
+  case MIXED_SOURCE:
+    *(struct mixed_segment **)buffer = source->segment;
+    return 1;
   case MIXED_BUFFER:
     *(struct mixed_buffer **)buffer = source->buffer;
     return 1;
@@ -483,6 +499,10 @@ struct mixed_segment_info *space_segment_info(struct mixed_segment *segment){
   info->fields[11].field = MIXED_SPACE_ATTENUATION;
   info->fields[11].description = "The function that calculates the attenuation curve that defines the volume of a source by its distance.";
   info->fields[11].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+  info->fields[12].field = MIXED_SOURCE;
+  info->fields[12].description = "The segment that needs to be mixed before its buffer has any useful data.";
+  info->fields[12].flags = MIXED_IN | MIXED_SET | MIXED_GET;
 
   return info;
 }
