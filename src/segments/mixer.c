@@ -80,7 +80,7 @@ void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
   if(0 < buffers){
     size_t channels = data->channels;
     float volume = data->volume;
-    float div = volume/buffers;
+    float div = volume;
 
     for(size_t c=0; c<channels; ++c){
       float *out = data->out[c]->data;

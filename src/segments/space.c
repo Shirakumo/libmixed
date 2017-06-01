@@ -128,7 +128,7 @@ static inline void calculate_volumes(float *lvolume, float *rvolume, struct spac
   float min = data->min_distance;
   float max = data->max_distance;
   float roll = data->rolloff;
-  float div = data->volume/((float)data->count);
+  float div = data->volume;
   float distance = clamp(min, dist(source->location, data->location), max);
   float volume = div * data->attenuation(min, max, distance, roll);
   float pan = calculate_pan(source->location, data->location, data->direction, data->up);
