@@ -556,6 +556,7 @@ MIXED_EXPORT int mixed_make_segment_space(size_t samplerate, struct mixed_segmen
   data->volume = 1.0;
   
   segment->free = space_segment_free;
+  segment->info = space_segment_info;
   segment->start = space_segment_start;
   segment->mix = space_segment_mix;
   segment->end = space_segment_end;
