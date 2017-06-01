@@ -106,6 +106,10 @@ void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
         }
       }
     }
+  }else{
+    for(size_t c=0; c<data->channels; ++c){
+      memset(data->out[c]->data, 0, samples*sizeof(float));
+    }
   }
 }
 
