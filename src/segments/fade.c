@@ -125,36 +125,39 @@ void fade_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
 struct mixed_segment_info *fade_segment_info(struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-  info->name = "fade";
-  info->description = "Fade the volume of buffers.";
-  info->flags = MIXED_INPLACE;
-  info->min_inputs = 1;
-  info->max_inputs = 1;
-  info->outputs = 1;
+
+  if(info){
+    info->name = "fade";
+    info->description = "Fade the volume of buffers.";
+    info->flags = MIXED_INPLACE;
+    info->min_inputs = 1;
+    info->max_inputs = 1;
+    info->outputs = 1;
   
-  info->fields[0].field = MIXED_BUFFER;
-  info->fields[0].description = "The buffer for audio data attached to the location.";
-  info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
+    info->fields[0].field = MIXED_BUFFER;
+    info->fields[0].description = "The buffer for audio data attached to the location.";
+    info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
 
-  info->fields[1].field = MIXED_FADE_FROM;
-  info->fields[1].description = "The starting volume from which the fade begins.";
-  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[1].field = MIXED_FADE_FROM;
+    info->fields[1].description = "The starting volume from which the fade begins.";
+    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[2].field = MIXED_FADE_TO;
-  info->fields[2].description = "The ending volume at which the fade ends.";
-  info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[2].field = MIXED_FADE_TO;
+    info->fields[2].description = "The ending volume at which the fade ends.";
+    info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[3].field = MIXED_FADE_TIME;
-  info->fields[3].description = "The number of seconds it takes to fade.";
-  info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[3].field = MIXED_FADE_TIME;
+    info->fields[3].description = "The number of seconds it takes to fade.";
+    info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[4].field = MIXED_FADE_TYPE;
-  info->fields[4].description = "The type of easing function used to fade.";
-  info->fields[4].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[4].field = MIXED_FADE_TYPE;
+    info->fields[4].description = "The type of easing function used to fade.";
+    info->fields[4].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[5].field = MIXED_BYPASS;
-  info->fields[5].description = "Bypass the segment's processing.";
-  info->fields[5].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[5].field = MIXED_BYPASS;
+    info->fields[5].description = "Bypass the segment's processing.";
+    info->fields[5].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  }
 
   return info;
 }

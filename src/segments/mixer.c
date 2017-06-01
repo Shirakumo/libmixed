@@ -162,24 +162,26 @@ int mixer_segment_get(size_t field, void *value, struct mixed_segment *segment){
 struct mixed_segment_info *mixer_segment_info(struct mixed_segment *segment){
   struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-  
-  info->name = "mixer";
-  info->description = "Mixes multiple buffers together";
-  info->min_inputs = 0;
-  info->max_inputs = -1;
-  info->outputs = data->channels;
-  
-  info->fields[0].field = MIXED_BUFFER;
-  info->fields[0].description = "The buffer for audio data attached to the location.";
-  info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
 
-  info->fields[1].field = MIXED_VOLUME;
-  info->fields[1].description = "The volume scaling factor for the output.";
-  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  if(info){
+    info->name = "mixer";
+    info->description = "Mixes multiple buffers together";
+    info->min_inputs = 0;
+    info->max_inputs = -1;
+    info->outputs = data->channels;
+  
+    info->fields[0].field = MIXED_BUFFER;
+    info->fields[0].description = "The buffer for audio data attached to the location.";
+    info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
 
-  info->fields[2].field = MIXED_SOURCE;
-  info->fields[2].description = "The segment that needs to be mixed before its buffer has any useful data.";
-  info->fields[2].flags = MIXED_IN | MIXED_SET;
+    info->fields[1].field = MIXED_VOLUME;
+    info->fields[1].description = "The volume scaling factor for the output.";
+    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+
+    info->fields[2].field = MIXED_SOURCE;
+    info->fields[2].description = "The segment that needs to be mixed before its buffer has any useful data.";
+    info->fields[2].flags = MIXED_IN | MIXED_SET;
+  }
 
   return info;
 }

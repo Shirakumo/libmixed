@@ -140,54 +140,60 @@ int source_segment_get(size_t field, void *value, struct mixed_segment *segment)
 
 struct mixed_segment_info *source_segment_info(struct mixed_segment *segment){
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-  info->name = "source";
-  info->description = "Segment acting as an audio source.";
-  info->min_inputs = 0;
-  info->max_inputs = 0;
-  info->outputs = ((struct channel_segment_data *)segment->data)->channel->channels;
+
+  if(info){
+    info->name = "source";
+    info->description = "Segment acting as an audio source.";
+    info->min_inputs = 0;
+    info->max_inputs = 0;
+    info->outputs = ((struct channel_segment_data *)segment->data)->channel->channels;
   
-  info->fields[0].field = MIXED_BUFFER;
-  info->fields[0].description = "The buffer to attach to the port.";
-  info->fields[0].flags = MIXED_OUT | MIXED_SET;
+    info->fields[0].field = MIXED_BUFFER;
+    info->fields[0].description = "The buffer to attach to the port.";
+    info->fields[0].flags = MIXED_OUT | MIXED_SET;
 
-  info->fields[1].field = MIXED_VOLUME;
-  info->fields[1].description = "The volume scaling factor.";
-  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[1].field = MIXED_VOLUME;
+    info->fields[1].description = "The volume scaling factor.";
+    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[2].field = MIXED_CHANNEL_RESAMPLER;
-  info->fields[2].description = "The function used to resample the audio if necessary.";
-  info->fields[2].flags = MIXED_SEGMENT | MIXED_SET;
+    info->fields[2].field = MIXED_CHANNEL_RESAMPLER;
+    info->fields[2].description = "The function used to resample the audio if necessary.";
+    info->fields[2].flags = MIXED_SEGMENT | MIXED_SET;
 
-  info->fields[3].field = MIXED_BYPASS;
-  info->fields[3].description = "Bypass the segment's processing.";
-  info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[3].field = MIXED_BYPASS;
+    info->fields[3].description = "Bypass the segment's processing.";
+    info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  }
   
   return info;
 }
 
 struct mixed_segment_info *drain_segment_info(struct mixed_segment *segment){
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-  info->name = "drain";
-  info->description = "Segment acting as an audio drain.";
-  info->min_inputs = ((struct channel_segment_data *)segment->data)->channel->channels;
-  info->max_inputs = info->min_inputs;
-  info->outputs = 0;
 
-  info->fields[0].field = MIXED_BUFFER;
-  info->fields[0].description = "The buffer for audio data attached to the location.";
-  info->fields[0].flags = MIXED_IN | MIXED_SET;
+  if(info){
+    info->name = "drain";
+    info->description = "Segment acting as an audio drain.";
+    info->min_inputs = ((struct channel_segment_data *)segment->data)->channel->channels;
+    info->max_inputs = info->min_inputs;
+    info->outputs = 0;
 
-  info->fields[1].field = MIXED_VOLUME;
-  info->fields[1].description = "The volume scaling factor.";
-  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[0].field = MIXED_BUFFER;
+    info->fields[0].description = "The buffer for audio data attached to the location.";
+    info->fields[0].flags = MIXED_IN | MIXED_SET;
 
-  info->fields[2].field = MIXED_CHANNEL_RESAMPLER;
-  info->fields[2].description = "The function used to resample the audio if necessary.";
-  info->fields[2].flags = MIXED_SEGMENT | MIXED_SET;
+    info->fields[1].field = MIXED_VOLUME;
+    info->fields[1].description = "The volume scaling factor.";
+    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-  info->fields[3].field = MIXED_BYPASS;
-  info->fields[3].description = "Bypass the segment's processing.";
-  info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[2].field = MIXED_CHANNEL_RESAMPLER;
+    info->fields[2].description = "The function used to resample the audio if necessary.";
+    info->fields[2].flags = MIXED_SEGMENT | MIXED_SET;
+
+    info->fields[3].field = MIXED_BYPASS;
+    info->fields[3].description = "Bypass the segment's processing.";
+    info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  }
 
   return info;
 }

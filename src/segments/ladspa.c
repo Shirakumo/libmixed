@@ -119,28 +119,31 @@ int ladspa_segment_end(struct mixed_segment *segment){
 struct mixed_segment_info *ladspa_segment_info(struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-  info->name = "ladspa";
-  info->description = data->descriptor->Name;
-  info->min_inputs = 0;
-  info->max_inputs = 0;
-  info->outputs = 0;
 
-  if(!LADSPA_IS_INPLACE_BROKEN(data->descriptor->Properties)){
-    info->flags = MIXED_INPLACE;
-  }
-  
-  for(size_t i=0; i<data->descriptor->PortCount; ++i){
-    const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
-    if(LADSPA_IS_PORT_AUDIO(port)){
-      if(LADSPA_IS_PORT_INPUT(port)){
-        ++info->max_inputs;
-        ++info->min_inputs;
-      }else{
-        ++info->outputs;
-      }
+  if(info){
+    info->name = "ladspa";
+    info->description = data->descriptor->Name;
+    info->min_inputs = 0;
+    info->max_inputs = 0;
+    info->outputs = 0;
+
+    if(!LADSPA_IS_INPLACE_BROKEN(data->descriptor->Properties)){
+      info->flags = MIXED_INPLACE;
     }
+  
+    for(size_t i=0; i<data->descriptor->PortCount; ++i){
+      const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
+      if(LADSPA_IS_PORT_AUDIO(port)){
+        if(LADSPA_IS_PORT_INPUT(port)){
+          ++info->max_inputs;
+          ++info->min_inputs;
+        }else{
+          ++info->outputs;
+        }
+      }
 
-    // FIXME: Fill fields
+      // FIXME: Fill fields
+    }
   }
   return info;
 }

@@ -77,27 +77,30 @@ void generator_segment_mix(size_t samples, struct mixed_segment *segment){
 
 struct mixed_segment_info *generator_segment_info(struct mixed_segment *segment){
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-  info->name = "generator";
-  info->description = "Wave generator source segment";
-  info->min_inputs = 0;
-  info->max_inputs = 0;
-  info->outputs = 1;
-  
-  info->fields[0].field = MIXED_BUFFER;
-  info->fields[0].description = "The buffer for audio data attached to the location.";
-  info->fields[0].flags = MIXED_OUT | MIXED_SET;
 
-  info->fields[1].field = MIXED_VOLUME;
-  info->fields[1].description = "The volume scaling factor.";
-  info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  if(info){
+    info->name = "generator";
+    info->description = "Wave generator source segment";
+    info->min_inputs = 0;
+    info->max_inputs = 0;
+    info->outputs = 1;
   
-  info->fields[2].field = MIXED_GENERATOR_FREQUENCY;
-  info->fields[2].description = "The frequency in Hz of the generated tone.";
-  info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[0].field = MIXED_BUFFER;
+    info->fields[0].description = "The buffer for audio data attached to the location.";
+    info->fields[0].flags = MIXED_OUT | MIXED_SET;
+
+    info->fields[1].field = MIXED_VOLUME;
+    info->fields[1].description = "The volume scaling factor.";
+    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
   
-  info->fields[3].field = MIXED_GENERATOR_TYPE;
-  info->fields[3].description = "The type of wave form that is produced.";
-  info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    info->fields[2].field = MIXED_GENERATOR_FREQUENCY;
+    info->fields[2].description = "The frequency in Hz of the generated tone.";
+    info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  
+    info->fields[3].field = MIXED_GENERATOR_TYPE;
+    info->fields[3].description = "The type of wave form that is produced.";
+    info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+  }
   
   return info;
 }
