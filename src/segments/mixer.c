@@ -67,6 +67,7 @@ int mixer_segment_set_in(size_t field, size_t location, void *buffer, struct mix
       return 0;
     }
     data->sources[location]->segment = (struct mixed_segment *)buffer;
+    return 1;
   default:
     mixed_err(MIXED_INVALID_FIELD);
     return 0;
@@ -178,7 +179,7 @@ struct mixed_segment_info *mixer_segment_info(struct mixed_segment *segment){
 
   info->fields[2].field = MIXED_SOURCE;
   info->fields[2].description = "The segment that needs to be mixed before its buffer has any useful data.";
-  info->fields[2].flags = MIXED_IN | MIXED_SET | MIXED_GET;
+  info->fields[2].flags = MIXED_IN | MIXED_SET;
 
   return info;
 }
