@@ -87,5 +87,9 @@ The procedure is as per usual for CMake-based builds:
 * `cmake ..`
 * `make`
 
+On Windows you will usually want to build with MSYS2 and the following cmake command:
+
+* `cmake .. -G "MSYS Makefiles"`
+
 ## Included Sources
 * [ladspa.h](https://web.archive.org/web/20150627144551/http://www.ladspa.org:80/ladspa_sdk/ladspa.h.txt)
