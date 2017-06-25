@@ -400,7 +400,7 @@ int space_segment_get(size_t field, void *value, struct mixed_segment *segment){
 
 int space_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct space_segment_data *data = (struct space_segment_data *)segment->data;
-  float *parts = *(float **)value;
+  float *parts = (float *)value;
   switch(field){
   case MIXED_VOLUME:
     data->volume = *((float *)value);
