@@ -549,8 +549,8 @@ MIXED_EXPORT int mixed_make_segment_space(size_t samplerate, struct mixed_segmen
   data->up[1] = 1.0;             // OpenGL-like. Y+ is up.
   data->soundspeed = 34330.0;    // Means units are in [cm].
   data->doppler_factor = 1.0;
-  data->min_distance = 1.0;      // That's a centrimetre.
-  data->max_distance = 10000.0;  // That's a 100 metres.
+  data->min_distance = 10.0;      // That's 10 centimetres.
+  data->max_distance = 100000.0;  // That's a kilometre.
   data->rolloff = 0.5;
   data->attenuation = attenuation_exponential;
   data->volume = 1.0;
