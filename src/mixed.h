@@ -175,18 +175,22 @@ extern "C" {
     // Access the doppler factor value as a float.
     // Changing this can exaggerate or dampen the doppler
     // effect's potency.
+    // The default is 1.
     MIXED_SPACE_DOPPLER_FACTOR,
     // Access the minimal distance as a float.
     // Any distance lower than this will make the sound
     // appear at its maximal volume.
+    // The default is 10.
     MIXED_SPACE_MIN_DISTANCE,
     // Access the maximal distance as a float.
     // Any distance greater than this will make the sound
     // appear at its minimal volume.
+    // The default is 100000.
     MIXED_SPACE_MAX_DISTANCE,
     // Access the rolloff factor as a float.
     // This factor influences the curve of the attenuation
     // function and should be in the range of [0.0, 1.0].
+    // The default is 0.5.
     MIXED_SPACE_ROLLOFF,
     // Access the attenuation function.
     // this function calculates how quickly the sound gets
@@ -203,6 +207,7 @@ extern "C" {
     //
     // The function should return a float describing the
     // volume multiplier of the source.
+    // The default is attenuation_exponential.
     MIXED_SPACE_ATTENUATION
   };
 
