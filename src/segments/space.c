@@ -115,7 +115,7 @@ static inline float clamp(float l, float v, float r){
 }
 
 static inline float calculate_pan(float S[3], float L[3], float D[3], float U[3]){
-  float t1[3], t2[3] = {S[0] - L[0], S[1] - L[1], S[2] - L[2]};
+  float t1[3], t2[3] = {L[0] - S[0], L[1] - S[1], L[2] - S[2]};
   return dot(norm(cross(U, D, t1)), norm(t2));
 }
 
