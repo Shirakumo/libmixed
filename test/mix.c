@@ -3,7 +3,7 @@
 int main(int argc, char **argv){
   int exit = 1;
   size_t samples = 100;
-  struct mixed_mixer mixer = {0};
+  struct mixed_segment_sequence sequence = {0};
   struct mixed_segment mix_segment = {0};
   struct mp3 *mp3s[argc-1];
   struct out *out = 0;
@@ -24,7 +24,7 @@ int main(int argc, char **argv){
     goto cleanup;
   }
   
-  if(!mixed_make_segment_mixer(2, &mix_segment)){
+  if(!mixed_make_segment_basic_mixer(2, &mix_segment)){
     fprintf(stderr, "Failed to create segment: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -48,9 +48,9 @@ int main(int argc, char **argv){
       fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
-    // Register with mixer.
-    if(!mixed_mixer_add(&mp3->segment, &mixer)){
-      fprintf(stderr, "Failed to assemble mixer: %s\n", mixed_error_string(-1));
+    // Register with sequence.
+    if(!mixed_segment_sequence_add(&mp3->segment, &sequence)){
+      fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
   }
@@ -58,43 +58,43 @@ int main(int argc, char **argv){
   // The order in which segments are added does matter, as the system
   // will not figure out on its own in which order the segments should
   // be called. We specify this here.
-  if(!mixed_mixer_add(&mix_segment, &mixer) ||
-     !mixed_mixer_add(&out->segment, &mixer)){
-    fprintf(stderr, "Failed to assemble mixer: %s\n", mixed_error_string(-1));
+  if(!mixed_segment_sequence_add(&mix_segment, &sequence) ||
+     !mixed_segment_sequence_add(&out->segment, &sequence)){
+    fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   // Perform the mixing
-  mixed_mixer_start(&mixer);
+  mixed_segment_sequence_start(&sequence);
 
   size_t read = 0, read_total = 0, played = 0;
   do{
     read_total = 0;
     for(size_t i=0; i<argc-1; ++i){
       struct mp3 *mp3 = mp3s[i];
-      if(mpg123_read(mp3->handle, mp3->channel.data, mp3->channel.size, &read) != MPG123_OK){
+      if(mpg123_read(mp3->handle, mp3->pack.data, mp3->pack.size, &read) != MPG123_OK){
         fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
         goto cleanup;
       }
       // Make sure we play until everything's done.
       if(read_total < read) read_total = read;
       // Make sure to zero out empty regions.
-      memset(((uint8_t *)mp3->channel.data)+read, 0, mp3->channel.size-read);
+      memset(((uint8_t *)mp3->pack.data)+read, 0, mp3->pack.size-read);
     }
 
-    mixed_mixer_mix(samples, &mixer);
+    mixed_segment_sequence_mix(samples, &sequence);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
     
-    played = out123_play(out->handle, out->channel.data, out->channel.size);
-    if(played < out->channel.size){
+    played = out123_play(out->handle, out->pack.data, out->pack.size);
+    if(played < out->pack.size){
       fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, samples);
     }
   }while(read_total && !interrupted);
 
-  mixed_mixer_end(&mixer);
+  mixed_segment_sequence_end(&sequence);
 
   // Clean the shop
   exit = 0;
@@ -103,7 +103,7 @@ int main(int argc, char **argv){
   fprintf(stderr, "\nCleaning up.\n");
   
   mixed_free_segment(&mix_segment);
-  mixed_free_mixer(&mixer);
+  mixed_free_segment_sequence(&sequence);
 
   for(size_t i=1; i<argc; ++i){
     if(mp3s[i]){

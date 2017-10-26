@@ -33,7 +33,7 @@ int fmt123_to_mixed(int fmt){
 
 struct out{
   out123_handle *handle;
-  struct mixed_channel channel;
+  struct mixed_packed_audio pack;
   struct mixed_segment segment;
   struct mixed_buffer left;
   struct mixed_buffer right;
@@ -45,8 +45,8 @@ void free_out(struct out *out){
     out123_close(out->handle);
     out123_del(out->handle);
   }
-  if(out->channel.data){
-    free(out->channel.data);
+  if(out->pack.data){
+    free(out->pack.data);
   }
   mixed_free_segment(&out->segment);
   mixed_free_buffer(&out->left);
@@ -147,20 +147,20 @@ int load_out_segment(size_t samples, struct out **_out){
   fprintf(stderr, "OUT: %i channels @ %li Hz, %s %i\n", out_channels, out_samplerate, out_encname);
   
   // Prepare pipeline segments
-  out->channel.encoding = fmt123_to_mixed(out_encoding);
-  out->channel.channels = out_channels;
-  out->channel.layout = MIXED_ALTERNATING;
-  out->channel.samplerate = out_samplerate;
-  out_samplesize = mixed_samplesize(out->channel.encoding);
-  out->channel.size = samples*out_samplesize*out_channels;
-  out->channel.data = calloc(out->channel.size, sizeof(uint8_t));
+  out->pack.encoding = fmt123_to_mixed(out_encoding);
+  out->pack.channels = out_channels;
+  out->pack.layout = MIXED_ALTERNATING;
+  out->pack.samplerate = out_samplerate;
+  out_samplesize = mixed_samplesize(out->pack.encoding);
+  out->pack.size = samples*out_samplesize*out_channels;
+  out->pack.data = calloc(out->pack.size, sizeof(uint8_t));
 
-  if(!out->channel.data){
+  if(!out->pack.data){
     fprintf(stderr, "Couldn't allocate output buffer.\n");
     goto cleanup;
   }
   
-  if(!mixed_make_segment_drain(&out->channel, 44100, &out->segment)){
+  if(!mixed_make_segment_packer(&out->pack, 44100, &out->segment)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -187,7 +187,7 @@ int load_out_segment(size_t samples, struct out **_out){
 
 struct mp3{
   mpg123_handle *handle;
-  struct mixed_channel channel;
+  struct mixed_packed_audio pack;
   struct mixed_segment segment;
   struct mixed_buffer left;
   struct mixed_buffer right;
@@ -199,8 +199,8 @@ void free_mp3(struct mp3 *mp3){
     mpg123_close(mp3->handle);
     mpg123_delete(mp3->handle);
   }
-  if(mp3->channel.data){
-    free(mp3->channel.data);
+  if(mp3->pack.data){
+    free(mp3->pack.data);
   }
   mixed_free_segment(&mp3->segment);
   mixed_free_buffer(&mp3->left);
@@ -251,15 +251,15 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
   mp3_encname = (char *)out123_enc_longname(mp3_encoding);
   fprintf(stderr, "MP3: %i channels @ %li Hz, %s\n", mp3_channels, mp3_samplerate, mp3_encname);
 
-  mp3->channel.encoding = fmt123_to_mixed(mp3_encoding);
-  mp3->channel.channels = mp3_channels;
-  mp3->channel.layout = MIXED_ALTERNATING;
-  mp3->channel.samplerate = mp3_samplerate;
-  mp3_samplesize = mixed_samplesize(mp3->channel.encoding);
-  mp3->channel.size = samples*mp3_samplesize*mp3_channels;
-  mp3->channel.data = calloc(mp3->channel.size, sizeof(uint8_t));
+  mp3->pack.encoding = fmt123_to_mixed(mp3_encoding);
+  mp3->pack.channels = mp3_channels;
+  mp3->pack.layout = MIXED_ALTERNATING;
+  mp3->pack.samplerate = mp3_samplerate;
+  mp3_samplesize = mixed_samplesize(mp3->pack.encoding);
+  mp3->pack.size = samples*mp3_samplesize*mp3_channels;
+  mp3->pack.data = calloc(mp3->pack.size, sizeof(uint8_t));
 
-  if(!mixed_make_segment_source(&mp3->channel, 44100, &mp3->segment)){
+  if(!mixed_make_segment_unpacker(&mp3->pack, 44100, &mp3->segment)){
     fprintf(stderr, "Failed to create segment for %s: %s\n", file, mixed_error_string(-1));
     goto cleanup;
   }

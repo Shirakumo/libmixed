@@ -4,7 +4,7 @@ int main(int argc, char **argv){
   int exit = 1;
   size_t samples = 1024;
   size_t samplerate = 44100;
-  struct mixed_mixer mixer = {0};
+  struct mixed_segment_sequence sequence = {0};
   struct mixed_segment generator = {0};
   struct mixed_segment fade = {0};
   struct out *out = 0;
@@ -51,36 +51,36 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_mixer_add(&generator, &mixer) ||
-     !mixed_mixer_add(&fade, &mixer) ||
-     !mixed_mixer_add(&out->segment, &mixer)){
-    fprintf(stderr, "Failed to assemble mixer: %s\n", mixed_error_string(-1));
+  if(!mixed_segment_sequence_add(&generator, &sequence) ||
+     !mixed_segment_sequence_add(&fade, &sequence) ||
+     !mixed_segment_sequence_add(&out->segment, &sequence)){
+    fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
-  mixed_mixer_start(&mixer);
+  mixed_segment_sequence_start(&sequence);
 
   size_t played;
   do{
-    mixed_mixer_mix(samples, &mixer);
+    mixed_segment_sequence_mix(samples, &sequence);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
     
-    played = out123_play(out->handle, out->channel.data, out->channel.size);
-    if(played < out->channel.size){
+    played = out123_play(out->handle, out->pack.data, out->pack.size);
+    if(played < out->pack.size){
       fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, samples);
     }
   }while(!interrupted);
   
-  mixed_mixer_end(&mixer);
+  mixed_segment_sequence_end(&sequence);
 
   exit = 0;
 
  cleanup:
   
-  mixed_free_mixer(&mixer);
+  mixed_free_segment_sequence(&sequence);
   mixed_free_segment(&generator);
   mixed_free_segment(&fade);
   free_out(out);
