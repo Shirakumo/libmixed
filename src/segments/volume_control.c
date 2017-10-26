@@ -1,13 +1,13 @@
 #include "internal.h"
 
-struct general_segment_data{
+struct volume_control_segment_data{
   struct mixed_buffer *in[2];
   struct mixed_buffer *out[2];
   float volume;
   float pan;
 };
 
-int general_segment_free(struct mixed_segment *segment){
+int volume_control_segment_free(struct mixed_segment *segment){
   if(segment->data)
     free(segment->data);
   segment->data = 0;
@@ -16,8 +16,8 @@ int general_segment_free(struct mixed_segment *segment){
 
 // FIXME: add start method that checks for buffer completeness.
 
-int general_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
-  struct general_segment_data *data = (struct general_segment_data *)segment->data;
+int volume_control_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+  struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
 
   switch(field){
   case MIXED_BUFFER:
@@ -32,8 +32,8 @@ int general_segment_set_in(size_t field, size_t location, void *buffer, struct m
   }
 }
 
-int general_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
-  struct general_segment_data *data = (struct general_segment_data *)segment->data;
+int volume_control_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+  struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
 
   switch(field){
   case MIXED_BUFFER:
@@ -48,8 +48,8 @@ int general_segment_set_out(size_t field, size_t location, void *buffer, struct 
   }
 }
 
-void general_segment_mix(size_t samples, struct mixed_segment *segment){
-  struct general_segment_data *data = (struct general_segment_data *)segment->data;
+void volume_control_segment_mix(size_t samples, struct mixed_segment *segment){
+  struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
   float lvolume = data->volume * ((0.0<data->pan)?(1.0f-data->pan):1.0f);
   float rvolume = data->volume * ((data->pan<0.0)?(1.0f+data->pan):1.0f);
 
@@ -59,18 +59,18 @@ void general_segment_mix(size_t samples, struct mixed_segment *segment){
   }
 }
 
-void general_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
-  struct general_segment_data *data = (struct general_segment_data *)segment->data;
+void volume_control_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+  struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
 
   mixed_buffer_copy(data->in[MIXED_LEFT], data->out[MIXED_LEFT]);
   mixed_buffer_copy(data->in[MIXED_RIGHT], data->out[MIXED_RIGHT]);
 }
 
-struct mixed_segment_info *general_segment_info(struct mixed_segment *segment){
+struct mixed_segment_info *volume_control_segment_info(struct mixed_segment *segment){
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
 
   if(info){
-    info->name = "general";
+    info->name = "volume_control";
     info->description = "General segment for volume adjustment and panning.";
     info->flags = MIXED_INPLACE;
     info->min_inputs = 2;
@@ -97,19 +97,19 @@ struct mixed_segment_info *general_segment_info(struct mixed_segment *segment){
   return info;
 }
 
-int general_segment_get(size_t field, void *value, struct mixed_segment *segment){
-  struct general_segment_data *data = (struct general_segment_data *)segment->data;
+int volume_control_segment_get(size_t field, void *value, struct mixed_segment *segment){
+  struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
   switch(field){
   case MIXED_VOLUME: *((float *)value) = data->volume; break;
   case MIXED_GENERAL_PAN: *((float *)value) = data->pan; break;
-  case MIXED_BYPASS: *((bool *)value) = (segment->mix == general_segment_mix_bypass); break;
+  case MIXED_BYPASS: *((bool *)value) = (segment->mix == volume_control_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
 }
 
-int general_segment_set(size_t field, void *value, struct mixed_segment *segment){
-  struct general_segment_data *data = (struct general_segment_data *)segment->data;
+int volume_control_segment_set(size_t field, void *value, struct mixed_segment *segment){
+  struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
   switch(field){
   case MIXED_VOLUME:
     if(*(float *)value < 0.0){
@@ -128,9 +128,9 @@ int general_segment_set(size_t field, void *value, struct mixed_segment *segment
     break;
   case MIXED_BYPASS:
     if(*(bool *)value){
-      segment->mix = general_segment_mix_bypass;
+      segment->mix = volume_control_segment_mix_bypass;
     }else{
-      segment->mix = general_segment_mix;
+      segment->mix = volume_control_segment_mix;
     }
   default:
     mixed_err(MIXED_INVALID_FIELD);
@@ -139,8 +139,8 @@ int general_segment_set(size_t field, void *value, struct mixed_segment *segment
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_general(float volume, float pan, struct mixed_segment *segment){
-  struct general_segment_data *data = calloc(1, sizeof(struct general_segment_data));
+MIXED_EXPORT int mixed_make_segment_volume_control(float volume, float pan, struct mixed_segment *segment){
+  struct volume_control_segment_data *data = calloc(1, sizeof(struct volume_control_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
@@ -149,13 +149,13 @@ MIXED_EXPORT int mixed_make_segment_general(float volume, float pan, struct mixe
   data->volume = volume;
   data->pan = pan;
   
-  segment->free = general_segment_free;
-  segment->mix = general_segment_mix;
-  segment->set_in = general_segment_set_in;
-  segment->set_out = general_segment_set_out;
-  segment->info = general_segment_info;
-  segment->get = general_segment_get;
-  segment->set = general_segment_set;
+  segment->free = volume_control_segment_free;
+  segment->mix = volume_control_segment_mix;
+  segment->set_in = volume_control_segment_set_in;
+  segment->set_out = volume_control_segment_set_out;
+  segment->info = volume_control_segment_info;
+  segment->get = volume_control_segment_get;
+  segment->set = volume_control_segment_set;
   segment->data = data;
   return 1;
 }

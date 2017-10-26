@@ -38,7 +38,7 @@ MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffe
 }
 
 #define DEF_MIXED_TRANSFER_SAMPLE_FROM(name, datatype)                  \
-  static inline void mixed_transfer_sample_from_##name(struct mixed_channel *in, size_t is, struct mixed_buffer *out, size_t os, float volume) { \
+  static inline void mixed_transfer_sample_from_##name(struct mixed_packed_audio *in, size_t is, struct mixed_buffer *out, size_t os, float volume) { \
     out->data[os] = mixed_from_##name(((datatype *)in->data)[is]) * volume; \
   }
 
@@ -51,7 +51,7 @@ DEF_MIXED_TRANSFER_SAMPLE_FROM(uint32, uint32_t);
 DEF_MIXED_TRANSFER_SAMPLE_FROM(float, float);
 DEF_MIXED_TRANSFER_SAMPLE_FROM(double, double);
 
-extern inline void mixed_transfer_sample_from_int24(struct mixed_channel *in, size_t is, struct mixed_buffer *out, size_t os, float volume) {
+extern inline void mixed_transfer_sample_from_int24(struct mixed_packed_audio *in, size_t is, struct mixed_buffer *out, size_t os, float volume) {
   int8_t *data = (int8_t *)in->data;
   // Read in as uint
   uint32_t temp = (data[3*is] << 16) + (data[3*is+1] << 8) + (data[3*is+2]);
@@ -63,14 +63,14 @@ extern inline void mixed_transfer_sample_from_int24(struct mixed_channel *in, si
   out->data[os] = mixed_from_int24(sample >> 8) * volume;
 }
 
-extern inline void mixed_transfer_sample_from_uint24(struct mixed_channel *in, size_t is, struct mixed_buffer *out, size_t os, float volume) {
+extern inline void mixed_transfer_sample_from_uint24(struct mixed_packed_audio *in, size_t is, struct mixed_buffer *out, size_t os, float volume) {
   int8_t *data = (int8_t *)in->data;
   uint24_t sample = (data[3*is] << 16) + (data[3*is+1] << 8) + (data[3*is+2]);
   out->data[os] = mixed_from_uint24(sample) * volume;
 }
 
-#define DEF_MIXED_BUFFER_FROM_CHANNEL(name)                             \
-  void mixed_buffer_from_##name##_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples, float volume) { \
+#define DEF_MIXED_BUFFER_FROM_PACKED(name)                             \
+  void mixed_buffer_from_##name##_packed(struct mixed_packed_audio *in, struct mixed_buffer **outs, size_t samples, float volume) { \
     mixed_err(MIXED_NO_ERROR);                                          \
     size_t channels = in->channels;                                     \
     switch(in->layout){                                                 \
@@ -99,48 +99,48 @@ extern inline void mixed_transfer_sample_from_uint24(struct mixed_channel *in, s
     }                                                                   \
   }
 
-DEF_MIXED_BUFFER_FROM_CHANNEL(int8);
-DEF_MIXED_BUFFER_FROM_CHANNEL(uint8);
-DEF_MIXED_BUFFER_FROM_CHANNEL(int16);
-DEF_MIXED_BUFFER_FROM_CHANNEL(uint16);
-DEF_MIXED_BUFFER_FROM_CHANNEL(int24);
-DEF_MIXED_BUFFER_FROM_CHANNEL(uint24);
-DEF_MIXED_BUFFER_FROM_CHANNEL(int32);
-DEF_MIXED_BUFFER_FROM_CHANNEL(uint32);
-DEF_MIXED_BUFFER_FROM_CHANNEL(float);
-DEF_MIXED_BUFFER_FROM_CHANNEL(double);
+DEF_MIXED_BUFFER_FROM_PACKED(int8);
+DEF_MIXED_BUFFER_FROM_PACKED(uint8);
+DEF_MIXED_BUFFER_FROM_PACKED(int16);
+DEF_MIXED_BUFFER_FROM_PACKED(uint16);
+DEF_MIXED_BUFFER_FROM_PACKED(int24);
+DEF_MIXED_BUFFER_FROM_PACKED(uint24);
+DEF_MIXED_BUFFER_FROM_PACKED(int32);
+DEF_MIXED_BUFFER_FROM_PACKED(uint32);
+DEF_MIXED_BUFFER_FROM_PACKED(float);
+DEF_MIXED_BUFFER_FROM_PACKED(double);
 
-MIXED_EXPORT int mixed_buffer_from_channel(struct mixed_channel *in, struct mixed_buffer **outs, size_t samples, float volume){
+MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, size_t samples, float volume){
   switch(in->encoding){
   case MIXED_INT8:
-    mixed_buffer_from_int8_channel(in, outs, samples, volume);
+    mixed_buffer_from_int8_packed(in, outs, samples, volume);
     break;
   case MIXED_UINT8:
-    mixed_buffer_from_uint8_channel(in, outs, samples, volume);
+    mixed_buffer_from_uint8_packed(in, outs, samples, volume);
     break;
   case MIXED_INT16:
-    mixed_buffer_from_int16_channel(in, outs, samples, volume);
+    mixed_buffer_from_int16_packed(in, outs, samples, volume);
     break;
   case MIXED_UINT16:
-    mixed_buffer_from_uint16_channel(in, outs, samples, volume);
+    mixed_buffer_from_uint16_packed(in, outs, samples, volume);
     break;
   case MIXED_INT24:
-    mixed_buffer_from_int24_channel(in, outs, samples, volume);
+    mixed_buffer_from_int24_packed(in, outs, samples, volume);
     break;
   case MIXED_UINT24:
-    mixed_buffer_from_uint24_channel(in, outs, samples, volume);
+    mixed_buffer_from_uint24_packed(in, outs, samples, volume);
     break;
   case MIXED_INT32:
-    mixed_buffer_from_int32_channel(in, outs, samples, volume);
+    mixed_buffer_from_int32_packed(in, outs, samples, volume);
     break;
   case MIXED_UINT32:
-    mixed_buffer_from_uint32_channel(in, outs, samples, volume);
+    mixed_buffer_from_uint32_packed(in, outs, samples, volume);
     break;
   case MIXED_FLOAT:
-    mixed_buffer_from_float_channel(in, outs, samples, volume);
+    mixed_buffer_from_float_packed(in, outs, samples, volume);
     break;
   case MIXED_DOUBLE:
-    mixed_buffer_from_double_channel(in, outs, samples, volume);
+    mixed_buffer_from_double_packed(in, outs, samples, volume);
     break;
   default:
     mixed_err(MIXED_UNKNOWN_ENCODING);
@@ -150,7 +150,7 @@ MIXED_EXPORT int mixed_buffer_from_channel(struct mixed_channel *in, struct mixe
 }
 
 #define DEF_MIXED_TRANSFER_SAMPLE_TO(name, datatype)                    \
-  static inline void mixed_transfer_sample_to_##name(struct mixed_buffer *in, size_t is, struct mixed_channel *out, size_t os, float volume){ \
+  static inline void mixed_transfer_sample_to_##name(struct mixed_buffer *in, size_t is, struct mixed_packed_audio *out, size_t os, float volume){ \
     ((datatype *)out->data)[os] = mixed_to_##name(in->data[is]) * volume; \
   }
 
@@ -164,22 +164,22 @@ DEF_MIXED_TRANSFER_SAMPLE_TO(uint32, uint32_t);
 DEF_MIXED_TRANSFER_SAMPLE_TO(float, float);
 DEF_MIXED_TRANSFER_SAMPLE_TO(double, double);
 
-extern inline void mixed_transfer_sample_to_int24(struct mixed_buffer *in, size_t is, struct mixed_channel *out, size_t os, float volume){
+extern inline void mixed_transfer_sample_to_int24(struct mixed_buffer *in, size_t is, struct mixed_packed_audio *out, size_t os, float volume){
   int24_t sample = mixed_to_int24(in->data[is]) * volume;
   ((uint8_t *)out->data)[os+2] = (sample >> 16) & 0xFF;
   ((uint8_t *)out->data)[os+1] = (sample >>  8) & 0xFF;
   ((uint8_t *)out->data)[os+0] = (sample >>  0) & 0xFF;
 }
 
-extern inline void mixed_transfer_sample_to_uint24(struct mixed_buffer *in, size_t is, struct mixed_channel *out, size_t os, float volume){
+extern inline void mixed_transfer_sample_to_uint24(struct mixed_buffer *in, size_t is, struct mixed_packed_audio *out, size_t os, float volume){
   uint24_t sample = mixed_to_uint24(in->data[is]) * volume;
   ((uint8_t *)out->data)[os+2] = (sample >> 16) & 0xFF;
   ((uint8_t *)out->data)[os+1] = (sample >>  8) & 0xFF;
   ((uint8_t *)out->data)[os+0] = (sample >>  0) & 0xFF;
 }
 
-#define DEF_MIXED_BUFFER_TO_CHANNEL(name)                               \
-  static inline void mixed_buffer_to_##name##_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples, float volume){ \
+#define DEF_MIXED_BUFFER_TO_PACKED(name)                               \
+  static inline void mixed_buffer_to_##name##_packed(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t samples, float volume){ \
     mixed_err(MIXED_NO_ERROR);                                          \
     size_t channels = out->channels;                                    \
     switch(out->layout){                                                \
@@ -208,48 +208,48 @@ extern inline void mixed_transfer_sample_to_uint24(struct mixed_buffer *in, size
     }                                                                   \
   }
 
-DEF_MIXED_BUFFER_TO_CHANNEL(int8);
-DEF_MIXED_BUFFER_TO_CHANNEL(uint8);
-DEF_MIXED_BUFFER_TO_CHANNEL(int16);
-DEF_MIXED_BUFFER_TO_CHANNEL(uint16);
-DEF_MIXED_BUFFER_TO_CHANNEL(int24);
-DEF_MIXED_BUFFER_TO_CHANNEL(uint24);
-DEF_MIXED_BUFFER_TO_CHANNEL(int32);
-DEF_MIXED_BUFFER_TO_CHANNEL(uint32);
-DEF_MIXED_BUFFER_TO_CHANNEL(float);
-DEF_MIXED_BUFFER_TO_CHANNEL(double);
+DEF_MIXED_BUFFER_TO_PACKED(int8);
+DEF_MIXED_BUFFER_TO_PACKED(uint8);
+DEF_MIXED_BUFFER_TO_PACKED(int16);
+DEF_MIXED_BUFFER_TO_PACKED(uint16);
+DEF_MIXED_BUFFER_TO_PACKED(int24);
+DEF_MIXED_BUFFER_TO_PACKED(uint24);
+DEF_MIXED_BUFFER_TO_PACKED(int32);
+DEF_MIXED_BUFFER_TO_PACKED(uint32);
+DEF_MIXED_BUFFER_TO_PACKED(float);
+DEF_MIXED_BUFFER_TO_PACKED(double);
 
-MIXED_EXPORT int mixed_buffer_to_channel(struct mixed_buffer **ins, struct mixed_channel *out, size_t samples, float volume){
+MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t samples, float volume){
   switch(out->encoding){
   case MIXED_INT8:
-    mixed_buffer_to_int8_channel(ins, out, samples, volume);
+    mixed_buffer_to_int8_packed(ins, out, samples, volume);
     break;
   case MIXED_UINT8:
-    mixed_buffer_to_uint8_channel(ins, out, samples, volume);
+    mixed_buffer_to_uint8_packed(ins, out, samples, volume);
     break;
   case MIXED_INT16:
-    mixed_buffer_to_int16_channel(ins, out, samples, volume);
+    mixed_buffer_to_int16_packed(ins, out, samples, volume);
     break;
   case MIXED_UINT16:
-    mixed_buffer_to_uint16_channel(ins, out, samples, volume);
+    mixed_buffer_to_uint16_packed(ins, out, samples, volume);
     break;
   case MIXED_INT24:
-    mixed_buffer_to_int24_channel(ins, out, samples, volume);
+    mixed_buffer_to_int24_packed(ins, out, samples, volume);
     break;
   case MIXED_UINT24:
-    mixed_buffer_to_uint24_channel(ins, out, samples, volume);
+    mixed_buffer_to_uint24_packed(ins, out, samples, volume);
     break;
   case MIXED_INT32:
-    mixed_buffer_to_int32_channel(ins, out, samples, volume);
+    mixed_buffer_to_int32_packed(ins, out, samples, volume);
     break;
   case MIXED_UINT32:
-    mixed_buffer_to_uint32_channel(ins, out, samples, volume);
+    mixed_buffer_to_uint32_packed(ins, out, samples, volume);
     break;
   case MIXED_FLOAT:
-    mixed_buffer_to_float_channel(ins, out, samples, volume);
+    mixed_buffer_to_float_packed(ins, out, samples, volume);
     break;
   case MIXED_DOUBLE:
-    mixed_buffer_to_double_channel(ins, out, samples, volume);
+    mixed_buffer_to_double_packed(ins, out, samples, volume);
     break;
   default:
     mixed_err(MIXED_UNKNOWN_ENCODING);

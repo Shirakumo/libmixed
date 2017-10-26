@@ -5,7 +5,7 @@ struct mixer_source{
   struct mixed_buffer *buffer;
 };
 
-struct mixer_segment_data{
+struct basic_mixer_data{
   struct mixer_source **sources;
   size_t count;
   size_t size;
@@ -14,13 +14,13 @@ struct mixer_segment_data{
   float volume;
 };
 
-int mixer_segment_free(struct mixed_segment *segment){
+int basic_mixer_free(struct mixed_segment *segment){
   free_vector((struct vector *)segment->data);
   return 1;
 }
 
-int mixer_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
-  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+int basic_mixer_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   
   switch(field){
   case MIXED_BUFFER:
@@ -36,8 +36,8 @@ int mixer_segment_set_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
-int mixer_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
-  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+int basic_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
 
   switch(field){
   case MIXED_BUFFER:
@@ -74,8 +74,8 @@ int mixer_segment_set_in(size_t field, size_t location, void *buffer, struct mix
   }
 }
 
-void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
-  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+void basic_mixer_mix(size_t samples, struct mixed_segment *segment){
+  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   size_t buffers = data->count / data->channels;
   if(0 < buffers){
     size_t channels = data->channels;
@@ -115,8 +115,8 @@ void mixer_segment_mix(size_t samples, struct mixed_segment *segment){
 
 // FIXME: add start method that checks for buffer completeness.
 
-int mixer_segment_start(struct mixed_segment *segment){
-  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+int basic_mixer_start(struct mixed_segment *segment){
+  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   for(size_t i=0; i<data->count; ++i){
     if(data->sources[i]->segment){
       if(!mixed_segment_start(data->sources[i]->segment))
@@ -126,8 +126,8 @@ int mixer_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int mixer_segment_end(struct mixed_segment *segment){
-  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+int basic_mixer_end(struct mixed_segment *segment){
+  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   for(size_t i=0; i<data->count; ++i){
     if(data->sources[i]->segment){
       if(!mixed_segment_end(data->sources[i]->segment))
@@ -137,8 +137,8 @@ int mixer_segment_end(struct mixed_segment *segment){
   return 1;
 }
 
-int mixer_segment_set(size_t field, void *value, struct mixed_segment *segment){
-  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+int basic_mixer_set(size_t field, void *value, struct mixed_segment *segment){
+  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   
   switch(field){
   case MIXED_VOLUME:
@@ -150,8 +150,8 @@ int mixer_segment_set(size_t field, void *value, struct mixed_segment *segment){
   }
 }
 
-int mixer_segment_get(size_t field, void *value, struct mixed_segment *segment){
-  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+int basic_mixer_get(size_t field, void *value, struct mixed_segment *segment){
+  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   
   switch(field){
   case MIXED_VOLUME:
@@ -163,12 +163,12 @@ int mixer_segment_get(size_t field, void *value, struct mixed_segment *segment){
   }
 }
 
-struct mixed_segment_info *mixer_segment_info(struct mixed_segment *segment){
-  struct mixer_segment_data *data = (struct mixer_segment_data *)segment->data;
+struct mixed_segment_info *basic_mixer_info(struct mixed_segment *segment){
+  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
 
   if(info){
-    info->name = "mixer";
+    info->name = "basic_mixer";
     info->description = "Mixes multiple buffers together";
     info->min_inputs = 0;
     info->max_inputs = -1;
@@ -190,8 +190,8 @@ struct mixed_segment_info *mixer_segment_info(struct mixed_segment *segment){
   return info;
 }
 
-MIXED_EXPORT int mixed_make_segment_mixer(size_t channels, struct mixed_segment *segment){
-  struct mixer_segment_data *data = calloc(1, sizeof(struct mixer_segment_data));
+MIXED_EXPORT int mixed_make_segment_basic_mixer(size_t channels, struct mixed_segment *segment){
+  struct basic_mixer_data *data = calloc(1, sizeof(struct basic_mixer_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
@@ -206,15 +206,15 @@ MIXED_EXPORT int mixed_make_segment_mixer(size_t channels, struct mixed_segment 
     return 0;
   }
   
-  segment->free = mixer_segment_free;
-  segment->start = mixer_segment_start;
-  segment->mix = mixer_segment_mix;
-  segment->end = mixer_segment_end;
-  segment->set = mixer_segment_set;
-  segment->get = mixer_segment_get;
-  segment->set_in = mixer_segment_set_in;
-  segment->set_out = mixer_segment_set_out;
-  segment->info = mixer_segment_info;
+  segment->free = basic_mixer_free;
+  segment->start = basic_mixer_start;
+  segment->mix = basic_mixer_mix;
+  segment->end = basic_mixer_end;
+  segment->set = basic_mixer_set;
+  segment->get = basic_mixer_get;
+  segment->set_in = basic_mixer_set_in;
+  segment->set_out = basic_mixer_set_out;
+  segment->info = basic_mixer_info;
   segment->data = data;
   return 1;
 }

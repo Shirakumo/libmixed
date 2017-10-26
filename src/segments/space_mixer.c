@@ -7,7 +7,7 @@ struct space_source{
   float velocity[3];
 };
 
-struct space_segment_data{
+struct space_mixer_data{
   struct space_source **sources;
   size_t count;
   size_t size;
@@ -27,8 +27,8 @@ struct space_segment_data{
   float (*attenuation)(float min, float max, float dist, float roll);
 };
 
-int space_segment_free(struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+int space_mixer_free(struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   if(data){
     free_pitch_data(&data->pitch_data);
     free(data->sources);
@@ -40,8 +40,8 @@ int space_segment_free(struct mixed_segment *segment){
 
 // FIXME: add start method that checks for buffer completeness.
 
-int space_segment_start(struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+int space_mixer_start(struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   for(size_t i=0; i<data->count; ++i){
     if(data->sources[i]->segment){
       if(!mixed_segment_start(data->sources[i]->segment))
@@ -51,8 +51,8 @@ int space_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int space_segment_end(struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+int space_mixer_end(struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   for(size_t i=0; i<data->count; ++i){
     if(data->sources[i]->segment){
       if(!mixed_segment_end(data->sources[i]->segment))
@@ -124,7 +124,7 @@ static inline float calculate_phase(float S[3], float L[3], float D[3]){
   return dot(norm(D), norm(t2));
 }
 
-static inline void calculate_volumes(float *lvolume, float *rvolume, struct space_source *source, struct space_segment_data *data){
+static inline void calculate_volumes(float *lvolume, float *rvolume, struct space_source *source, struct space_mixer_data *data){
   float min = data->min_distance;
   float max = data->max_distance;
   float roll = data->rolloff;
@@ -141,7 +141,7 @@ static inline void calculate_volumes(float *lvolume, float *rvolume, struct spac
   }
 }
 
-float calculate_pitch_shift(struct space_segment_data *listener, struct space_source *source){
+float calculate_pitch_shift(struct space_mixer_data *listener, struct space_source *source){
   if(listener->doppler_factor <= 0.0) return 1.0;
   // See OpenAL1.1 specification §3.5.2
   float SL[3] = {listener->location[0] - source->location[0],
@@ -160,8 +160,8 @@ float calculate_pitch_shift(struct space_segment_data *listener, struct space_so
   return (SS - DF*vls) / (SS - DF*vss);
 }
 
-void space_segment_mix(size_t samples, struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+void space_mixer_mix(size_t samples, struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
 
   // Shift frequencies
   for(size_t s=0; s<data->count; ++s){
@@ -210,8 +210,8 @@ void space_segment_mix(size_t samples, struct mixed_segment *segment){
   }
 }
 
-int space_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+int space_mixer_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   
   switch(field){
   case MIXED_BUFFER:
@@ -226,8 +226,8 @@ int space_segment_set_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
-int space_segment_get_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+int space_mixer_get_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   
   switch(field){
   case MIXED_BUFFER:
@@ -242,8 +242,8 @@ int space_segment_get_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
-int space_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+int space_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
 
   switch(field){
   case MIXED_BUFFER:
@@ -299,8 +299,8 @@ int space_segment_set_in(size_t field, size_t location, void *buffer, struct mix
   }
 }
 
-int space_segment_get_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+int space_mixer_get_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   
   if(data->count <= location){
     mixed_err(MIXED_INVALID_LOCATION);
@@ -338,8 +338,8 @@ int space_segment_get_in(size_t field, size_t location, void *buffer, struct mix
   }
 }
 
-int space_segment_get(size_t field, void *value, struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+int space_mixer_get(size_t field, void *value, struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   float *parts = (float *)value;
   switch(field){
   case MIXED_VOLUME:
@@ -400,8 +400,8 @@ int space_segment_get(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-int space_segment_set(size_t field, void *value, struct mixed_segment *segment){
-  struct space_segment_data *data = (struct space_segment_data *)segment->data;
+int space_mixer_set(size_t field, void *value, struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   float *parts = (float *)value;
   switch(field){
   case MIXED_VOLUME:
@@ -467,11 +467,11 @@ int space_segment_set(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-struct mixed_segment_info *space_segment_info(struct mixed_segment *segment){
+struct mixed_segment_info *space_mixer_info(struct mixed_segment *segment){
   struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
 
   if(info){
-    info->name = "space";
+    info->name = "space_mixer";
     info->description = "Mixes multiple sources while simulating 3D space.";
     info->flags = MIXED_MODIFIES_INPUT;
     info->min_inputs = 0;
@@ -534,8 +534,8 @@ struct mixed_segment_info *space_segment_info(struct mixed_segment *segment){
   return info;
 }
 
-MIXED_EXPORT int mixed_make_segment_space(size_t samplerate, struct mixed_segment *segment){
-  struct space_segment_data *data = calloc(1, sizeof(struct space_segment_data));
+MIXED_EXPORT int mixed_make_segment_space_mixer(size_t samplerate, struct mixed_segment *segment){
+  struct space_mixer_data *data = calloc(1, sizeof(struct space_mixer_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
@@ -557,17 +557,17 @@ MIXED_EXPORT int mixed_make_segment_space(size_t samplerate, struct mixed_segmen
   data->attenuation = attenuation_exponential;
   data->volume = 1.0;
   
-  segment->free = space_segment_free;
-  segment->info = space_segment_info;
-  segment->start = space_segment_start;
-  segment->mix = space_segment_mix;
-  segment->end = space_segment_end;
-  segment->set_in = space_segment_set_in;
-  segment->get_in = space_segment_get_in;
-  segment->set_out = space_segment_set_out;
-  segment->get_out = space_segment_get_out;
-  segment->set = space_segment_set;
-  segment->get = space_segment_get;
+  segment->free = space_mixer_free;
+  segment->info = space_mixer_info;
+  segment->start = space_mixer_start;
+  segment->mix = space_mixer_mix;
+  segment->end = space_mixer_end;
+  segment->set_in = space_mixer_set_in;
+  segment->get_in = space_mixer_get_in;
+  segment->set_out = space_mixer_set_out;
+  segment->get_out = space_mixer_get_out;
+  segment->set = space_mixer_set;
+  segment->get = space_mixer_get;
   segment->data = data;
   return 1;
 }
