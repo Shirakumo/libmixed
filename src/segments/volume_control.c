@@ -85,7 +85,7 @@ struct mixed_segment_info *volume_control_segment_info(struct mixed_segment *seg
     info->fields[1].description = "The volume scaling factor for the input.";
     info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
-    info->fields[2].field = MIXED_GENERAL_PAN;
+    info->fields[2].field = MIXED_VOLUME_CONTROL_PAN;
     info->fields[2].description = "The left/right stereo panning.";
     info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
 
@@ -101,7 +101,7 @@ int volume_control_segment_get(size_t field, void *value, struct mixed_segment *
   struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
   switch(field){
   case MIXED_VOLUME: *((float *)value) = data->volume; break;
-  case MIXED_GENERAL_PAN: *((float *)value) = data->pan; break;
+  case MIXED_VOLUME_CONTROL_PAN: *((float *)value) = data->pan; break;
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == volume_control_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
@@ -118,7 +118,7 @@ int volume_control_segment_set(size_t field, void *value, struct mixed_segment *
     }
     data->volume = *(float *)value;
     break;
-  case MIXED_GENERAL_PAN: 
+  case MIXED_VOLUME_CONTROL_PAN: 
     if(*(float *)value < -1.0 ||
        1.0 < *(float *)value){
       mixed_err(MIXED_INVALID_VALUE);

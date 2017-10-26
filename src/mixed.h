@@ -130,7 +130,7 @@ extern "C" {
     // Access the panning of the general segment as a float.
     // The pan should be in the range of [-1.0, +1.0] where
     // -1 is all the way on the left and +1 is on the right.
-    MIXED_GENERAL_PAN,
+    MIXED_VOLUME_CONTROL_PAN,
     // Access the starting volume for the fading as a float.
     // See MIXED_GENERAL_VOLUME
     MIXED_FADE_FROM,
