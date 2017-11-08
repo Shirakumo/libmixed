@@ -456,6 +456,12 @@ extern "C" {
   // 
   // This clears the entire buffer to hold samples of all zeroes.
   MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer);
+
+  // Resize the buffer to a new size.
+  //
+  // If the resizing operation fails due to a lack of memory, the
+  // old data is preserved and the buffer is not changed.
+  MIXED_EXPORT int mixed_buffer_resize(size_t size, struct mixed_buffer *buffer);
   
   // Resample the buffer using nearest-neighbor.
   //

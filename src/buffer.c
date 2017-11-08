@@ -37,6 +37,18 @@ MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffe
   return 1;
 }
 
+MIXED_EXPORT int mixed_buffer_resize(size_t size, struct mixed_buffer *buffer){
+  mixed_err(MIXED_NO_ERROR);
+  void *new = realloc(buffer->data, size*sizeof(float));
+  if(!new){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  }
+  buffer->data = new;
+  buffer->size = size;
+  return 1;
+}
+
 #define DEF_MIXED_TRANSFER_SAMPLE_FROM(name, datatype)                  \
   static inline void mixed_transfer_sample_from_##name(struct mixed_packed_audio *in, size_t is, struct mixed_buffer *out, size_t os, float volume) { \
     out->data[os] = mixed_from_##name(((datatype *)in->data)[is]) * volume; \
