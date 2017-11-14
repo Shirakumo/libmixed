@@ -10,7 +10,7 @@ set_property(TARGET mixed PROPERTY C_STANDARD 99)
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(mixed PRIVATE MIXED_BUILD=1)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang"
-    OR CMAKE_CXX_COMPILER_ID MATCHES "Gnu")
+    OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(mixed PRIVATE -fvisibility=hidden)
 endif()
 if(WIN32)
