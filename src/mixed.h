@@ -215,7 +215,27 @@ extern "C" {
     // Access the sample rate by which the segment operates.
     MIXED_SAMPLERATE,
     // Access the change of the pitch as a float.
-    MIXED_PITCH_SHIFT
+    MIXED_PITCH_SHIFT,
+    // Access the opening threshold for the gate as a float.
+    // The threshold is in dB.
+    // The default is -24dB
+    MIXED_GATE_OPEN_THRESHOLD,
+    // Access the closing threshold for the gate as a float.
+    // The threshold is in dB.
+    // The default is -32dB
+    MIXED_GATE_CLOSE_THRESHOLD,
+    // Access the attack time for the gate as a float.
+    // The attack time is in seconds.
+    // The default is 0.025s
+    MIXED_GATE_ATTACK,
+    // Access the hold time for the gate as a float.
+    // The hold time is in seconds.
+    // The default is 0.2s
+    MIXED_GATE_HOLD,
+    // Access the release time for the gate as a float.
+    // The release time is in seconds.
+    // The default is 0.15s
+    MIXED_GATE_RELEASE
   };
 
   // This enum describes the possible preset attenuation functions.
@@ -779,6 +799,10 @@ extern "C" {
   // means no change in pitch, 0.5 means half the pitch, 2.0 means double the
   // pitch and so on.
   MIXED_EXPORT int mixed_make_segment_pitch(float pitch, size_t samplerate, struct mixed_segment *segment);
+
+  // A noise gate segment
+  //
+  MIXED_EXPORT int mixed_make_segment_gate(size_t samplerate, struct mixed_segment *segment);
 
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);
