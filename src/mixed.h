@@ -237,7 +237,12 @@ extern "C" {
     // The default is 0.15s
     MIXED_GATE_RELEASE,
     // Access the type of noise that is generated.
-    MIXED_NOISE_TYPE
+    MIXED_NOISE_TYPE,
+    // Access how long the repeated segment is as a float.
+    // The repeat time is in seconds.
+    MIXED_REPEAT_TIME,
+    // Access the current mode the repeater segment is in.
+    MIXED_REPEAT_MODE
   };
 
   // This enum describes the possible preset attenuation functions.
@@ -269,6 +274,12 @@ extern "C" {
     MIXED_WHITE_NOISE = 1,
     MIXED_PINK_NOISE,
     MIXED_BROWN_NOISE
+  };
+
+  // This enum describes the possible repeater segment modes.
+  MIXED_EXPORT enum mixed_repeat_mode{
+    MIXED_RECORD = 1,
+    MIXED_PLAY
   };
 
   // This enum holds property flags for segments.
@@ -800,6 +811,16 @@ extern "C" {
   // This buffering means that delaying for a long time may take a lot of
   // memory, so watch out for that.
   MIXED_EXPORT int mixed_make_segment_delay(float time, size_t samplerate, struct mixed_segment *segment);
+
+  // A repeat segment
+  //
+  // This segment allows you to repeat some input from a buffer, and then
+  // simply loops the recorded bit to its output continuously. During the
+  // recording time, the input is simply passed through.
+  //
+  // Since the repeated audio data needs to be recorded, a long repeat time
+  // may take a lot of memory.
+  MIXED_EXPORT int mixed_make_segment_repeat(float time, size_t samplerate, struct mixed_segment *segment);
 
   // A pitch shift segment
   //
