@@ -1,12 +1,10 @@
 #include "internal.h"
-#define WHITE_NOISE_SAMPLES 1024
+#define WHITE_NOISE_SAMPLES 4096
 
 struct noise_segment_data{
   struct mixed_buffer *out;
   enum mixed_noise_type type;
-  float white_noise[WHITE_NOISE_SAMPLES];
   float window[8];
-  size_t white_noise_index;
   float volume;
 };
 
@@ -34,7 +32,7 @@ int noise_segment_set_out(size_t field, size_t location, void *buffer, struct mi
 }
 
 float noise_white(float *window, float white){
-  return white;
+  return mixed_random();
 }
 
 float noise_pink(float *window, float white){
@@ -59,11 +57,9 @@ void noise_segment_mix(size_t samples, struct mixed_segment *segment){
   struct noise_segment_data *data = (struct noise_segment_data *)segment->data;
 
   float (*noise)(float *window, float white) = 0;
-  size_t index = data->white_noise_index;
   float volume = data->volume;
   float *out = data->out->data;
   float *window = data->window;
-  float *white = data->white_noise;
   
   switch(data->type){
   case MIXED_WHITE_NOISE: noise = noise_white; break;
@@ -72,10 +68,8 @@ void noise_segment_mix(size_t samples, struct mixed_segment *segment){
   }
   
   for(size_t i=0; i<samples; ++i){
-    out[i] = noise(window, white[index]) * volume;
-    index = (index+1) % WHITE_NOISE_SAMPLES;
+    out[i] = noise(window, mixed_random()) * volume;
   }
-  data->white_noise_index = index;
 }
 
 struct mixed_segment_info *noise_segment_info(struct mixed_segment *segment){
@@ -144,10 +138,6 @@ MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type type, struct mix
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
-  }
-
-  for(size_t i=0; i<WHITE_NOISE_SAMPLES; ++i){
-    data->white_noise[i] = (float)rand()/(float)RAND_MAX*2-1;
   }
 
   data->type = type;
