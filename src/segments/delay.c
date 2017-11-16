@@ -133,7 +133,7 @@ int delay_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
   switch(field){
   case MIXED_SAMPLERATE:
-    if(*(float *)value < 0.0){
+    if(*(size_t *)value <= 0){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
