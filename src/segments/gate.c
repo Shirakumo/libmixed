@@ -1,11 +1,11 @@
 #include "internal.h"
 
 enum state{
-  CLOSED,
-  ATTACKING,
-  OPEN,
-  HOLDING,
-  RELEASING,
+  CLOSED = 1,
+  ATTACKING = 2,
+  OPEN = 3,
+  HOLDING = 4,
+  RELEASING = 5
 };
 
 struct gate_segment_data{
@@ -91,60 +91,55 @@ void gate_segment_mix(size_t samples, struct mixed_segment *segment){
   float release = data->release;
   float *in = data->in->data;
   float *out = data->out->data;
-  float volume = 0.0;
+  float volume = 1.0;
   for(size_t i=0; i<samples; ++i){
     float sample = in[i];
     switch(data->state){
     case CLOSED:
-      if(sample < open){
-        volume = 0.0;
-        break;
-      }else{
+      volume = 0.0;
+      if(open <= sample){
         time = 0.0;
         data->state = ATTACKING;
       }
+      break;
     case ATTACKING:
-      if(sample < close){
-        data->state = RELEASING;
-      }else if(time < attack){
-        time += stime;
-        volume = time/attack;
-        break;
-      }else{
+      if(attack < time){
         data->state = OPEN;
-      }
-    case OPEN:
-      if(close < sample){
-        volume = 1.0;
-        break;
       }else{
-        time = hold;
-        data->state = HOLDING; 
+        volume = time/attack;
+        time += stime;
       }
+      break;
+    case OPEN:
+      if(sample < close){
+        time = hold;
+        data->state = HOLDING;
+      }
+      break;
     case HOLDING:
       if(open <= sample){
         data->state = OPEN;
-        volume = 1.0;
-      }else if(0 < time){
-        time -= stime;
-        volume = 1.0;
-        break;
-      }else{
+      }else if(time <= 0){
         time = release;
         data->state = RELEASING;
+      }else{
+        time -= stime;
       }
+      break;
     case RELEASING:
       if(open <= sample){
+        volume = time/release;
+        time = time/release*attack;
         data->state = ATTACKING;
-        volume = time/release;
-      }else if(0 < time){
-        time -= stime;
-        volume = time/release;
-      }else{
-        time = 0.0;
+      }else if(time <= 0){
         volume = 0.0;
+        time = 0.0;
         data->state = CLOSED;
+      }else{
+        volume = time/release;
+        time -= stime;
       }
+      break;
     }
     out[i] = sample * volume;
   }
@@ -283,6 +278,7 @@ MIXED_EXPORT int mixed_make_segment_gate(size_t samplerate, struct mixed_segment
   data->attack = 0.025;
   data->hold = 0.2;
   data->release = 0.15;
+  data->state = CLOSED;
   
   segment->free = gate_segment_free;
   segment->start = gate_segment_start;
