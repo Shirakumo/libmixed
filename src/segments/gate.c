@@ -1,5 +1,13 @@
 #include "internal.h"
 
+enum state{
+  CLOSED,
+  ATTACKING,
+  OPEN,
+  HOLDING,
+  RELEASING,
+};
+
 struct gate_segment_data{
   struct mixed_buffer *in;
   struct mixed_buffer *out;
@@ -13,16 +21,8 @@ struct gate_segment_data{
   enum state state;
 };
 
-enum state{
-  CLOSED,
-  ATTACKING,
-  OPEN,
-  HOLDING,
-  RELEASING,
-};
-
 float db_to_linear(float db){
-  return pow(db/20.0);
+  return pow(10, db/20.0);
 }
 
 float linear_to_db(float linear){
@@ -84,8 +84,8 @@ void gate_segment_mix(size_t samples, struct mixed_segment *segment){
 
   float stime = 1.0/data->samplerate;
   float time = data->time;
-  float open = data->open;
-  float close = data->close;
+  float open = data->open_threshold;
+  float close = data->close_threshold;
   float attack = data->attack;
   float hold = data->hold;
   float release = data->release;
@@ -223,10 +223,6 @@ int gate_segment_set(size_t field, void *value, struct mixed_segment *segment){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    free_gate_data(&data->gate_data);
-    if(!make_gate_data(2048, 4, data->samplerate, &data->gate_data)){
-      return 0;
-    }
     break;
   case MIXED_GATE_OPEN_THRESHOLD:
     data->open_threshold = db_to_linear(*(float *)value);
@@ -269,13 +265,14 @@ int gate_segment_set(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_gate(float gate, size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_gate(size_t samplerate, struct mixed_segment *segment){
   struct gate_segment_data *data = calloc(1, sizeof(struct gate_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
 
+  data->samplerate = samplerate;
   data->open_threshold = db_to_linear(-24.0);
   data->close_threshold = db_to_linear(-32.0);
   data->attack = 0.025;

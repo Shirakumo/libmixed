@@ -5,7 +5,7 @@ struct noise_segment_data{
   struct mixed_buffer *out;
   enum mixed_noise_type type;
   float white_noise[WHITE_NOISE_SAMPLES];
-  float window[7];
+  float window[8];
   size_t white_noise_index;
   float volume;
 };
@@ -58,17 +58,17 @@ float noise_brown(float *window, float white){
 void noise_segment_mix(size_t samples, struct mixed_segment *segment){
   struct noise_segment_data *data = (struct noise_segment_data *)segment->data;
 
-  float *(noise)(float *window, float white) = 0;
+  float (*noise)(float *window, float white) = 0;
   size_t index = data->white_noise_index;
   float volume = data->volume;
   float *out = data->out->data;
-  float *window = &data->window;
+  float *window = data->window;
   float *white = data->white_noise;
   
   switch(data->type){
-  case MIXED_TYPE_WHITE: noise = noise_white; break;
-  case MIXED_TYPE_PINK: noise = noise_pink; break;
-  case MIXED_TYPE_BROWN: noise = noise_brown; break;
+  case MIXED_WHITE_NOISE: noise = noise_white; break;
+  case MIXED_PINK_NOISE: noise = noise_pink; break;
+  case MIXED_BROWN_NOISE: noise = noise_brown; break;
   }
   
   for(size_t i=0; i<samples; ++i){
