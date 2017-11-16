@@ -213,7 +213,9 @@ extern "C" {
     // delayed.
     MIXED_DELAY_TIME,
     // Access the sample rate by which the segment operates.
-    MIXED_SAMPLERATE
+    MIXED_SAMPLERATE,
+    // Access the change of the pitch as a float.
+    MIXED_PITCH_SHIFT
   };
 
   // This enum describes the possible preset attenuation functions.
@@ -769,6 +771,14 @@ extern "C" {
   // This buffering means that delaying for a long time may take a lot of
   // memory, so watch out for that.
   MIXED_EXPORT int mixed_make_segment_delay(float time, size_t samplerate, struct mixed_segment *segment);
+
+  // A pitch shift segment
+  //
+  // This segment will shift the pitch of the incoming samples by a specified
+  // amount. The pitch should be a float in the range ]0, infty[, where 1.0
+  // means no change in pitch, 0.5 means half the pitch, 2.0 means double the
+  // pitch and so on.
+  MIXED_EXPORT int mixed_make_segment_pitch(float pitch, size_t samplerate, struct mixed_segment *segment);
 
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);
