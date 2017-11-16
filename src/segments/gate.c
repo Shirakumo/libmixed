@@ -104,7 +104,9 @@ void gate_segment_mix(size_t samples, struct mixed_segment *segment){
         data->state = ATTACKING;
       }
     case ATTACKING:
-      if(time < attack){
+      if(sample < close){
+        data->state = RELEASING;
+      }else if(time < attack){
         time += stime;
         volume = time/attack;
         break;
@@ -120,7 +122,10 @@ void gate_segment_mix(size_t samples, struct mixed_segment *segment){
         data->state = HOLDING; 
       }
     case HOLDING:
-      if(0 < time){
+      if(open <= sample){
+        data->state = OPEN;
+        volume = 1.0;
+      }else if(0 < time){
         time -= stime;
         volume = 1.0;
         break;
