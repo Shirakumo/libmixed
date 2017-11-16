@@ -3,7 +3,7 @@
 struct delay_segment_data{
   struct mixed_buffer *in;
   struct mixed_buffer *out;
-  struct mixed_buffer *buffer;
+  struct mixed_buffer buffer;
   size_t buffer_index;
   float time;
   size_t samplerate;
@@ -11,10 +11,8 @@ struct delay_segment_data{
 
 int delay_segment_free(struct mixed_segment *segment){
   if(segment->data){
-    struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
-    mixed_free_buffer(data->buffer);
-    free(data->buffer);
-    free(data);
+    mixed_free_buffer(&((struct delay_segment_data *)segment->data)->buffer);
+    free(segment->data);
   }
   segment->data = 0;
   return 1;
@@ -25,7 +23,7 @@ int delay_segment_free(struct mixed_segment *segment){
 int delay_segment_start(struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
   data->buffer_index = 0.0;
-  mixed_buffer_clear(data->buffer);
+  mixed_buffer_clear(&data->buffer);
   return 1;
 }
 
@@ -66,10 +64,10 @@ int delay_segment_set_out(size_t field, size_t location, void *buffer, struct mi
 void delay_segment_mix(size_t samples, struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
 
-  size_t delay_samples = data->buffer->size;
+  size_t delay_samples = data->buffer.size;
   size_t index = data->buffer_index;
 
-  flaot *buf = data->buffer->data;
+  float *buf = data->buffer.data;
   float *in = data->in->data;
   float *out = data->out->data;
   for(size_t i=0; i<samples; ++i){
@@ -140,7 +138,7 @@ int delay_segment_set(size_t field, void *value, struct mixed_segment *segment){
       return 0;
     }
     data->samplerate = *(size_t *)value;
-    mixed_buffer_resize(ceil(data->samplerate * data->time), data->buffer);
+    mixed_buffer_resize(ceil(data->samplerate * data->time), &data->buffer);
     break;
   case MIXED_DELAY_TIME:
     if(*(float *)value < 0.0){
@@ -148,7 +146,7 @@ int delay_segment_set(size_t field, void *value, struct mixed_segment *segment){
       return 0;
     }
     data->time = *(float *)value;
-    mixed_buffer_resize(ceil(data->samplerate * data->time), data->buffer);
+    mixed_buffer_resize(ceil(data->samplerate * data->time), &data->buffer);
     break;
   case MIXED_BYPASS:
     if(*(bool *)value){
@@ -170,20 +168,12 @@ MIXED_EXPORT int mixed_make_segment_delay(float time, size_t samplerate, struct 
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
-  struct mixed_buffer *buffer = calloc(1, sizeof(struct mixed_buffer));
-  if(!data){
-    mixed_err(MIXED_OUT_OF_MEMORY);
+
+  if(!mixed_make_buffer(ceil(time * samplerate), &data->buffer)){
     free(data);
     return 0;
   }
 
-  if(!mixed_make_buffer(ceil(time * samplerate), buffer)){
-    free(data);
-    free(buffer);
-    return 0;
-  }
-
-  data->buffer = buffer;
   data->time = time;
   data->samplerate = samplerate;
   
