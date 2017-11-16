@@ -2,7 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 #include "mixed.h"
+#ifdef __RDRND__
+#include <cpuid.h>
+#include <immintrin.h>
+#endif
 #define BASE_VECTOR_SIZE 32
 
 struct vector{
@@ -42,3 +47,5 @@ void mix_noop(size_t samples, struct mixed_segment *segment);
 void mixed_err(int errorcode);
 
 void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size);
+
+extern float (*mixed_random)();

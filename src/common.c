@@ -78,3 +78,38 @@ void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   }
   return ptr;
 }
+
+float mixed_random_m(){
+  return (float)rand()/(float)RAND_MAX;
+}
+
+float (*mixed_random)() = mixed_random_m;
+
+#ifdef __RDRND__
+uint8_t rdrand_available(){
+  const unsigned int flag_RDRAND = (1 << 30);
+
+  unsigned int eax, ebx, ecx, edx;
+  __cpuid(1, eax, ebx, ecx, edx);
+
+  return ((ecx & flag_RDRAND) == flag_RDRAND);
+}
+
+float mixed_random_rdrand(){
+  int retries = 10;
+  uint32_t random;
+  while(retries--){
+    if (_rdrand32_step(&random)) {
+      return (float)random/UINT32_MAX;
+    }
+  }
+  return mixed_random_m();
+}
+#endif
+
+static void init() __attribute__((constructor));
+void init(){
+  srand(time(NULL));
+  if(rdrand_available())
+    mixed_random = mixed_random_rdrand;
+}
