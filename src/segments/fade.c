@@ -169,7 +169,7 @@ int fade_segment_get(size_t field, void *value, struct mixed_segment *segment){
   case MIXED_FADE_TO: *((float *)value) = data->to; break;
   case MIXED_FADE_TIME: *((float *)value) = data->time; break;
   case MIXED_FADE_TYPE: *((enum mixed_fade_type *)value) = data->type; break;
-  case MIXED_BYPASS: *((bool *)value) = (segment->mix == fade_segment_mix_bypass);
+  case MIXED_BYPASS: *((bool *)value) = (segment->mix == fade_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;

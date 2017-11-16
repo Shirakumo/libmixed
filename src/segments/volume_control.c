@@ -132,6 +132,7 @@ int volume_control_segment_set(size_t field, void *value, struct mixed_segment *
     }else{
       segment->mix = volume_control_segment_mix;
     }
+    break;
   default:
     mixed_err(MIXED_INVALID_FIELD);
     return 0;
