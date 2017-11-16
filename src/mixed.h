@@ -208,7 +208,12 @@ extern "C" {
     // The function should return a float describing the
     // volume multiplier of the source.
     // The default is attenuation_exponential.
-    MIXED_SPACE_ATTENUATION
+    MIXED_SPACE_ATTENUATION,
+    // Access the time, in seconds, by which the sound is
+    // delayed.
+    MIXED_DELAY_TIME,
+    // Access the sample rate by which the segment operates.
+    MIXED_SAMPLERATE
   };
 
   // This enum describes the possible preset attenuation functions.
@@ -753,6 +758,17 @@ extern "C" {
   // This segment does allow you to change fields and buffers while the
   // mixing has already been started.
   MIXED_EXPORT int mixed_make_segment_space_mixer(size_t samplerate, struct mixed_segment *segment);
+
+  // A delay segment
+  //
+  // This segment will simply delay the incoming samples to the output by
+  // a specified amount of time. To do this, it will keep an internal
+  // buffer of time*samplerate samples to store the incoming samples before
+  // outputting them again once the delay time has been passed.
+  //
+  // This buffering means that delaying for a long time may take a lot of
+  // memory, so watch out for that.
+  MIXED_EXPORT int mixed_make_segment_delay(float time, size_t samplerate, struct mixed_segment *segment);
 
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);
