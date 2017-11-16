@@ -235,7 +235,9 @@ extern "C" {
     // Access the release time for the gate as a float.
     // The release time is in seconds.
     // The default is 0.15s
-    MIXED_GATE_RELEASE
+    MIXED_GATE_RELEASE,
+    // Access the type of noise that is generated.
+    MIXED_NOISE_TYPE
   };
 
   // This enum describes the possible preset attenuation functions.
@@ -260,6 +262,13 @@ extern "C" {
     MIXED_SQUARE,
     MIXED_TRIANGLE,
     MIXED_SAWTOOTH
+  };
+
+  // This enum describes the possible noise types.
+  MIXED_EXPORT enum mixed_noise_type{
+    MIXED_WHITE_NOISE = 1,
+    MIXED_PINK_NOISE,
+    MIXED_BROWN_NOISE
   };
 
   // This enum holds property flags for segments.
@@ -802,7 +811,18 @@ extern "C" {
 
   // A noise gate segment
   //
+  // The gate has an open threshold, which if exceeded opens the gate. Audio
+  // does not immediately pass through the gate upon opening though. It first
+  // goes through an attack time during which the volume is linearly scaled up.
+  // If the volume then ever goes below the close threshold, the gate stays
+  // open for the duration of the hold time, after which it goes through a
+  // linear fade out for the duration of the release time.
   MIXED_EXPORT int mixed_make_segment_gate(size_t samplerate, struct mixed_segment *segment);
+
+  // A noise generator segment.
+  //
+  // This segment can generate white, pink, and brown noise.
+  MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type, struct mixed_segment *segment);
 
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);
