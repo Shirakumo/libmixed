@@ -105,6 +105,10 @@ float mixed_random_rdrand(){
   }
   return mixed_random_m();
 }
+#else
+uint8_t rdrand_available(){
+  return 0;
+}
 #endif
 
 static void init() __attribute__((constructor));

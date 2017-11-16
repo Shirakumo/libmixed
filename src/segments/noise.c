@@ -4,8 +4,13 @@
 struct noise_segment_data{
   struct mixed_buffer *out;
   enum mixed_noise_type type;
-  float window[8];
   float volume;
+  int64_t pink_rows[30];
+  int64_t pink_running_sum;
+  int32_t pink_index;
+  int32_t pink_index_mask;
+  float pink_scalar;
+  float brown;
 };
 
 int noise_segment_free(struct mixed_segment *segment){
@@ -31,44 +36,57 @@ int noise_segment_set_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
-float noise_white(float *window, float white){
-  return mixed_random();
+float noise_white(struct noise_segment_data *data){
+  return mixed_random()*2.0-1.0;
 }
 
-float noise_pink(float *window, float white){
-  window[0] = 0.99886 * window[0] + white * 0.0555179;
-  window[1] = 0.99332 * window[1] + white * 0.0750759;
-  window[2] = 0.96900 * window[2] + white * 0.1538520;
-  window[3] = 0.86650 * window[3] + white * 0.3104856;
-  window[4] = 0.55000 * window[4] + white * 0.5329522;
-  window[5] = -0.7616 * window[5] - white * 0.0168980;
-  float result = (window[0] + window[1] + window[2] + window[3] + window[4] + window[5] + window[6] + white * 0.5362) * 0.11;
-  window[6] = white * 0.115926;
-  return result;
+float noise_pink(struct noise_segment_data *data){
+  int64_t random;
+  int64_t sum;
+
+  data->pink_index = (data->pink_index + 1) & data->pink_index_mask;
+
+  if(data->pink_index != 0) {
+    int zeroes = 0;
+    int n = data->pink_index;
+    while((n & 1) == 0){
+      n = n >> 1;
+      zeroes++;
+    }
+
+    data->pink_running_sum -= data->pink_rows[zeroes];
+    random = (mixed_random()-0.5)*67108864;
+    data->pink_running_sum += random;
+    data->pink_rows[zeroes] = random;
+  }
+  
+  random = (mixed_random()-0.5)*67108864;
+  sum = data->pink_running_sum + random;
+
+  return data->pink_scalar * sum;
 }
 
-float noise_brown(float *window, float white){
-  float result = (window[0] + 0.02*white) / 1.02;
-  window[0] = result * 3.5;
-  return result;
+float noise_brown(struct noise_segment_data *data){
+  data->brown += (mixed_random()*2.0-1.0);
+  data->brown -= data->brown * 0.03125;
+  return data->brown * 0.06250;
 }
 
 void noise_segment_mix(size_t samples, struct mixed_segment *segment){
   struct noise_segment_data *data = (struct noise_segment_data *)segment->data;
 
-  float (*noise)(float *window, float white) = 0;
+  float (*noise)(struct noise_segment_data *data) = 0;
   float volume = data->volume;
   float *out = data->out->data;
-  float *window = data->window;
   
   switch(data->type){
   case MIXED_WHITE_NOISE: noise = noise_white; break;
   case MIXED_PINK_NOISE: noise = noise_pink; break;
   case MIXED_BROWN_NOISE: noise = noise_brown; break;
   }
-  
+
   for(size_t i=0; i<samples; ++i){
-    out[i] = noise(window, mixed_random()) * volume;
+    out[i] = noise(data) * volume;
   }
 }
 
@@ -139,9 +157,16 @@ MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type type, struct mix
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
-
+  
   data->type = type;
   data->volume = 1.0f;
+
+  data->pink_index = 0;
+  data->pink_index_mask = (1<<30) - 1;
+  long pmax = ((30 + 1) * (1<<(23)));
+  data->pink_scalar = 1.0 / (float)pmax;
+  data->pink_running_sum = 0;
+  for(size_t i=0; i<30; ++i) data->pink_rows[i] = 0;
   
   segment->free = noise_segment_free;
   segment->mix = noise_segment_mix;
