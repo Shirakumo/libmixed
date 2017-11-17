@@ -223,6 +223,7 @@ int gate_segment_set(size_t field, void *value, struct mixed_segment *segment){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
+    data->samplerate = *(size_t *)value;
     break;
   case MIXED_GATE_OPEN_THRESHOLD:
     data->open_threshold = db_to_linear(*(float *)value);

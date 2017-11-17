@@ -125,6 +125,7 @@ int pitch_segment_set(size_t field, void *value, struct mixed_segment *segment){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
+    data->samplerate = *(size_t *)value;
     free_pitch_data(&data->pitch_data);
     if(!make_pitch_data(2048, 4, data->samplerate, &data->pitch_data)){
       return 0;
