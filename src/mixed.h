@@ -245,7 +245,10 @@ extern "C" {
     MIXED_REPEAT_MODE,
     // Access the frequency cutoff of the low/high-pass filter.
     // This value is a size_t in Hertz.
-    MIXED_FREQUENCY_CUTOFF
+    MIXED_FREQUENCY_CUTOFF,
+    // Access whether to pass frequencies above or below the cutoff.
+    // This value is an enum mixed_frequency_pass.
+    MIXED_FREQUENCY_PASS
   };
 
   // This enum describes the possible preset attenuation functions.
@@ -283,6 +286,12 @@ extern "C" {
   MIXED_EXPORT enum mixed_repeat_mode{
     MIXED_RECORD = 1,
     MIXED_PLAY
+  };
+
+  // This enum describes the possible pass directions.
+  MIXED_EXPORT enum mixed_frequency_pass{
+    MIXED_PASS_LOW,
+    MIXED_PASS_HIGH
   };
 
   // This enum holds property flags for segments.
@@ -848,12 +857,12 @@ extern "C" {
   // This segment can generate white, pink, and brown noise.
   MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type, struct mixed_segment *segment);
 
-  // A low-pass frequency filter segment.
+  // A frequency filter segment.
   //
   // The cutoff cannot be larger than the samplerate. Generally, if the cutoff
   // frequency is larger than half of the samplerate, major distortion will
   // occur, so tread carefully.
-  MIXED_EXPORT int mixed_make_segment_low_pass(size_t cutoff, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pass, size_t cutoff, size_t samplerate, struct mixed_segment *segment);
 
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);

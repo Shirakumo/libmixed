@@ -24,7 +24,7 @@ int main(int argc, char **argv){
     goto cleanup;
   }
   
-  if(!mixed_make_segment_low_pass(1000, 44100, &sfx_segment)){
+  if(!mixed_make_segment_frequency_pass(MIXED_PASS_HIGH, 440, 44100, &sfx_segment)){
     fprintf(stderr, "Failed to create segment: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
