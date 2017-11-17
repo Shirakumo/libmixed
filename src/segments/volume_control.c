@@ -78,16 +78,20 @@ struct mixed_segment_info *volume_control_segment_info(struct mixed_segment *seg
     info->outputs = 2;
   
     struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER, MIXED_IN | MIXED_OUT | MIXED_SET,
+    set_info_field(field++, MIXED_BUFFER,
+                   MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
                    "The buffer for audio data attached to the location.");
 
-    set_info_field(field++, MIXED_VOLUME, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_VOLUME,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The volume scaling factor for the input.");
 
-    set_info_field(field++, MIXED_VOLUME_CONTROL_PAN, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_VOLUME_CONTROL_PAN,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The left/right stereo panning.");
 
-    set_info_field(field++, MIXED_BYPASS, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_BYPASS,
+                   MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "Bypass the segment's processing.");
   }
   

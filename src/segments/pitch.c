@@ -87,16 +87,20 @@ struct mixed_segment_info *pitch_segment_info(struct mixed_segment *segment){
     info->outputs = 1;
   
     struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER, MIXED_IN | MIXED_OUT | MIXED_SET,
+    set_info_field(field++, MIXED_BUFFER,
+                   MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
                    "The buffer for audio data attached to the location.");
 
-    set_info_field(field++, MIXED_PITCH_SHIFT, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_PITCH_SHIFT,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The amount of change in pitch that is excised.");
 
-    set_info_field(field++, MIXED_SAMPLERATE, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SAMPLERATE,
+                   MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The samplerate at which the segment operates.");
 
-    set_info_field(field++, MIXED_BYPASS, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_BYPASS,
+                   MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "Bypass the segment's processing.");
   }
 

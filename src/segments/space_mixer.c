@@ -479,43 +479,56 @@ struct mixed_segment_info *space_mixer_info(struct mixed_segment *segment){
     info->outputs = 2;
     
     struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER, MIXED_IN | MIXED_OUT | MIXED_SET,
+    set_info_field(field++, MIXED_BUFFER,
+                   MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
                    "The buffer for audio data attached to the location.");
 
-    set_info_field(field++, MIXED_VOLUME, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_VOLUME,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The volume scaling factor for the output.");
 
-    set_info_field(field++, MIXED_SPACE_LOCATION, MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SPACE_LOCATION,
+                   MIXED_FLOAT, 3, MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The location of the source or segment (listener) in space.");
 
-    set_info_field(field++, MIXED_SPACE_VELOCITY, MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SPACE_VELOCITY,
+                   MIXED_FLOAT, 3, MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The velocity of the source or segment (listener) in space.");
 
-    set_info_field(field++, MIXED_SPACE_DIRECTION, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SPACE_DIRECTION,
+                   MIXED_FLOAT, 3, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The direction the segment is facing in space.");
 
-    set_info_field(field++, MIXED_SPACE_UP, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SPACE_UP,
+                   MIXED_FLOAT, 3, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The vector designating 'upwards' in space.");
 
-    set_info_field(field++, MIXED_SPACE_SOUNDSPEED, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SPACE_SOUNDSPEED,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The speed of sound. This also implicitly declares the unit size.");
 
-    set_info_field(field++, MIXED_SPACE_DOPPLER_FACTOR, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SPACE_DOPPLER_FACTOR,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The doppler factor. You can use this to exaggerate or dampen the effect.");
 
-    set_info_field(field++, MIXED_SPACE_MIN_DISTANCE, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SPACE_MIN_DISTANCE,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "Any distance lower than this will make the sound appear at its maximal volume.");
 
-    set_info_field(field++, MIXED_SPACE_MAX_DISTANCE, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SPACE_MAX_DISTANCE,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "Any distance greater than this will make the sound appear at its minimal volume.");
 
-    set_info_field(field++, MIXED_SPACE_ROLLOFF, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SPACE_ROLLOFF,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "This factor influences the curve of the attenuation function.");
 
-    set_info_field(field++, MIXED_SPACE_ATTENUATION, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SPACE_ATTENUATION,
+                   MIXED_FUNCTION, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The function that calculates the attenuation curve that defines the volume of a source by its distance.");
 
-    set_info_field(field++, MIXED_SOURCE, MIXED_IN | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_SOURCE,
+                   MIXED_SEGMENT_POINTER, 1, MIXED_IN | MIXED_SET | MIXED_GET,
                    "The segment that needs to be mixed before its buffer has any useful data.");
   }
 

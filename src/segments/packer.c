@@ -149,16 +149,20 @@ struct mixed_segment_info *source_segment_info(struct mixed_segment *segment){
     info->outputs = ((struct pack_segment_data *)segment->data)->pack->channels;
   
     struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER, MIXED_OUT | MIXED_SET,
+    set_info_field(field++, MIXED_BUFFER,
+                   MIXED_BUFFER_POINTER, 1, MIXED_OUT | MIXED_SET,
                    "The buffer to attach to the port.");
 
-    set_info_field(field++, MIXED_VOLUME, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_VOLUME,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The volume scaling factor.");
 
-    set_info_field(field++, MIXED_PACKED_AUDIO_RESAMPLER, MIXED_SEGMENT | MIXED_SET,
+    set_info_field(field++, MIXED_PACKED_AUDIO_RESAMPLER,
+                   MIXED_FUNCTION, 1, MIXED_SEGMENT | MIXED_SET,
                    "The function used to resample the audio if necessary.");
 
-    set_info_field(field++, MIXED_BYPASS, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_BYPASS,
+                   MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "Bypass the segment's processing.");
   }
   
@@ -176,16 +180,20 @@ struct mixed_segment_info *drain_segment_info(struct mixed_segment *segment){
     info->outputs = 0;
 
     struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER, MIXED_IN | MIXED_SET,
+    set_info_field(field++, MIXED_BUFFER,
+                   MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_SET,
                    "The buffer for audio data attached to the location.");
 
-    set_info_field(field++, MIXED_VOLUME, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_VOLUME,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The volume scaling factor.");
 
-    set_info_field(field++, MIXED_PACKED_AUDIO_RESAMPLER, MIXED_SEGMENT | MIXED_SET,
+    set_info_field(field++, MIXED_PACKED_AUDIO_RESAMPLER,
+                   MIXED_FUNCTION, 1, MIXED_SEGMENT | MIXED_SET,
                    "The function used to resample the audio if necessary.");
 
-    set_info_field(field++, MIXED_BYPASS, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_BYPASS,
+                   MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "Bypass the segment's processing.");
   }
 

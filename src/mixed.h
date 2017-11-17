@@ -313,7 +313,7 @@ extern "C" {
     // The field can be set.
     MIXED_SET = 0x8,
     // The field can be get.
-    MIXED_GET = 0x10
+    MIXED_GET = 0x10,
   };
 
   // Convenience enum to map common speaker channels to buffer locations.
@@ -330,6 +330,40 @@ extern "C" {
     MIXED_RIGHT_REAR = 3,
     MIXED_CENTER = 4,
     MIXED_SUBWOOFER = 5
+  };
+
+  // This enum holds type descriptors for the segment fields.
+  MIXED_EXPORT enum mixed_segment_field_type{
+    MIXED_UNKNOWN = 0, /* See MIXED_ENCODING
+    MIXED_INT8 = 1,
+    MIXED_UINT8,
+    MIXED_INT16,
+    MIXED_UINT16,
+    MIXED_INT24,
+    MIXED_UINT24,
+    MIXED_INT32,
+    MIXED_UINT32,
+    MIXED_FLOAT,
+    MIXED_DOUBLE */
+    MIXED_BOOL = 11,
+    MIXED_SIZE_T,
+    MIXED_STRING,
+    MIXED_FUNCTION,
+    MIXED_POINTER,
+    MIXED_SEGMENT_POINTER,
+    MIXED_BUFFER_POINTER,
+    MIXED_PACKED_AUDIO_POINTER,
+    MIXED_SEGMENT_SEQUENCE_POINTER,
+    MIXED_LOCATION_ENUM,
+    MIXED_FREQUENCY_PASS_ENUM,
+    MIXED_REPEAT_MODE_ENUM,
+    MIXED_NOISE_TYPE_ENUM,
+    MIXED_GENERATOR_TYPE_ENUM,
+    MIXED_FADE_TYPE_ENUM,
+    MIXED_ATTENUATION_ENUM,
+    MIXED_LAYOUT_ENUM,
+    MIXED_ENCODING_ENUM,
+    MIXED_ERROR_ENUM
   };
 
   // An internal audio data buffer.
@@ -380,6 +414,15 @@ extern "C" {
     // inputs, outputs, or the segment itself, and whether
     // it can be set or get.
     enum mixed_segment_info_flags flags;
+    // The base element type of the value contained in the
+    // field. Note that while the get and set functions
+    // always take a pointer, the dereferenced value is
+    // interpreted as being of the type indicated by this
+    // field.
+    enum mixed_segment_field_type type;
+    // In case the field stores an array of values, this
+    // defines the number of values that can be dererefenced.
+    size_t type_count;
   };
 
   // Metadata struct for a segment.

@@ -101,13 +101,16 @@ struct mixed_segment_info *noise_segment_info(struct mixed_segment *segment){
     info->outputs = 1;
 
     struct mixed_segment_field_info *field = info->fields;  
-    set_info_field(field++, MIXED_BUFFER, MIXED_OUT | MIXED_SET,
+    set_info_field(field++, MIXED_BUFFER,
+                   MIXED_BUFFER_POINTER, 1, MIXED_OUT | MIXED_SET,
                    "The buffer for audio data attached to the location.");
 
-    set_info_field(field++, MIXED_VOLUME, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_VOLUME,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The volume scaling factor.");
   
-    set_info_field(field++, MIXED_NOISE_TYPE, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_NOISE_TYPE,
+                   MIXED_NOISE_TYPE_ENUM, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The type of noise that is produced.");
   }
   

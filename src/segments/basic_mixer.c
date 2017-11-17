@@ -175,13 +175,16 @@ struct mixed_segment_info *basic_mixer_info(struct mixed_segment *segment){
     info->outputs = data->channels;
   
     struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER, MIXED_IN | MIXED_OUT | MIXED_SET,
+    set_info_field(field++, MIXED_BUFFER,
+                   MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
                    "The buffer for audio data attached to the location.");
 
-    set_info_field(field++, MIXED_VOLUME, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+    set_info_field(field++, MIXED_VOLUME,
+                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "The volume scaling factor for the output.");
 
-    set_info_field(field++, MIXED_SOURCE, MIXED_IN | MIXED_SET,
+    set_info_field(field++, MIXED_SOURCE,
+                   MIXED_SEGMENT_POINTER, 1, MIXED_IN | MIXED_SET,
                    "The segment that needs to be mixed before its buffer has any useful data.");
   }
 
