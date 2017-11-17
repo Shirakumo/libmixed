@@ -85,21 +85,18 @@ struct mixed_segment_info *generator_segment_info(struct mixed_segment *segment)
     info->max_inputs = 0;
     info->outputs = 1;
   
-    info->fields[0].field = MIXED_BUFFER;
-    info->fields[0].description = "The buffer for audio data attached to the location.";
-    info->fields[0].flags = MIXED_OUT | MIXED_SET;
+    struct mixed_segment_field_info *field = info->fields;
+    set_info_field(field++, MIXED_BUFFER, MIXED_OUT | MIXED_SET,
+                   "The buffer for audio data attached to the location.");
 
-    info->fields[1].field = MIXED_VOLUME;
-    info->fields[1].description = "The volume scaling factor.";
-    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_VOLUME, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The volume scaling factor.");
   
-    info->fields[2].field = MIXED_GENERATOR_FREQUENCY;
-    info->fields[2].description = "The frequency in Hz of the generated tone.";
-    info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_GENERATOR_FREQUENCY, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The frequency in Hz of the generated tone.");
   
-    info->fields[3].field = MIXED_GENERATOR_TYPE;
-    info->fields[3].description = "The type of wave form that is produced.";
-    info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_GENERATOR_TYPE, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The type of wave form that is produced.");
   }
   
   return info;

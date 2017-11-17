@@ -477,58 +477,46 @@ struct mixed_segment_info *space_mixer_info(struct mixed_segment *segment){
     info->min_inputs = 0;
     info->max_inputs = -1;
     info->outputs = 2;
-  
-    info->fields[0].field = MIXED_BUFFER;
-    info->fields[0].description = "The buffer for audio data attached to the location.";
-    info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
+    
+    struct mixed_segment_field_info *field = info->fields;
+    set_info_field(field++, MIXED_BUFFER, MIXED_IN | MIXED_OUT | MIXED_SET,
+                   "The buffer for audio data attached to the location.");
 
-    info->fields[1].field = MIXED_VOLUME;
-    info->fields[1].description = "The volume scaling factor for the output.";
-    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_VOLUME, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The volume scaling factor for the output.");
 
-    info->fields[2].field = MIXED_SPACE_LOCATION;
-    info->fields[2].description = "The location of the source or segment (listener) in space.";
-    info->fields[2].flags = MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SPACE_LOCATION, MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The location of the source or segment (listener) in space.");
 
-    info->fields[3].field = MIXED_SPACE_VELOCITY;
-    info->fields[3].description = "The velocity of the source or segment (listener) in space.";
-    info->fields[3].flags = MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SPACE_VELOCITY, MIXED_IN | MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The velocity of the source or segment (listener) in space.");
 
-    info->fields[4].field = MIXED_SPACE_DIRECTION;
-    info->fields[4].description = "The direction the segment is facing in space.";
-    info->fields[4].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SPACE_DIRECTION, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The direction the segment is facing in space.");
 
-    info->fields[5].field = MIXED_SPACE_UP;
-    info->fields[5].description = "The vector designating 'upwards' in space.";
-    info->fields[5].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SPACE_UP, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The vector designating 'upwards' in space.");
 
-    info->fields[5].field = MIXED_SPACE_SOUNDSPEED;
-    info->fields[6].description = "The speed of sound. This also implicitly declares the unit size.";
-    info->fields[6].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SPACE_SOUNDSPEED, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The speed of sound. This also implicitly declares the unit size.");
 
-    info->fields[7].field = MIXED_SPACE_DOPPLER_FACTOR;
-    info->fields[7].description = "The doppler factor. You can use this to exaggerate or dampen the effect.";
-    info->fields[7].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SPACE_DOPPLER_FACTOR, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The doppler factor. You can use this to exaggerate or dampen the effect.");
 
-    info->fields[8].field = MIXED_SPACE_MIN_DISTANCE;
-    info->fields[8].description = "Any distance lower than this will make the sound appear at its maximal volume.";
-    info->fields[8].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SPACE_MIN_DISTANCE, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "Any distance lower than this will make the sound appear at its maximal volume.");
 
-    info->fields[9].field = MIXED_SPACE_MAX_DISTANCE;
-    info->fields[9].description = "Any distance greater than this will make the sound appear at its minimal volume.";
-    info->fields[9].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SPACE_MAX_DISTANCE, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "Any distance greater than this will make the sound appear at its minimal volume.");
 
-    info->fields[10].field = MIXED_SPACE_ROLLOFF;
-    info->fields[10].description = "This factor influences the curve of the attenuation function.";
-    info->fields[10].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SPACE_ROLLOFF, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "This factor influences the curve of the attenuation function.");
 
-    info->fields[11].field = MIXED_SPACE_ATTENUATION;
-    info->fields[11].description = "The function that calculates the attenuation curve that defines the volume of a source by its distance.";
-    info->fields[11].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SPACE_ATTENUATION, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The function that calculates the attenuation curve that defines the volume of a source by its distance.");
 
-    info->fields[12].field = MIXED_SOURCE;
-    info->fields[12].description = "The segment that needs to be mixed before its buffer has any useful data.";
-    info->fields[12].flags = MIXED_IN | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SOURCE, MIXED_IN | MIXED_SET | MIXED_GET,
+                   "The segment that needs to be mixed before its buffer has any useful data.");
   }
 
   return info;

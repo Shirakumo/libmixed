@@ -163,38 +163,31 @@ struct mixed_segment_info *gate_segment_info(struct mixed_segment *segment){
     info->min_inputs = 1;
     info->max_inputs = 1;
     info->outputs = 1;
-  
-    info->fields[0].field = MIXED_BUFFER;
-    info->fields[0].description = "The buffer for audio data attached to the location.";
-    info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
 
-    info->fields[1].field = MIXED_GATE_OPEN_THRESHOLD;
-    info->fields[1].description = "The volume in dB necessary to open the gate.";
-    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    struct mixed_segment_field_info *field = info->fields;
+    set_info_field(field++, MIXED_BUFFER, MIXED_IN | MIXED_OUT | MIXED_SET,
+                   "The buffer for audio data attached to the location.");
 
-    info->fields[1].field = MIXED_GATE_CLOSE_THRESHOLD;
-    info->fields[1].description = "The volume in dB below which the gate is closed again.";
-    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_GATE_OPEN_THRESHOLD, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The volume in dB necessary to open the gate.");
 
-    info->fields[1].field = MIXED_GATE_ATTACK;
-    info->fields[1].description = "The time during which the output volume is scaled up.";
-    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_GATE_CLOSE_THRESHOLD, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The volume in dB below which the gate is closed again.");
 
-    info->fields[1].field = MIXED_GATE_HOLD;
-    info->fields[1].description = "The time during which the output is still transmitted despite the gate being closed.";
-    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_GATE_ATTACK, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The time during which the output volume is scaled up.");
 
-    info->fields[1].field = MIXED_GATE_RELEASE;
-    info->fields[1].description = "The time during which the output volume is scaled down.";
-    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_GATE_HOLD, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The time during which the output is still transmitted despite the gate being closed.");
 
-    info->fields[2].field = MIXED_SAMPLERATE;
-    info->fields[2].description = "The samplerate at which the segment operates.";
-    info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_GATE_RELEASE, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The time during which the output volume is scaled down.");
 
-    info->fields[5].field = MIXED_BYPASS;
-    info->fields[5].description = "Bypass the segment's processing.";
-    info->fields[5].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SAMPLERATE, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The samplerate at which the segment operates.");
+
+    set_info_field(field++, MIXED_BYPASS, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "Bypass the segment's processing.");
   }
 
   return info;

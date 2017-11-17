@@ -77,21 +77,18 @@ struct mixed_segment_info *volume_control_segment_info(struct mixed_segment *seg
     info->max_inputs = 2;
     info->outputs = 2;
   
-    info->fields[0].field = MIXED_BUFFER;
-    info->fields[0].description = "The buffer for audio data attached to the location.";
-    info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
+    struct mixed_segment_field_info *field = info->fields;
+    set_info_field(field++, MIXED_BUFFER, MIXED_IN | MIXED_OUT | MIXED_SET,
+                   "The buffer for audio data attached to the location.");
 
-    info->fields[1].field = MIXED_VOLUME;
-    info->fields[1].description = "The volume scaling factor for the input.";
-    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_VOLUME, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The volume scaling factor for the input.");
 
-    info->fields[2].field = MIXED_VOLUME_CONTROL_PAN;
-    info->fields[2].description = "The left/right stereo panning.";
-    info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_VOLUME_CONTROL_PAN, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The left/right stereo panning.");
 
-    info->fields[3].field = MIXED_BYPASS;
-    info->fields[3].description = "Bypass the segment's processing.";
-    info->fields[3].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_BYPASS, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "Bypass the segment's processing.");
   }
   
   return info;

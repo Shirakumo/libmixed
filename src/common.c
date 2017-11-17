@@ -79,6 +79,12 @@ void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   return ptr;
 }
 
+void set_info_field(struct mixed_segment_field_info *info, size_t field, enum mixed_segment_info_flags flags, char*description){
+  info->field = field;
+  info->flags = flags;
+  info->description = description;
+}
+
 float mixed_random_m(){
   return (float)rand()/(float)RAND_MAX;
 }

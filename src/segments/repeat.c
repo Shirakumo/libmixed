@@ -113,22 +113,19 @@ struct mixed_segment_info *repeat_segment_info(struct mixed_segment *segment){
     info->min_inputs = 1;
     info->max_inputs = 1;
     info->outputs = 1;
-  
-    info->fields[0].field = MIXED_BUFFER;
-    info->fields[0].description = "The buffer for audio data attached to the location.";
-    info->fields[0].flags = MIXED_IN | MIXED_OUT | MIXED_SET;
+    
+    struct mixed_segment_field_info *field = info->fields;
+    set_info_field(field++, MIXED_BUFFER, MIXED_IN | MIXED_OUT | MIXED_SET,
+                   "The buffer for audio data attached to the location.");
 
-    info->fields[1].field = MIXED_REPEAT_TIME;
-    info->fields[1].description = "The time, in seconds, that is recorded and repeated.";
-    info->fields[1].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_REPEAT_TIME, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The time, in seconds, that is recorded and repeated.");
 
-    info->fields[2].field = MIXED_SAMPLERATE;
-    info->fields[2].description = "The samplerate at which the segment operates.";
-    info->fields[2].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_SAMPLERATE, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "The samplerate at which the segment operates.");
 
-    info->fields[5].field = MIXED_BYPASS;
-    info->fields[5].description = "Bypass the segment's processing.";
-    info->fields[5].flags = MIXED_SEGMENT | MIXED_SET | MIXED_GET;
+    set_info_field(field++, MIXED_BYPASS, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                   "Bypass the segment's processing.");
   }
 
   return info;
