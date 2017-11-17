@@ -242,7 +242,10 @@ extern "C" {
     // The repeat time is in seconds.
     MIXED_REPEAT_TIME,
     // Access the current mode the repeater segment is in.
-    MIXED_REPEAT_MODE
+    MIXED_REPEAT_MODE,
+    // Access the frequency cutoff of the low/high-pass filter.
+    // This value is a size_t in Hertz.
+    MIXED_FREQUENCY_CUTOFF
   };
 
   // This enum describes the possible preset attenuation functions.
@@ -844,6 +847,13 @@ extern "C" {
   //
   // This segment can generate white, pink, and brown noise.
   MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type, struct mixed_segment *segment);
+
+  // A low-pass frequency filter segment.
+  //
+  // The cutoff cannot be larger than the samplerate. Generally, if the cutoff
+  // frequency is larger than half of the samplerate, major distortion will
+  // occur, so tread carefully.
+  MIXED_EXPORT int mixed_make_segment_low_pass(size_t cutoff, size_t samplerate, struct mixed_segment *segment);
 
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);
