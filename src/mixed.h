@@ -118,6 +118,8 @@ extern "C" {
     // Whether to bypass the segment and effectively
     // disable its effects. The value is a bool.
     MIXED_BYPASS,
+    // Access the sample rate by which the segment operates.
+    MIXED_SAMPLERATE,
     // Access the volume of the segment.
     // The volume should be positive. Setting the volume
     // to values higher than one will result in distortion.
@@ -212,8 +214,6 @@ extern "C" {
     // Access the time, in seconds, by which the sound is
     // delayed.
     MIXED_DELAY_TIME,
-    // Access the sample rate by which the segment operates.
-    MIXED_SAMPLERATE,
     // Access the change of the pitch as a float.
     MIXED_PITCH_SHIFT,
     // Access the opening threshold for the gate as a float.
@@ -290,7 +290,7 @@ extern "C" {
 
   // This enum describes the possible pass directions.
   MIXED_EXPORT enum mixed_frequency_pass{
-    MIXED_PASS_LOW,
+    MIXED_PASS_LOW = 1,
     MIXED_PASS_HIGH
   };
 
@@ -898,7 +898,7 @@ extern "C" {
   // A noise generator segment.
   //
   // This segment can generate white, pink, and brown noise.
-  MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type type, struct mixed_segment *segment);
 
   // A frequency filter segment.
   //
