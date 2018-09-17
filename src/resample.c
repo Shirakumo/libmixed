@@ -17,14 +17,14 @@ MIXED_EXPORT int mixed_resample_nearest(struct mixed_buffer *in, size_t in_sampl
 MIXED_EXPORT int mixed_resample_linear(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples){
   float *out_data = out->data;
   float *in_data = in->data;
-  
-  size_t in_samples = out_samples * in_samplerate / out_samplerate;
-  for(size_t o=0; o<out_samples; ++o){
-    float p = (o * in_samplerate) / ((float)out_samplerate);
-    size_t i = clamp(0, (size_t)p, in_samples);
-    float t = p-i;
+
+  float ratio = in_samplerate / ((float)out_samplerate);
+  float i = 0;
+  for(size_t o=0; o<out_samples; ++o, i+=ratio){
+    int ii = clamp(0, (int)i, in->size-2);
+    float t = i-ii;
     
-    out_data[o] = in_data[i]+(in_data[i+1]-in_data[i])*t;
+    out_data[o] = in_data[ii]+(in_data[ii+1]-in_data[ii])*t;
   }
   return 1;
 }
