@@ -66,10 +66,10 @@ void drain_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
   if(data->resample_buffers){
+    size_t drain_samples = samples * data->pack->samplerate / data->samplerate;
     for(size_t i=0; i<data->pack->channels; ++i){
-      data->resampler(data->buffers[i], data->samplerate, data->resample_buffers[i], data->pack->samplerate, samples);
+      data->resampler(data->buffers[i], data->samplerate, data->resample_buffers[i], data->pack->samplerate, drain_samples);
     }
-    size_t drain_samples = samples * data->samplerate / data->pack->samplerate;
     mixed_buffer_to_packed_audio(data->resample_buffers, data->pack, drain_samples, data->volume);
   }else{
     mixed_buffer_to_packed_audio(data->buffers, data->pack, samples, data->volume);
