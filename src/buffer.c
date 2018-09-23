@@ -8,6 +8,7 @@ MIXED_EXPORT int mixed_make_buffer(size_t size, struct mixed_buffer *buffer){
     return 0;
   }
   buffer->size = size;
+  buffer->count = 0;
   return 1;
 }
 
@@ -20,6 +21,7 @@ MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer){
 MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer){
   if(buffer->data){
     memset(buffer->data, 0, sizeof(float)*buffer->size);
+    buffer->count = 0;
     return 1;
   }
   return 0;
@@ -28,10 +30,10 @@ MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer){
 MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to){
   mixed_err(MIXED_NO_ERROR);
   if(from != to){
-    size_t size = (to->size<from->size)? from->size : to->size;
+    size_t size = (to->count<from->count)? from->count : to->count;
     memcpy(to->data, from->data, sizeof(float)*size);
     if(size < to->size){
-      memset(to->data+size, 0, sizeof(float)*(to->size-size));
+      memset(to->data+size, 0, sizeof(float)*(to->count-size));
     }
   }
   return 1;
@@ -46,6 +48,7 @@ MIXED_EXPORT int mixed_buffer_resize(size_t size, struct mixed_buffer *buffer){
   }
   buffer->data = new;
   buffer->size = size;
+  buffer->count = (size<buffer->count)? size : buffer->count;
   return 1;
 }
 
