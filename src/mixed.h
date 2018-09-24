@@ -371,7 +371,12 @@ extern "C" {
   // The sample array is always stored in floats.
   MIXED_EXPORT struct mixed_buffer{
     float *data;
+    // The number of samples the data buffer can store.
     size_t size;
+    // The number of samples that are fresh in the buffer.
+    // accessing beyond this number is safe, but won't
+    // give you meaningful samples.
+    size_t count;
   };
 
   // Information struct to encapsulate a "channel"
@@ -550,19 +555,22 @@ extern "C" {
   // Copy a buffer to another.
   //
   // This only copies as many samples as viable, meaning that if
-  // one buffer is smaller than the other, only as many samples as
-  // the smaller buffer can carry are copied.
+  // one buffer has less samples than the other, only as many samples
+  // as the smaller buffer has available are copied.
   MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
 
   // Clear the buffer to make it empty again.
   // 
   // This clears the entire buffer to hold samples of all zeroes.
+  // The buffer's count is also set to zero,
   MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer);
 
   // Resize the buffer to a new size.
   //
   // If the resizing operation fails due to a lack of memory, the
   // old data is preserved and the buffer is not changed.
+  // If the new size is less than the buffer's count, the count is
+  // adapted to the size.
   MIXED_EXPORT int mixed_buffer_resize(size_t size, struct mixed_buffer *buffer);
   
   // Resample the buffer using nearest-neighbor.
@@ -613,6 +621,12 @@ extern "C" {
   // restarted. This happens if the segment is some kind of
   // finite source and has ended, or if an internal error
   // occurred that prevents the segment from operating.
+  //
+  // The number of samples actually produced by the segment,
+  // as well as the number of samples actually available in
+  // potential input buffers may differ from the number passed
+  // here. The segment is required to write the number of
+  // produced samples to its output buffers, if any.
   //
   // See mixed_segment_sequence_mix
   MIXED_EXPORT int mixed_segment_mix(size_t samples, struct mixed_segment *segment);
