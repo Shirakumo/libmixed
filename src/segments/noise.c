@@ -72,7 +72,7 @@ float noise_brown(struct noise_segment_data *data){
   return data->brown * 0.06250;
 }
 
-void noise_segment_mix(size_t samples, struct mixed_segment *segment){
+int noise_segment_mix(size_t samples, struct mixed_segment *segment){
   struct noise_segment_data *data = (struct noise_segment_data *)segment->data;
 
   float (*noise)(struct noise_segment_data *data) = 0;
@@ -88,6 +88,7 @@ void noise_segment_mix(size_t samples, struct mixed_segment *segment){
   for(size_t i=0; i<samples; ++i){
     out[i] = noise(data) * volume;
   }
+  return 1;
 }
 
 struct mixed_segment_info *noise_segment_info(struct mixed_segment *segment){

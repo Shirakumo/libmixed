@@ -53,19 +53,20 @@ int queue_segment_set_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
-void queue_segment_mix(size_t samples, struct mixed_segment *segment){
+int queue_segment_mix(size_t samples, struct mixed_segment *segment){
   struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
   if(0 <= data->count){
     size_t out = data->queue[0];
   }else{
     
   }
+  return 1;
 }
 
-void queue_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int queue_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
   struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
   
-  mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_copy(data->in, data->out);
 }
 
 struct mixed_segment_info *queue_segment_info(struct mixed_segment *segment){

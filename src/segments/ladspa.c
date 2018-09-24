@@ -81,9 +81,10 @@ int ladspa_segment_set_out(size_t field, size_t location, void *buffer, struct m
   }
 }
 
-void ladspa_segment_mix(size_t samples, struct mixed_segment *segment){
+int ladspa_segment_mix(size_t samples, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
   data->descriptor->run(data->handle, samples);
+  return 1;
 }
 
 int ladspa_segment_start(struct mixed_segment *segment){

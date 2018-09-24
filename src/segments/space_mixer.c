@@ -160,7 +160,7 @@ float calculate_pitch_shift(struct space_mixer_data *listener, struct space_sour
   return (SS - DF*vls) / (SS - DF*vss);
 }
 
-void space_mixer_mix(size_t samples, struct mixed_segment *segment){
+int space_mixer_mix(size_t samples, struct mixed_segment *segment){
   struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
 
   // Shift frequencies
@@ -208,6 +208,7 @@ void space_mixer_mix(size_t samples, struct mixed_segment *segment){
       }
     }
   }
+  return 1;
 }
 
 int space_mixer_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){

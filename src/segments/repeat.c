@@ -62,7 +62,7 @@ int repeat_segment_set_out(size_t field, size_t location, void *buffer, struct m
   }
 }
 
-void repeat_segment_mix_record(size_t samples, struct mixed_segment *segment){
+int repeat_segment_mix_record(size_t samples, struct mixed_segment *segment){
   struct repeat_segment_data *data = (struct repeat_segment_data *)segment->data;
 
   size_t repeat_samples = data->buffer.size;
@@ -78,9 +78,10 @@ void repeat_segment_mix_record(size_t samples, struct mixed_segment *segment){
   }
 
   data->buffer_index = index;
+  return 1;
 }
 
-void repeat_segment_mix_play(size_t samples, struct mixed_segment *segment){
+int repeat_segment_mix_play(size_t samples, struct mixed_segment *segment){
   struct repeat_segment_data *data = (struct repeat_segment_data *)segment->data;
 
   size_t repeat_samples = data->buffer.size;
@@ -94,12 +95,13 @@ void repeat_segment_mix_play(size_t samples, struct mixed_segment *segment){
   }
 
   data->buffer_index = index;
+  return 1;
 }
 
-void repeat_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int repeat_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
   struct repeat_segment_data *data = (struct repeat_segment_data *)segment->data;
   
-  mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_copy(data->in, data->out);
 }
 
 struct mixed_segment_info *repeat_segment_info(struct mixed_segment *segment){

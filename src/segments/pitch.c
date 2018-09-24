@@ -58,7 +58,7 @@ int pitch_segment_set_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
-void pitch_segment_mix(size_t samples, struct mixed_segment *segment){
+int pitch_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
 
   if(data->pitch == 1.0){
@@ -66,12 +66,13 @@ void pitch_segment_mix(size_t samples, struct mixed_segment *segment){
   }else{
     pitch_shift(data->pitch, data->in->data, data->out->data, samples, &data->pitch_data);
   }
+  return 1;
 }
 
-void pitch_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int pitch_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
   struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
   
-  mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_copy(data->in, data->out);
 }
 
 struct mixed_segment_info *pitch_segment_info(struct mixed_segment *segment){
