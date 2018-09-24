@@ -48,7 +48,7 @@ int pack_segment_set_buffer(size_t field, size_t location, void *buffer, struct 
   }
 }
 
-void source_segment_mix(size_t samples, struct mixed_segment *segment){
+int source_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
   if(data->resample_buffers){
@@ -60,9 +60,10 @@ void source_segment_mix(size_t samples, struct mixed_segment *segment){
   }else{
     mixed_buffer_from_packed_audio(data->pack, data->buffers, samples, data->volume);
   }
+  return 1;
 }
 
-void drain_segment_mix(size_t samples, struct mixed_segment *segment){
+int drain_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
   if(data->resample_buffers){
@@ -74,6 +75,7 @@ void drain_segment_mix(size_t samples, struct mixed_segment *segment){
   }else{
     mixed_buffer_to_packed_audio(data->buffers, data->pack, samples, data->volume);
   }
+  return 1;
 }
 
 int source_segment_set(size_t field, void *value, struct mixed_segment *segment){

@@ -79,7 +79,7 @@ int gate_segment_set_out(size_t field, size_t location, void *buffer, struct mix
   }
 }
 
-void gate_segment_mix(size_t samples, struct mixed_segment *segment){
+int gate_segment_mix(size_t samples, struct mixed_segment *segment){
   struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
 
   float stime = 1.0/data->samplerate;
@@ -144,12 +144,13 @@ void gate_segment_mix(size_t samples, struct mixed_segment *segment){
     out[i] = sample * volume;
   }
   data->time = time;
+  return 1;
 }
 
-void gate_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int gate_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
   struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
   
-  mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_copy(data->in, data->out);
 }
 
 struct mixed_segment_info *gate_segment_info(struct mixed_segment *segment){

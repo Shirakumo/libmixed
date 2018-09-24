@@ -74,7 +74,7 @@ int basic_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed
   }
 }
 
-void basic_mixer_mix(size_t samples, struct mixed_segment *segment){
+int basic_mixer_mix(size_t samples, struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   size_t buffers = data->count / data->channels;
   if(0 < buffers){
@@ -111,6 +111,7 @@ void basic_mixer_mix(size_t samples, struct mixed_segment *segment){
       memset(data->out[c]->data, 0, samples*sizeof(float));
     }
   }
+  return 1;
 }
 
 // FIXME: add start method that checks for buffer completeness.

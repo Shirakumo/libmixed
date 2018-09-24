@@ -474,7 +474,7 @@ extern "C" {
     int (*free)(struct mixed_segment *segment);
     struct mixed_segment_info *(*info)(struct mixed_segment *segment);
     int (*start)(struct mixed_segment *segment);
-    void (*mix)(size_t samples, struct mixed_segment *segment);
+    int (*mix)(size_t samples, struct mixed_segment *segment);
     int (*end)(struct mixed_segment *segment);
     int (*set_in)(size_t field, size_t location, void *value, struct mixed_segment *segment);
     int (*set_out)(size_t field, size_t location, void *value, struct mixed_segment *segment);
@@ -608,8 +608,14 @@ extern "C" {
 
   // Run the segment for the given number of samples.
   //
+  // If this returns zero, then the segment did not produce any
+  // output and can't be expected to produce any until it is
+  // restarted. This happens if the segment is some kind of
+  // finite source and has ended, or if an internal error
+  // occurred that prevents the segment from operating.
+  //
   // See mixed_segment_sequence_mix
-  MIXED_EXPORT void mixed_segment_mix(size_t samples, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_mix(size_t samples, struct mixed_segment *segment);
 
   // End the segment's mixing process.
   //
