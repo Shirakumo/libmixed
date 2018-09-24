@@ -61,7 +61,7 @@ int delay_segment_set_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
-void delay_segment_mix(size_t samples, struct mixed_segment *segment){
+int delay_segment_mix(size_t samples, struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
 
   size_t delay_samples = data->buffer.size;
@@ -78,12 +78,13 @@ void delay_segment_mix(size_t samples, struct mixed_segment *segment){
   }
 
   data->buffer_index = index;
+  return 1;
 }
 
-void delay_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int delay_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
   
-  mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_copy(data->in, data->out);
 }
 
 struct mixed_segment_info *delay_segment_info(struct mixed_segment *segment){

@@ -81,7 +81,7 @@ int frequency_pass_segment_set_out(size_t field, size_t location, void *buffer, 
   }
 }
 
-void low_pass_segment_mix(size_t samples, struct mixed_segment *segment){
+int low_pass_segment_mix(size_t samples, struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
 
   float *in = data->in->data;
@@ -100,9 +100,11 @@ void low_pass_segment_mix(size_t samples, struct mixed_segment *segment){
     y[1] = y[0];
     y[0] = out[i];
   }
+
+  return 1;
 }
 
-void high_pass_segment_mix(size_t samples, struct mixed_segment *segment){
+int high_pass_segment_mix(size_t samples, struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
 
   float *in = data->in->data;
@@ -122,12 +124,14 @@ void high_pass_segment_mix(size_t samples, struct mixed_segment *segment){
     y[0] = out[i];
     out[i] = s-out[i];
   }
+
+  return 1;
 }
 
-void frequency_pass_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int frequency_pass_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
   
-  mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_copy(data->in, data->out);
 }
 
 struct mixed_segment_info *frequency_pass_segment_info(struct mixed_segment *segment){

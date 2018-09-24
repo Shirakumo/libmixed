@@ -83,7 +83,7 @@ float fade_cubic_in_out(float x){
   }
 }
 
-void fade_segment_mix(size_t samples, struct mixed_segment *segment){
+int fade_segment_mix(size_t samples, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
 
   double time = data->time_passed;
@@ -114,12 +114,13 @@ void fade_segment_mix(size_t samples, struct mixed_segment *segment){
   }
 
   data->time_passed = time;
+  return 1;
 }
 
-void fade_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int fade_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
   
-  mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_copy(data->in, data->out);
 }
 
 struct mixed_segment_info *fade_segment_info(struct mixed_segment *segment){
