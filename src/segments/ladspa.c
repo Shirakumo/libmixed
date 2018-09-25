@@ -142,6 +142,8 @@ int ladspa_segment_info(struct mixed_segment_info *info, struct mixed_segment *s
     }
 
     // FIXME: Fill fields
+    struct mixed_segment_field_info *field = info->fields;
+    clear_info_field(field++);
   }
   return 1;
 }

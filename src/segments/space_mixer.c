@@ -529,6 +529,7 @@ int space_mixer_info(struct mixed_segment_info *info, struct mixed_segment *segm
                  MIXED_SEGMENT_POINTER, 1, MIXED_IN | MIXED_SET | MIXED_GET,
                  "The segment that needs to be mixed before its buffer has any useful data.");
 
+  clear_info_field(field++);
   return 1;
 }
 

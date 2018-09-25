@@ -88,6 +88,14 @@ void set_info_field(struct mixed_segment_field_info *info, size_t field, enum mi
   info->type_count = count;
 }
 
+void clear_info_field(struct mixed_segment_field_info *info){
+  info->field = 0;
+  info->description = 0;
+  info->flags = 0;
+  info->type = 0;
+  info->type_count = 0;
+}
+
 size_t smin(size_t a, size_t b){
   return (a<b)?a:b;
 }
