@@ -104,37 +104,33 @@ int repeat_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
   return mixed_buffer_copy(data->in, data->out);
 }
 
-struct mixed_segment_info *repeat_segment_info(struct mixed_segment *segment){
+int repeat_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
   struct repeat_segment_data *data = (struct repeat_segment_data *)segment->data;
-  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-
-  if(info){
-    info->name = "repeat";
-    info->description = "Allows recording some input and then repeatedly playing it back.";
-    info->flags = MIXED_INPLACE;
-    info->min_inputs = 1;
-    info->max_inputs = 1;
-    info->outputs = 1;
+  
+  info->name = "repeat";
+  info->description = "Allows recording some input and then repeatedly playing it back.";
+  info->flags = MIXED_INPLACE;
+  info->min_inputs = 1;
+  info->max_inputs = 1;
+  info->outputs = 1;
     
-    struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER,
-                   MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
-                   "The buffer for audio data attached to the location.");
+  struct mixed_segment_field_info *field = info->fields;
+  set_info_field(field++, MIXED_BUFFER,
+                 MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
+                 "The buffer for audio data attached to the location.");
 
-    set_info_field(field++, MIXED_REPEAT_TIME,
-                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The time, in seconds, that is recorded and repeated.");
+  set_info_field(field++, MIXED_REPEAT_TIME,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The time, in seconds, that is recorded and repeated.");
 
-    set_info_field(field++, MIXED_SAMPLERATE,
-                   MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The samplerate at which the segment operates.");
+  set_info_field(field++, MIXED_SAMPLERATE,
+                 MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The samplerate at which the segment operates.");
 
-    set_info_field(field++, MIXED_BYPASS,
-                   MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "Bypass the segment's processing.");
-  }
-
-  return info;
+  set_info_field(field++, MIXED_BYPASS,
+                 MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "Bypass the segment's processing.");
+  return 1;
 }
 
 int repeat_segment_get(size_t field, void *value, struct mixed_segment *segment){

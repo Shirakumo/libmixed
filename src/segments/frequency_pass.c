@@ -134,41 +134,38 @@ int frequency_pass_segment_mix_bypass(size_t samples, struct mixed_segment *segm
   return mixed_buffer_copy(data->in, data->out);
 }
 
-struct mixed_segment_info *frequency_pass_segment_info(struct mixed_segment *segment){
+int frequency_pass_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
-  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-
-  if(info){
-    info->name = "frequency_pass";
-    info->description = "A frequency filter segment.";
-    info->flags = MIXED_INPLACE;
-    info->min_inputs = 1;
-    info->max_inputs = 1;
-    info->outputs = 1;
+  
+  info->name = "frequency_pass";
+  info->description = "A frequency filter segment.";
+  info->flags = MIXED_INPLACE;
+  info->min_inputs = 1;
+  info->max_inputs = 1;
+  info->outputs = 1;
     
-    struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER,
-                   MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
-                   "The buffer for audio data attached to the location.");
+  struct mixed_segment_field_info *field = info->fields;
+  set_info_field(field++, MIXED_BUFFER,
+                 MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
+                 "The buffer for audio data attached to the location.");
 
-    set_info_field(field++, MIXED_FREQUENCY_CUTOFF,
-                   MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The maximum/minimum frequency that will pass through the segment.");
+  set_info_field(field++, MIXED_FREQUENCY_CUTOFF,
+                 MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The maximum/minimum frequency that will pass through the segment.");
 
-    set_info_field(field++, MIXED_FREQUENCY_PASS,
-                   MIXED_FREQUENCY_PASS_ENUM, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "Whether to pass high or low frequencies.");
+  set_info_field(field++, MIXED_FREQUENCY_PASS,
+                 MIXED_FREQUENCY_PASS_ENUM, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "Whether to pass high or low frequencies.");
 
-    set_info_field(field++, MIXED_SAMPLERATE,
-                   MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The samplerate at which the segment operates.");
+  set_info_field(field++, MIXED_SAMPLERATE,
+                 MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The samplerate at which the segment operates.");
 
-    set_info_field(field++, MIXED_BYPASS,
-                   MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "Bypass the segment's processing.");
-  }
+  set_info_field(field++, MIXED_BYPASS,
+                 MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "Bypass the segment's processing.");
 
-  return info;
+  return 1;
 }
 
 int frequency_pass_segment_get(size_t field, void *value, struct mixed_segment *segment){
