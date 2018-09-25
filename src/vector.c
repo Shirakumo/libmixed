@@ -46,6 +46,7 @@ int vector_remove_pos(size_t i, struct vector *vector){
   if(vector->count < vector->size/4 && BASE_VECTOR_SIZE < vector->size){
     vector->data = crealloc(vector->data, vector->size, vector->size/2,
                             sizeof(struct mixed_buffer *));
+    vector->size /= 2;
     if(!vector->data){
       mixed_err(MIXED_OUT_OF_MEMORY);
       vector->count = 0;
@@ -65,6 +66,22 @@ int vector_remove_item(void *element, struct vector *vector){
     if(vector->data[i] == element){
       vector_remove_pos(i, vector);
       break;
+    }
+  }
+  return 1;
+}
+
+int vector_clear(struct vector *vector){
+  vector->count = 0;
+  // We have sufficiently deallocated. Shrink.
+  if(BASE_VECTOR_SIZE < vector->size){
+    vector->data = crealloc(vector->data, vector->size, BASE_VECTOR_SIZE,
+                            sizeof(struct mixed_buffer *));
+    vector->size = BASE_VECTOR_SIZE;
+    if(!vector->data){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      vector->size = 0;
+      return 0;
     }
   }
   return 1;

@@ -88,6 +88,10 @@ void set_info_field(struct mixed_segment_field_info *info, size_t field, enum mi
   info->type_count = count;
 }
 
+size_t smin(size_t a, size_t b){
+  return (a<b)?a:b;
+}
+
 float mixed_random_m(){
   return (float)rand()/(float)RAND_MAX;
 }

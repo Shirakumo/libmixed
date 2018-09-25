@@ -32,6 +32,7 @@ void free_vector(struct vector *vector);
 int vector_add(void *element, struct vector *vector);
 int vector_remove_pos(size_t i, struct vector *vector);
 int vector_remove_item(void *element, struct vector *vector);
+int vector_clear(struct vector *vector);
 
 struct pitch_data{
   float *in_fifo;
@@ -61,5 +62,7 @@ void mixed_err(int errorcode);
 void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size);
 
 void set_info_field(struct mixed_segment_field_info *info, size_t field, enum mixed_segment_field_type type, size_t count, enum mixed_segment_info_flags flags, char*description);
+
+size_t smin(size_t a, size_t b);
 
 extern float (*mixed_random)();
