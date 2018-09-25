@@ -248,7 +248,15 @@ extern "C" {
     MIXED_FREQUENCY_CUTOFF,
     // Access whether to pass frequencies above or below the cutoff.
     // This value is an enum mixed_frequency_pass.
-    MIXED_FREQUENCY_PASS
+    MIXED_FREQUENCY_PASS,
+    // Access the number of input buffers the segment can hold.
+    // The value is a size_t.
+    // The default is 8.
+    MIXED_IN_COUNT,
+    // Access the number of output buffers the segment can hold.
+    // The value is a size_t.
+    // The default is 8.
+    MIXED_OUT_COUNT,
   };
 
   // This enum describes the possible preset attenuation functions.
@@ -926,6 +934,28 @@ extern "C" {
   // frequency is larger than half of the samplerate, major distortion will
   // occur, so tread carefully.
   MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pass, size_t cutoff, size_t samplerate, struct mixed_segment *segment);
+
+  // A queue segment for inner segments.
+  //
+  // The queue will delegate mixing to the first segment in its list until that
+  // segment is explicitly removed, or returns zero from its mix function.
+  // When a new segment is added to the queue, the queue will connect as many
+  // of its buffers as appropriate. When the segment is removed, the buffers
+  // are also unset.
+  //
+  // If the queue is empty or is being bypassed, it will simply copy the
+  // contents of the input buffers to corresponding output buffers. If there are
+  // more output buffers than input buffers, the remaining are cleared to zero.
+  //
+  // The number of bufers that can be connected to the queue is controlled by
+  // the MIXED_IN_COUNT and MIXED_OUT_COUNT fields.
+  //
+  // The queue's info will reflect the capabilities of the first segment, if any,
+  // and the queue's maximal capabilities otherwise.
+  MIXED_EXPORT int mixed_make_segment_queue(struct mixed_segment *);
+  MIXED_EXPORT int mixed_queue_add(struct mixed_segment *new, struct mixed_segment *queue);
+  MIXED_EXPORT int mixed_queue_remove(struct mixed_segment *old, struct mixed_segment *queue);
+  MIXED_EXPORT int mixed_queue_clear(struct mixed_segment *queue);
 
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);
