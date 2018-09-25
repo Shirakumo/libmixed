@@ -51,6 +51,7 @@ int pack_segment_set_buffer(size_t field, size_t location, void *buffer, struct 
 int source_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
+  // FIXME: buffer counts
   if(data->resample_buffers){
     size_t source_samples = samples * data->samplerate / data->pack->samplerate;
     mixed_buffer_from_packed_audio(data->pack, data->resample_buffers, source_samples, data->volume);

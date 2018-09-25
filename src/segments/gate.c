@@ -82,6 +82,8 @@ int gate_segment_set_out(size_t field, size_t location, void *buffer, struct mix
 int gate_segment_mix(size_t samples, struct mixed_segment *segment){
   struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
 
+  samples = data->in->count;
+  data->out->count = samples;
   float stime = 1.0/data->samplerate;
   float time = data->time;
   float open = data->open_threshold;

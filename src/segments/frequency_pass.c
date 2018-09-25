@@ -84,6 +84,8 @@ int frequency_pass_segment_set_out(size_t field, size_t location, void *buffer, 
 int low_pass_segment_mix(size_t samples, struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
 
+  samples = data->in->count;
+  data->out->count = samples;
   float *in = data->in->data;
   float *out = data->out->data;
   float *x = data->x;

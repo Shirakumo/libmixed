@@ -1,6 +1,5 @@
 #include "internal.h"
 
-//FIXME: allow arbitrary buffers
 struct volume_control_segment_data{
   struct mixed_buffer *in[2];
   struct mixed_buffer *out[2];
@@ -51,12 +50,18 @@ int volume_control_segment_set_out(size_t field, size_t location, void *buffer, 
 
 int volume_control_segment_mix(size_t samples, struct mixed_segment *segment){
   struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
-  float lvolume = data->volume * ((0.0<data->pan)?(1.0f-data->pan):1.0f);
-  float rvolume = data->volume * ((data->pan<0.0)?(1.0f+data->pan):1.0f);
+  float volume[2] = {data->volume * ((0.0<data->pan)?(1.0f-data->pan):1.0f),
+                     data->volume * ((data->pan<0.0)?(1.0f+data->pan):1.0f)};
 
-  for(size_t i=0; i<samples; ++i){
-    data->out[MIXED_LEFT]->data[i] = data->in[MIXED_LEFT]->data[i]*lvolume;
-    data->out[MIXED_RIGHT]->data[i] = data->in[MIXED_RIGHT]->data[i]*rvolume;
+  for(size_t c=0; c<2; ++c){
+    samples = data->in[c]->count;
+    data->out[c]->count = samples;
+    float vol = volume[c];
+    float *in = data->in[c]->data;
+    float *out = data->out[c]->data;
+    for(size_t i=0; i<samples; ++i){
+      out[i] = in[i]*vol;
+    }
   }
   return 1;
 }

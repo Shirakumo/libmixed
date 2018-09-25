@@ -68,6 +68,8 @@ int repeat_segment_mix_record(size_t samples, struct mixed_segment *segment){
   size_t repeat_samples = data->buffer.size;
   size_t index = data->buffer_index;
 
+  samples = data->in->count;
+  data->out->count = samples;
   float *buf = data->buffer.data;
   float *in = data->in->data;
   float *out = data->out->data;
@@ -87,6 +89,8 @@ int repeat_segment_mix_play(size_t samples, struct mixed_segment *segment){
   size_t repeat_samples = data->buffer.size;
   size_t index = data->buffer_index;
 
+  samples = fmin(repeat_samples, data->buffer.count);
+  data->out->count = samples;
   float *buf = data->buffer.data;
   float *out = data->out->data;
   for(size_t i=0; i<samples; ++i){

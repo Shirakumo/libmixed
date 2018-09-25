@@ -88,6 +88,7 @@ int noise_segment_mix(size_t samples, struct mixed_segment *segment){
   for(size_t i=0; i<samples; ++i){
     out[i] = noise(data) * volume;
   }
+  data->out->count = samples;
   return 1;
 }
 

@@ -83,28 +83,24 @@ int basic_mixer_mix(size_t samples, struct mixed_segment *segment){
     float div = volume;
 
     for(size_t c=0; c<channels; ++c){
+      // Clear out the buffer.
       float *out = data->out[c]->data;
-
-      // Mix first buffer directly.
-      struct mixer_source *source = data->sources[c];
-      struct mixed_segment *segment = source->segment;
-      if(segment) segment->mix(samples, segment);
-      
-      float *in = source->buffer->data;
-      for(size_t i=0; i<samples; ++i){
-        out[i] = in[i]*div;
-      }
-      // Mix other buffers additively.
-      for(size_t b=1; b<buffers; ++b){
-        source = data->sources[b*channels+c];
-        segment = source->segment;
+      memset(out, 0, sizeof(float)*data->out[c]->size);
+      // Mix segments additively.
+      for(size_t b=0; b<buffers; ++b){
+        struct mixer_source *source = data->sources[b*channels+c];
+        struct mixed_segment *segment = source->segment;
         if(segment) segment->mix(samples, segment);
-        
-        in = source->buffer->data;
+
+        samples = source->buffer->count;
+        float *in = source->buffer->data;
         for(size_t i=0; i<samples; ++i){
           out[i] += in[i]*div;
         }
       }
+      // FIXME: Ideally we'd calculate the samples
+      //        by maximising input buffer count.
+      data->out[c]->count = samples;
     }
   }else{
     for(size_t c=0; c<data->channels; ++c){

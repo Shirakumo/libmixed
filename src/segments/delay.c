@@ -67,6 +67,8 @@ int delay_segment_mix(size_t samples, struct mixed_segment *segment){
   size_t delay_samples = data->buffer.size;
   size_t index = data->buffer_index;
 
+  samples = data->in->count;
+  data->out->count = samples;
   float *buf = data->buffer.data;
   float *in = data->in->data;
   float *out = data->out->data;

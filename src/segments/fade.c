@@ -104,6 +104,8 @@ int fade_segment_mix(size_t samples, struct mixed_segment *segment){
   //       for the entirety of the sample range if the total duration
   //       of the buffer is small enough (~1ms?) as the human ear
   //       wouldn't be able to properly notice it.
+  samples = data->in->count;
+  data->out->count = samples;
   float *in = data->in->data;
   float *out = data->out->data;
   for(size_t i=0; i<samples; ++i){

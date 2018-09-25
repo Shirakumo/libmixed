@@ -61,6 +61,8 @@ int pitch_segment_set_out(size_t field, size_t location, void *buffer, struct mi
 int pitch_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
 
+  samples = data->in->count;
+  data->out->count = samples;
   if(data->pitch == 1.0){
     mixed_buffer_copy(data->in, data->out);
   }else{

@@ -176,31 +176,20 @@ int space_mixer_mix(size_t samples, struct mixed_segment *segment){
   float *left = data->left->data;
   float *right = data->right->data;
   size_t count = data->count;
-  if(count == 0){
-    memset(left, 0, samples*sizeof(float));
-    memset(right, 0, samples*sizeof(float));
-  }else{
+
+  memset(left, 0, samples*sizeof(float));
+  memset(right, 0, samples*sizeof(float));
+
+  if(0 < count){
     float lvolume, rvolume;
-    // Mix the first source directly to avoid a clearing loop.
-    struct space_source *source = data->sources[0];
-    // Invoke segment's mixing function if necessary.
-    struct mixed_segment *segment = source->segment;
-    if(segment) segment->mix(samples, segment);
-    // Perform mix.
-    float *in = source->buffer->data;
-    calculate_volumes(&lvolume, &rvolume, source, data);
-    for(size_t i=0; i<samples; ++i){
-      left[i] = in[i] * lvolume;
-      right[i] = in[i] * rvolume;
-    }
-    // Mix the rest of the sources additively.
-    for(size_t s=1; s<count; ++s){
-      source = data->sources[s];
-      // Invoke segment's mixing function if necessary.
-      segment = source->segment;
+    // Mix the sources additively.
+    for(size_t s=0; s<count; ++s){
+      struct space_source *source = data->sources[s];
+      struct mixed_segment *segment = source->segment;
       if(segment) segment->mix(samples, segment);
-      // Perform mix.
-      in = source->buffer->data;
+      
+      samples = source->buffer->count;
+      float *in = source->buffer->data;
       calculate_volumes(&lvolume, &rvolume, source, data);
       for(size_t i=0; i<samples; ++i){
         left[i] += in[i] * lvolume;
@@ -208,6 +197,10 @@ int space_mixer_mix(size_t samples, struct mixed_segment *segment){
       }
     }
   }
+  // FIXME: Ideally we'd calculate the samples
+  //        by maximising input buffer count.
+  data->left->count = samples;
+  data->right->count = samples;
   return 1;
 }
 

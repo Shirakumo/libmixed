@@ -72,6 +72,7 @@ int generator_segment_mix(size_t samples, struct mixed_segment *segment){
     phase = (phase+1) % data->samplerate;
   }
 
+  data->out->count = samples;
   data->phase = phase;
   return 1;
 }
