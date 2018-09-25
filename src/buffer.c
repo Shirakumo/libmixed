@@ -16,6 +16,8 @@ MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer){
   if(buffer->data)
     free(buffer->data);
   buffer->data = 0;
+  buffer->size = 0;
+  buffer->count = 0;
 }
 
 MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer){
@@ -30,10 +32,10 @@ MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer){
 MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to){
   mixed_err(MIXED_NO_ERROR);
   if(from != to){
-    size_t size = (to->count<from->count)? from->count : to->count;
-    memcpy(to->data, from->data, sizeof(float)*size);
-    if(size < to->size){
-      memset(to->data+size, 0, sizeof(float)*(to->count-size));
+    size_t count = (to->count<from->count)? from->count : to->count;
+    memcpy(to->data, from->data, sizeof(float)*count);
+    if(count < to->count){
+      memset(to->data+count, 0, sizeof(float)*(to->count-count));
     }
   }
   return 1;
@@ -96,6 +98,7 @@ extern inline void mixed_transfer_sample_from_uint24(struct mixed_packed_audio *
         for(size_t sample=0; sample<samples; ++sample){                 \
           mixed_transfer_sample_from_##name(in, sample*channels+channel, out, sample, volume); \
         }                                                               \
+        out->count = samples;                                            \
       }}                                                                \
       break;                                                            \
     case MIXED_SEQUENTIAL:{                                             \
@@ -106,6 +109,7 @@ extern inline void mixed_transfer_sample_from_uint24(struct mixed_packed_audio *
           mixed_transfer_sample_from_##name(in, sample+offset, out, sample, volume); \
         }                                                               \
         offset += samples;                                              \
+        out->count = samples;                                            \
       }}                                                                \
       break;                                                            \
     default:                                                            \
