@@ -70,6 +70,10 @@ MIXED_EXPORT char *mixed_error_string(int code){
   }
 }
 
+MIXED_EXPORT char *mixed_version(){
+  return VERSION;
+}
+
 void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   size_t newsize = newcount*size;
   size_t oldsize = oldcount*size;
