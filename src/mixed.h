@@ -988,6 +988,9 @@ extern "C" {
   MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding);
 
   // Return the current error code.
+  //
+  // The error code is thread-local in order to allow multiple operations
+  // at the same time.
   MIXED_EXPORT int mixed_error();
 
   // Return the error string for the given error code.
