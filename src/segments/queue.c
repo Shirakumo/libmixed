@@ -113,15 +113,20 @@ int queue_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
   set_info_field(field++, MIXED_BYPASS,
                  MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "Bypass the segment's processing.");
+  
   set_info_field(field++, MIXED_CURRENT_SEGMENT,
                  MIXED_SEGMENT_POINTER, 1, MIXED_SEGMENT | MIXED_GET,
                  "Retrieve the currently playing segment, if any.");
+
   set_info_field(field++, MIXED_IN_COUNT,
                  MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "Access the number of available input buffers.");
+
   set_info_field(field++, MIXED_OUT_COUNT,
                  MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "Access the number of available output buffers.");
+
+  clear_info_field(field++);
   return 1;
 }
 

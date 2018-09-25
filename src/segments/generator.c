@@ -100,6 +100,7 @@ int generator_segment_info(struct mixed_segment_info *info, struct mixed_segment
                  MIXED_GENERATOR_TYPE_ENUM, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The type of wave form that is produced.");
   
+  clear_info_field(field++);
   return 1;
 }
 

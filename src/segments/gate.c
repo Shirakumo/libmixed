@@ -196,6 +196,7 @@ int gate_segment_info(struct mixed_segment_info *info, struct mixed_segment *seg
                  MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "Bypass the segment's processing.");
 
+  clear_info_field(field++);
   return 1;
 }
 
