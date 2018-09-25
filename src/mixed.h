@@ -257,6 +257,9 @@ extern "C" {
     // The value is a size_t.
     // The default is 8.
     MIXED_OUT_COUNT,
+    // Returns the current segment in the queue.
+    // The value is a pointer to a struct mixed_segment.
+    MIXED_CURRENT_SEGMENT,
   };
 
   // This enum describes the possible preset attenuation functions.
@@ -941,6 +944,7 @@ extern "C" {
   MIXED_EXPORT int mixed_make_segment_queue(struct mixed_segment *);
   MIXED_EXPORT int mixed_queue_add(struct mixed_segment *new, struct mixed_segment *queue);
   MIXED_EXPORT int mixed_queue_remove(struct mixed_segment *old, struct mixed_segment *queue);
+  MIXED_EXPORT int mixed_queue_remove_at(size_t pos, struct mixed_segment *queue);
   MIXED_EXPORT int mixed_queue_clear(struct mixed_segment *queue);
 
   // Free the associated sequence data.
