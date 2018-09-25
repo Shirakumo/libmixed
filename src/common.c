@@ -20,7 +20,7 @@ int mix_noop(size_t samples, struct mixed_segment *segment){
   return 1;
 }
 
-int errorcode = 0;
+thread_local int errorcode = 0;
 
 void mixed_err(int code){
   errorcode = code;
