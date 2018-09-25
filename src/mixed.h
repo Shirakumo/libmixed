@@ -1003,6 +1003,9 @@ extern "C" {
   // error code returned by mixed_error(); is returned instead.
   MIXED_EXPORT char *mixed_error_string(int error_code);
 
+  // Returns the version string of the library.
+  MIXED_EXPORT char *mixed_version();
+
 #ifdef __cplusplus
 }
 #endif
