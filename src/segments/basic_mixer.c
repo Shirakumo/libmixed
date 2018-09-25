@@ -164,32 +164,27 @@ int basic_mixer_get(size_t field, void *value, struct mixed_segment *segment){
   }
 }
 
-struct mixed_segment_info *basic_mixer_info(struct mixed_segment *segment){
+int basic_mixer_info(struct mixed_segment_info *info, struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
-  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-
-  if(info){
-    info->name = "basic_mixer";
-    info->description = "Mixes multiple buffers together";
-    info->min_inputs = 0;
-    info->max_inputs = -1;
-    info->outputs = data->channels;
+  info->name = "basic_mixer";
+  info->description = "Mixes multiple buffers together";
+  info->min_inputs = 0;
+  info->max_inputs = -1;
+  info->outputs = data->channels;
   
-    struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER,
-                   MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
-                   "The buffer for audio data attached to the location.");
+  struct mixed_segment_field_info *field = info->fields;
+  set_info_field(field++, MIXED_BUFFER,
+                 MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
+                 "The buffer for audio data attached to the location.");
 
-    set_info_field(field++, MIXED_VOLUME,
-                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The volume scaling factor for the output.");
+  set_info_field(field++, MIXED_VOLUME,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The volume scaling factor for the output.");
 
-    set_info_field(field++, MIXED_SOURCE,
-                   MIXED_SEGMENT_POINTER, 1, MIXED_IN | MIXED_SET,
-                   "The segment that needs to be mixed before its buffer has any useful data.");
-  }
-
-  return info;
+  set_info_field(field++, MIXED_SOURCE,
+                 MIXED_SEGMENT_POINTER, 1, MIXED_IN | MIXED_SET,
+                 "The segment that needs to be mixed before its buffer has any useful data.");
+  return 1;
 }
 
 MIXED_EXPORT int mixed_make_segment_basic_mixer(size_t channels, struct mixed_segment *segment){

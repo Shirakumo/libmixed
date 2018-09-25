@@ -483,7 +483,7 @@ extern "C" {
   // function below.
   MIXED_EXPORT struct mixed_segment{
     int (*free)(struct mixed_segment *segment);
-    struct mixed_segment_info *(*info)(struct mixed_segment *segment);
+    int (*info)(struct mixed_segment_info *info, struct mixed_segment *segment);
     int (*start)(struct mixed_segment *segment);
     int (*mix)(size_t samples, struct mixed_segment *segment);
     int (*end)(struct mixed_segment *segment);
@@ -687,7 +687,7 @@ extern "C" {
   //
   // If the method is not implemented, the error is set to
   // MIXED_NOT_IMPLEMENTED and a null pointer is returned.
-  MIXED_EXPORT struct mixed_segment_info *mixed_segment_info(struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment);
 
   // Set the value of a field in the segment.
   //

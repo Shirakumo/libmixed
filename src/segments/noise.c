@@ -91,31 +91,26 @@ int noise_segment_mix(size_t samples, struct mixed_segment *segment){
   return 1;
 }
 
-struct mixed_segment_info *noise_segment_info(struct mixed_segment *segment){
-  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
+int noise_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
+  info->name = "noise";
+  info->description = "Noise generator segment";
+  info->min_inputs = 0;
+  info->max_inputs = 0;
+  info->outputs = 1;
 
-  if(info){
-    info->name = "noise";
-    info->description = "Noise generator segment";
-    info->min_inputs = 0;
-    info->max_inputs = 0;
-    info->outputs = 1;
+  struct mixed_segment_field_info *field = info->fields;  
+  set_info_field(field++, MIXED_BUFFER,
+                 MIXED_BUFFER_POINTER, 1, MIXED_OUT | MIXED_SET,
+                 "The buffer for audio data attached to the location.");
 
-    struct mixed_segment_field_info *field = info->fields;  
-    set_info_field(field++, MIXED_BUFFER,
-                   MIXED_BUFFER_POINTER, 1, MIXED_OUT | MIXED_SET,
-                   "The buffer for audio data attached to the location.");
-
-    set_info_field(field++, MIXED_VOLUME,
-                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The volume scaling factor.");
+  set_info_field(field++, MIXED_VOLUME,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The volume scaling factor.");
   
-    set_info_field(field++, MIXED_NOISE_TYPE,
-                   MIXED_NOISE_TYPE_ENUM, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The type of noise that is produced.");
-  }
-  
-  return info;
+  set_info_field(field++, MIXED_NOISE_TYPE,
+                 MIXED_NOISE_TYPE_ENUM, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The type of noise that is produced.");
+  return 1;
 }
 
 int noise_segment_get(size_t field, void *value, struct mixed_segment *segment){

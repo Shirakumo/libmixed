@@ -140,41 +140,33 @@ int source_segment_get(size_t field, void *value, struct mixed_segment *segment)
   }
 }
 
-struct mixed_segment_info *source_segment_info(struct mixed_segment *segment){
-  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-
-  if(info){
-    info->name = "unpacker";
-    info->description = "Segment acting as an audio unpacker.";
-    info->min_inputs = 0;
-    info->max_inputs = 0;
-    info->outputs = ((struct pack_segment_data *)segment->data)->pack->channels;
+int source_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
+  info->name = "unpacker";
+  info->description = "Segment acting as an audio unpacker.";
+  info->min_inputs = 0;
+  info->max_inputs = 0;
+  info->outputs = ((struct pack_segment_data *)segment->data)->pack->channels;
   
-    struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER,
-                   MIXED_BUFFER_POINTER, 1, MIXED_OUT | MIXED_SET,
-                   "The buffer to attach to the port.");
+  struct mixed_segment_field_info *field = info->fields;
+  set_info_field(field++, MIXED_BUFFER,
+                 MIXED_BUFFER_POINTER, 1, MIXED_OUT | MIXED_SET,
+                 "The buffer to attach to the port.");
 
-    set_info_field(field++, MIXED_VOLUME,
-                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The volume scaling factor.");
+  set_info_field(field++, MIXED_VOLUME,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The volume scaling factor.");
 
-    set_info_field(field++, MIXED_PACKED_AUDIO_RESAMPLER,
-                   MIXED_FUNCTION, 1, MIXED_SEGMENT | MIXED_SET,
-                   "The function used to resample the audio if necessary.");
+  set_info_field(field++, MIXED_PACKED_AUDIO_RESAMPLER,
+                 MIXED_FUNCTION, 1, MIXED_SEGMENT | MIXED_SET,
+                 "The function used to resample the audio if necessary.");
 
-    set_info_field(field++, MIXED_BYPASS,
-                   MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "Bypass the segment's processing.");
-  }
-  
-  return info;
+  set_info_field(field++, MIXED_BYPASS,
+                 MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "Bypass the segment's processing.");
+  return 1;
 }
 
-struct mixed_segment_info *drain_segment_info(struct mixed_segment *segment){
-  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-
-  if(info){
+int drain_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
     info->name = "packer";
     info->description = "Segment acting as an audio packer.";
     info->min_inputs = ((struct pack_segment_data *)segment->data)->pack->channels;
@@ -197,9 +189,7 @@ struct mixed_segment_info *drain_segment_info(struct mixed_segment *segment){
     set_info_field(field++, MIXED_BYPASS,
                    MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                    "Bypass the segment's processing.");
-  }
-
-  return info;
+    return 1;
 }
 
 int initialize_resample_buffers(struct mixed_packed_audio *pack, struct pack_segment_data *data){

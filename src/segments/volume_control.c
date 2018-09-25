@@ -69,36 +69,31 @@ int volume_control_segment_mix_bypass(size_t samples, struct mixed_segment *segm
   return 1;
 }
 
-struct mixed_segment_info *volume_control_segment_info(struct mixed_segment *segment){
-  struct mixed_segment_info *info = calloc(1, sizeof(struct mixed_segment_info));
-
-  if(info){
-    info->name = "volume_control";
-    info->description = "General segment for volume adjustment and panning.";
-    info->flags = MIXED_INPLACE;
-    info->min_inputs = 2;
-    info->max_inputs = 2;
-    info->outputs = 2;
+int volume_control_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
+  info->name = "volume_control";
+  info->description = "General segment for volume adjustment and panning.";
+  info->flags = MIXED_INPLACE;
+  info->min_inputs = 2;
+  info->max_inputs = 2;
+  info->outputs = 2;
   
-    struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER,
-                   MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
-                   "The buffer for audio data attached to the location.");
+  struct mixed_segment_field_info *field = info->fields;
+  set_info_field(field++, MIXED_BUFFER,
+                 MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
+                 "The buffer for audio data attached to the location.");
 
-    set_info_field(field++, MIXED_VOLUME,
-                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The volume scaling factor for the input.");
+  set_info_field(field++, MIXED_VOLUME,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The volume scaling factor for the input.");
 
-    set_info_field(field++, MIXED_VOLUME_CONTROL_PAN,
-                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The left/right stereo panning.");
+  set_info_field(field++, MIXED_VOLUME_CONTROL_PAN,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The left/right stereo panning.");
 
-    set_info_field(field++, MIXED_BYPASS,
-                   MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "Bypass the segment's processing.");
-  }
-  
-  return info;
+  set_info_field(field++, MIXED_BYPASS,
+                 MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "Bypass the segment's processing.");
+  return 1;
 }
 
 int volume_control_segment_get(size_t field, void *value, struct mixed_segment *segment){

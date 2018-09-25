@@ -60,9 +60,9 @@ MIXED_EXPORT int mixed_segment_get_out(size_t field, size_t location, void *valu
   return 0;
 }
 
-MIXED_EXPORT struct mixed_segment_info *mixed_segment_info(struct mixed_segment *segment){
+MIXED_EXPORT int mixed_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
   if(segment->info)
-    return segment->info(segment);
+    return segment->info(info, segment);
   mixed_err(MIXED_NOT_IMPLEMENTED);
   return 0;
 }
