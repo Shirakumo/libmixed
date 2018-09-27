@@ -941,7 +941,7 @@ extern "C" {
   //
   // The queue's info will reflect the capabilities of the first segment, if any,
   // and the queue's maximal capabilities otherwise.
-  MIXED_EXPORT int mixed_make_segment_queue(struct mixed_segment *);
+  MIXED_EXPORT int mixed_make_segment_queue(struct mixed_segment *segment);
   MIXED_EXPORT int mixed_queue_add(struct mixed_segment *new, struct mixed_segment *queue);
   MIXED_EXPORT int mixed_queue_remove(struct mixed_segment *old, struct mixed_segment *queue);
   MIXED_EXPORT int mixed_queue_remove_at(size_t pos, struct mixed_segment *queue);
