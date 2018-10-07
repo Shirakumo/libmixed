@@ -142,6 +142,22 @@ int queue_segment_get(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
+int queue_resize_buffers(struct mixed_buffer ***buffers, size_t *count, size_t new){
+  if(new == *count) return 1;
+  if(new == 0){
+    free(*buffers);
+    *buffers = 0;
+  }else{
+    *buffers = crealloc(*buffers, *count, new, sizeof(struct mixed_buffer *));
+    if(!*buffers){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+  }
+  *count = new;
+  return 1;
+}
+
 int queue_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
   switch(field){
@@ -152,24 +168,8 @@ int queue_segment_set(size_t field, void *value, struct mixed_segment *segment){
       segment->mix = queue_segment_mix;
     }
     break;
-  case MIXED_IN_COUNT: {
-    struct mixed_buffer **in = crealloc(data->in, data->in_count, *(size_t *)value, sizeof(struct mixed_buffer *));
-    if(!in){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    data->in = in;
-    data->in_count = *(size_t *)value;
-  } break;
-  case MIXED_OUT_COUNT: {
-    struct mixed_buffer **out = crealloc(data->out, data->out_count, *(size_t *)value, sizeof(struct mixed_buffer *));
-    if(!out){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    data->out = out;
-    data->out_count = *(size_t *)value;
-  } break;
+  case MIXED_IN_COUNT: return queue_resize_buffers(&data->in, &data->in_count, *(size_t *)value);
+  case MIXED_OUT_COUNT: return queue_resize_buffers(&data->out, &data->out_count, *(size_t *)value);
   default:
     mixed_err(MIXED_INVALID_FIELD);
     return 0;
