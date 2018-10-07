@@ -181,12 +181,12 @@ MIXED_EXPORT int mixed_make_segment_queue(struct mixed_segment *segment){
   struct queue_segment_data *data = calloc(1, sizeof(struct queue_segment_data));
   if(!data){ goto cleanup; }
 
-  data->in_count = 8;
-  data->in = calloc(8, sizeof(struct mixed_segment *));
+  data->in_count = 2;
+  data->in = calloc(2, sizeof(struct mixed_segment *));
   if(!data->in){ goto cleanup; }
 
-  data->out_count = 8;
-  data->out = calloc(8, sizeof(struct mixed_segment *));
+  data->out_count = 2;
+  data->out = calloc(2, sizeof(struct mixed_segment *));
   if(!data->out){ goto cleanup; }
   
   segment->free = queue_segment_free;

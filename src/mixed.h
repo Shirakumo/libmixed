@@ -251,11 +251,11 @@ extern "C" {
     MIXED_FREQUENCY_PASS,
     // Access the number of input buffers the segment can hold.
     // The value is a size_t.
-    // The default is 8.
+    // The default is 2.
     MIXED_IN_COUNT,
     // Access the number of output buffers the segment can hold.
     // The value is a size_t.
-    // The default is 8.
+    // The default is 2.
     MIXED_OUT_COUNT,
     // Returns the current segment in the queue.
     // The value is a pointer to a struct mixed_segment.
