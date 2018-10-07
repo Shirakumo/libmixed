@@ -226,7 +226,6 @@ MIXED_EXPORT int mixed_queue_add(struct mixed_segment *new, struct mixed_segment
     mixed_segment_set_in(MIXED_BUFFER, i, data->in[i], new);
   }
   size_t outs = smin(data->out_count, info.outputs);
-  fprintf(stderr, "Connecting %i outs to %s", outs, info.name);
   for(size_t i=0; i<outs; ++i){
     mixed_segment_set_out(MIXED_BUFFER, i, data->out[i], new);
   }
