@@ -78,12 +78,12 @@ int queue_segment_mix(size_t samples, struct mixed_segment *segment){
   struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
  start:
   if(0 < data->count){
-    segment = data->queue[0];
-    int result = segment->mix(samples, segment);
+    struct mixed_segment *inner = data->queue[0];
+    int result = inner->mix(samples, inner);
     if(result)
       return result;
-    mixed_segment_end(segment);
-    if(vector_remove_pos(0, (struct vector *)data))
+    mixed_segment_end(inner);
+    if(mixed_queue_remove(inner, segment))
       goto start;
     return 0;
   }else{
