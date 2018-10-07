@@ -77,11 +77,12 @@ int queue_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
 int queue_segment_mix(size_t samples, struct mixed_segment *segment){
   struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
  start:
-  if(0 <= data->count){
+  if(0 < data->count){
     segment = data->queue[0];
     int result = segment->mix(samples, segment);
     if(result)
       return result;
+    mixed_segment_end(segment);
     if(vector_remove_pos(0, (struct vector *)data))
       goto start;
     return 0;
@@ -134,7 +135,7 @@ int queue_segment_get(size_t field, void *value, struct mixed_segment *segment){
   struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
   switch(field){
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == queue_segment_mix_bypass); break;
-  case MIXED_CURRENT_SEGMENT: *((struct mixed_segment **)value) = data->queue[0]; break;
+  case MIXED_CURRENT_SEGMENT: *((struct mixed_segment **)value) = (data->queue)?data->queue[0]:0; break;
   case MIXED_IN_COUNT: *((size_t *)value) = data->in_count; break;
   case MIXED_OUT_COUNT: *((size_t *)value) = data->out_count; break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
@@ -209,49 +210,61 @@ MIXED_EXPORT int mixed_make_segment_queue(struct mixed_segment *segment){
   return 0;
 }
 
-MIXED_EXPORT int mixed_queue_add(struct mixed_segment *new, struct mixed_segment *queue){
-  struct queue_segment_data *data = calloc(1, sizeof(struct queue_segment_data));
+MIXED_EXPORT int mixed_queue_add(struct mixed_segment *new, struct mixed_segment *segment){
+  struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
   struct mixed_segment_info info = {0};
+
+  if(!mixed_segment_start(new))
+    return 0;
   
-  if(vector_add(new, (struct vector *)queue)){
-    mixed_segment_info(&info, new);
-    size_t ins = smin(data->in_count, info.max_inputs);
-    for(size_t i=0; i<ins; ++i){
-      mixed_segment_set_in(MIXED_BUFFER, i, data->in[i], new);
-    }
-    size_t outs = smin(data->out_count, info.outputs);
-    for(size_t i=0; i<outs; ++i){
-      mixed_segment_set_out(MIXED_BUFFER, i, data->out[i], new);
-    }
+  if(!vector_add(new, (struct vector *)data))
+    return 0;
+  
+  mixed_segment_info(&info, new);
+  size_t ins = smin(data->in_count, info.max_inputs);
+  for(size_t i=0; i<ins; ++i){
+    mixed_segment_set_in(MIXED_BUFFER, i, data->in[i], new);
   }
+  size_t outs = smin(data->out_count, info.outputs);
+  fprintf(stderr, "Connecting %i outs to %s", outs, info.name);
+  for(size_t i=0; i<outs; ++i){
+    mixed_segment_set_out(MIXED_BUFFER, i, data->out[i], new);
+  }
+  return 1;
 }
 
-MIXED_EXPORT int mixed_queue_remove(struct mixed_segment *old, struct mixed_segment *queue){
-  struct queue_segment_data *data = calloc(1, sizeof(struct queue_segment_data));
+MIXED_EXPORT int mixed_queue_remove(struct mixed_segment *old, struct mixed_segment *segment){
+  struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
   struct mixed_segment_info info = {0};
+
+  mixed_segment_end(old);
+  // If the stop fails we remove it anyway.
   
-  if(vector_remove_item(old, (struct vector *)data)){
-    mixed_segment_info(&info, old);
-    for(size_t i=0; i<info.max_inputs; ++i){
-      mixed_segment_set_in(MIXED_BUFFER, i, 0, old);
-    }
-    for(size_t i=0; i<info.outputs; ++i){
-      mixed_segment_set_out(MIXED_BUFFER, i, 0, old);
-    }
+  if(!vector_remove_item(old, (struct vector *)data))
+    return 0;
+    
+  mixed_segment_info(&info, old);
+  for(size_t i=0; i<info.max_inputs; ++i){
+    mixed_segment_set_in(MIXED_BUFFER, i, 0, old);
   }
+  for(size_t i=0; i<info.outputs; ++i){
+    mixed_segment_set_out(MIXED_BUFFER, i, 0, old);
+  }
+  return 1;
 }
 
-MIXED_EXPORT int mixed_queue_remove_at(size_t pos, struct mixed_segment *queue){
-  struct queue_segment_data *data = calloc(1, sizeof(struct queue_segment_data));
-  return mixed_queue_remove(data->queue[pos], queue);
+MIXED_EXPORT int mixed_queue_remove_at(size_t pos, struct mixed_segment *segment){
+  struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
+  return mixed_queue_remove(data->queue[pos], segment);
 }
 
-MIXED_EXPORT int mixed_queue_clear(struct mixed_segment *queue){
-  struct queue_segment_data *data = calloc(1, sizeof(struct queue_segment_data));
+MIXED_EXPORT int mixed_queue_clear(struct mixed_segment *segment){
+  struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
   struct mixed_segment_info info = {0};
   
   for(size_t i=0; i<data->count; ++i){
     struct mixed_segment *old = data->queue[i];
+    mixed_segment_end(old);
     mixed_segment_info(&info, old);
     for(size_t i=0; i<info.max_inputs; ++i){
       mixed_segment_set_in(MIXED_BUFFER, i, 0, old);
