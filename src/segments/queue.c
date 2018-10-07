@@ -96,7 +96,7 @@ int queue_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
   info->name = "queue";
   info->description = "Queue multiple segments one after the other";
   info->flags = MIXED_INPLACE;
-  info->min_inputs = data->in_count;
+  info->min_inputs = 0;
   info->max_inputs = data->in_count;
   info->outputs = data->out_count;
 
