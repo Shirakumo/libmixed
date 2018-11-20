@@ -90,10 +90,11 @@ extern inline void mixed_transfer_sample_from_uint24(struct mixed_packed_audio *
       size_t i = 0;                                                     \
       for(uint8_t channel=0; channel<channels; ++channel){              \
         struct mixed_buffer *out = outs[channel];                       \
-        if (out)                                                        \
-          {for(size_t sample=0; sample<samples; ++sample){              \
-              mixed_transfer_sample_from_##name(in, sample*channels+channel, out, sample, volume); \
-            }}                                                          \
+        if (out){                                                       \
+          for(size_t sample=0; sample<samples; ++sample){               \
+            mixed_transfer_sample_from_##name(in, sample*channels+channel, out, sample, volume); \
+          }                                                             \
+        }                                                               \
       }}                                                                \
       break;                                                            \
     case MIXED_SEQUENTIAL:{                                             \
@@ -103,7 +104,8 @@ extern inline void mixed_transfer_sample_from_uint24(struct mixed_packed_audio *
         if (out){                                                       \
           for(size_t sample=0; sample<samples; ++sample){               \
             mixed_transfer_sample_from_##name(in, sample+offset, out, sample, volume); \
-          }}                                                            \
+          }                                                             \
+        }                                                               \
         offset += samples;                                              \
       }}                                                                \
       break;                                                            \
@@ -203,7 +205,8 @@ extern inline void mixed_transfer_sample_to_uint24(struct mixed_buffer *in, size
         if (in){                                                        \
           for(size_t sample=0; sample<samples; ++sample){               \
             mixed_transfer_sample_to_##name(in, sample, out, sample*channels+channel, volume); \
-          }}                                                            \
+          }                                                             \
+        }                                                               \
       }}                                                                \
       break;                                                            \
     case MIXED_SEQUENTIAL:{                                             \
@@ -214,7 +217,8 @@ extern inline void mixed_transfer_sample_to_uint24(struct mixed_buffer *in, size
           for(size_t sample=0; sample<samples; ++sample){               \
             mixed_transfer_sample_to_##name(in, sample, out, sample+offset, volume); \
             ++sample;                                                   \
-          }}                                                            \
+          }                                                             \
+        }                                                               \
         offset += samples;                                              \
       }}                                                                \
       break;                                                            \
