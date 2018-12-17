@@ -185,9 +185,15 @@ int space_mixer_mix(size_t samples, struct mixed_segment *segment){
     struct space_source *source = data->sources[0];
     // Invoke segment's mixing function if necessary.
     struct mixed_segment *segment = source->segment;
-    if(segment) segment->mix(samples, segment);
-    // Perform mix.
     float *in = source->buffer->data;
+
+    if(segment){
+      // FIXME: This is not optimal. Ideally we'd avoid mixing entirely.
+      if(!segment->mix(samples, segment))
+        memset(in, 0, samples*sizeof(float));
+    }
+    
+    // Perform mix.
     calculate_volumes(&lvolume, &rvolume, source, data);
     for(size_t i=0; i<samples; ++i){
       left[i] = in[i] * lvolume;
@@ -198,9 +204,14 @@ int space_mixer_mix(size_t samples, struct mixed_segment *segment){
       source = data->sources[s];
       // Invoke segment's mixing function if necessary.
       segment = source->segment;
-      if(segment) segment->mix(samples, segment);
-      // Perform mix.
       in = source->buffer->data;
+
+      if(segment){
+        if(!segment->mix(samples, segment))
+          memset(in, 0, samples*sizeof(float));
+      }
+
+      // Perform mix.
       calculate_volumes(&lvolume, &rvolume, source, data);
       for(size_t i=0; i<samples; ++i){
         left[i] += in[i] * lvolume;
