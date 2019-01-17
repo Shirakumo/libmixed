@@ -93,3 +93,4 @@ On Windows you will usually want to build with MSYS2 and the following cmake com
 
 ## Included Sources
 * [ladspa.h](https://web.archive.org/web/20150627144551/http://www.ladspa.org:80/ladspa_sdk/ladspa.h.txt)
+* [libsamplerate](http://www.mega-nerd.com/SRC/index.html) Please note that the BSD 2-Clause license restrictions also apply to libmixed, as it includes libsamplerate internally.

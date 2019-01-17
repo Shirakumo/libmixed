@@ -17,10 +17,14 @@ else()
 endif()
 add_definitions( -DVERSION="${VERSION}" )
 
+## Libsamplerate
+file(GLOB samplerate_src "libsamplerate/*.c")
+add_library(samplerate OBJECT ${samplerate_src})
+
 ## Main Library
 include_directories("src/")
-file(GLOB lib_src "src/*.c" "src/segments/*.c")
-add_library(mixed SHARED ${lib_src})
+file(GLOB mixed_src "src/*.c" "src/segments/*.c")
+add_library(mixed SHARED ${mixed_src} $<TARGET_OBJECTS:samplerate>)
 string(REGEX MATCH "([0-9]+)\\.([0-9]+)-[0-9]+-(.+)" TMP ${VERSION})
 set(MIXED_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(MIXED_VERSION_MINOR ${CMAKE_MATCH_2})
