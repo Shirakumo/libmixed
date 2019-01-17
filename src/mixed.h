@@ -72,7 +72,9 @@ extern "C" {
     MIXED_LADSPA_NO_PLUGIN_AT_INDEX,
     // The instantiation of the LADSPA plugin handle failed
     // for some reason.
-    MIXED_LADSPA_INSTANTIATION_FAILED
+    MIXED_LADSPA_INSTANTIATION_FAILED,
+    // A libsamplerate operation failed.
+    MIXED_RESAMPLE_FAILED
   };
 
   // This enum describes the possible sample encodings.
@@ -125,10 +127,10 @@ extern "C" {
     // to values higher than one will result in distortion.
     // The type of this field should be a float.
     MIXED_VOLUME,
-    // Access to the resampling function of the channel.
-    // The resampling function must have the same signature
-    // as mixed_resample_linear below.
-    MIXED_PACKED_AUDIO_RESAMPLER,
+    // Access to the resampling quality of the audio pack.
+    // The value must be from the mixed_resample_type enum.
+    // The default is MIXED_SINC_FASTEST
+    MIXED_PACKED_AUDIO_RESAMPLE_TYPE,
     // Access the panning of the general segment as a float.
     // The pan should be in the range of [-1.0, +1.0] where
     // -1 is all the way on the left and +1 is on the right.
@@ -262,6 +264,34 @@ extern "C" {
     MIXED_CURRENT_SEGMENT,
   };
 
+  // This enum descripbes the possible resampling quality options.
+  // 
+  // The options are the same as in SRC/libsamplerate and the
+  // descriptions are copied from its documentation.
+  MIXED_EXPORT enum mixed_resample_type{
+    //This is a bandlimited interpolator derived from the
+    // mathematical sinc function and this is the highest
+    // quality sinc based converter, providing a worst case
+    // Signal-to-Noise Ratio (SNR) of 97 decibels (dB) at a
+    // bandwidth of 97%.
+    MIXED_SINC_BEST_QUALITY = 0,
+    // This is another bandlimited interpolator much like
+    // the previous one. It has an SNR of 97dB and a
+    // bandwidth of 90%. The speed of the conversion is
+    // much faster than the previous one.
+    MIXED_SINC_MEDIUM_QUALITY,
+    // This is the fastest bandlimited interpolator and has
+    // an SNR of 97dB and a bandwidth of 80%.
+    MIXED_SINC_FASTEST,
+    // A Zero Order Hold converter (interpolated value is
+    // equal to the last value). The quality is poor but the
+    // conversion speed is blindlingly fast.
+    MIXED_ZERO_ORDER_HOLD,
+    // A linear converter. Again the quality is poor, but
+    // the conversion speed is blindingly fast.
+    MIXED_LINEAR_ITNERPOLATION
+  };
+
   // This enum describes the possible preset attenuation functions.
   MIXED_EXPORT enum mixed_attenuation{
     MIXED_NO_ATTENUATION = 1,
@@ -374,7 +404,8 @@ extern "C" {
     MIXED_ATTENUATION_ENUM,
     MIXED_LAYOUT_ENUM,
     MIXED_ENCODING_ENUM,
-    MIXED_ERROR_ENUM
+    MIXED_ERROR_ENUM,
+    MIXED_RESAMPLE_TYPE_ENUM,
   };
 
   // An internal audio data buffer.
@@ -575,28 +606,6 @@ extern "C" {
   // If the resizing operation fails due to a lack of memory, the
   // old data is preserved and the buffer is not changed.
   MIXED_EXPORT int mixed_buffer_resize(size_t size, struct mixed_buffer *buffer);
-  
-  // Resample the buffer using nearest-neighbor.
-  //
-  // This is the fastest and most primitive resampling you could
-  // possibly do. It will most likely sound pretty horrid if you
-  // have to upsample. Downsampling might be alright.
-  MIXED_EXPORT int mixed_resample_nearest(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples);
-
-  // Resample the buffer using linear interpolation.
-  //
-  // Linear interpolation should give "ok" results as long as the
-  // resampling factor is not too big.
-  MIXED_EXPORT int mixed_resample_linear(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples);
-
-  // Resample the buffer using a cubic hermite spline.
-  //
-  // Cubic hermite spline should give fairly good interpolation
-  // results. Naturally you can't expect magic either, as the
-  // interpolation will always remain an interpolation and not a
-  // CSI enhance. This resampling will become costly at large
-  // buffer sizes and might not be suitable for real-time systems.
-  MIXED_EXPORT int mixed_resample_cubic(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples);
 
   // Free the segment's internal data.
   //

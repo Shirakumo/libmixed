@@ -65,6 +65,8 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "The LADSPA plugin library does not have a plugin at the requested index.";
   case MIXED_LADSPA_INSTANTIATION_FAILED:
     return "Instantiation of the LADSPA plugin has failed.";
+  case MIXED_RESAMPLE_FAILED:
+    return "An error happened in the libsamplerate library.";
   default:
     return "Unknown error code.";
   }

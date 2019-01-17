@@ -1,10 +1,11 @@
 #include "internal.h"
+#include "samplerate.h"
 
 struct pack_segment_data{
   struct mixed_packed_audio *pack;
   struct mixed_buffer **buffers;
-  struct mixed_buffer **resample_buffers;
-  int (*resampler)(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples);
+  float *resample_buffer;
+  SRC_STATE *resample_state;
   size_t samplerate;
   float volume;
 };
@@ -12,15 +13,13 @@ struct pack_segment_data{
 int pack_segment_free(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   if(data){
-    if(data->resample_buffers){
-      for(size_t i=0; i<data->pack->channels; ++i){
-        struct mixed_buffer *buffer = data->resample_buffers[i];
-        mixed_free_buffer(buffer);
-        free(buffer);
-      }
-      free(data->resample_buffers);
-    }
     free(data->buffers);
+    if(data->resample_buffer){
+      free(data->resample_buffer);
+    }
+    if(data->resample_state){
+      src_delete(data->resample_state);
+    }
     free(data);
   }
   segment->data = 0;
@@ -31,9 +30,6 @@ int pack_segment_set_buffer(size_t field, size_t location, void *buffer, struct 
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
   switch(field){
-  case MIXED_PACKED_AUDIO_RESAMPLER:
-    data->resampler = (int (*)(struct mixed_buffer *in, size_t in_samplerate, struct mixed_buffer *out, size_t out_samplerate, size_t out_samples))buffer;
-    return 1;
   case MIXED_BUFFER:
     if(location<data->pack->channels){
       data->buffers[location] = (struct mixed_buffer *)buffer;
@@ -51,12 +47,8 @@ int pack_segment_set_buffer(size_t field, size_t location, void *buffer, struct 
 int source_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
-  if(data->resample_buffers){
-    size_t source_samples = samples * data->samplerate / data->pack->samplerate;
-    mixed_buffer_from_packed_audio(data->pack, data->resample_buffers, source_samples, data->volume);
-    for(size_t i=0; i<data->pack->channels; ++i){
-      data->resampler(data->resample_buffers[i], data->pack->samplerate, data->buffers[i], data->samplerate, samples);
-    }
+  if(data->resample_buffer){
+    // FIXME: resampling
   }else{
     mixed_buffer_from_packed_audio(data->pack, data->buffers, samples, data->volume);
   }
@@ -66,12 +58,8 @@ int source_segment_mix(size_t samples, struct mixed_segment *segment){
 int drain_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
-  if(data->resample_buffers){
-    size_t drain_samples = samples * data->pack->samplerate / data->samplerate;
-    for(size_t i=0; i<data->pack->channels; ++i){
-      data->resampler(data->buffers[i], data->samplerate, data->resample_buffers[i], data->pack->samplerate, drain_samples);
-    }
-    mixed_buffer_to_packed_audio(data->resample_buffers, data->pack, drain_samples, data->volume);
+  if(data->resample_state){
+    // FIXME: resampling
   }else{
     mixed_buffer_to_packed_audio(data->buffers, data->pack, samples, data->volume);
   }
@@ -82,6 +70,18 @@ int source_segment_set(size_t field, void *value, struct mixed_segment *segment)
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   
   switch(field){
+  case MIXED_PACKED_AUDIO_RESAMPLE_TYPE: {
+    int error;
+    SRC_STATE *new = src_new(*(enum mixed_resample_type *)value, data->pack->channels, &error);
+    if(!new) {
+      mixed_err(MIXED_RESAMPLE_FAILED);
+      return 0;
+    }
+    if(data->resample_state)
+      src_delete(data->resample_state);
+    data->resample_state = new;
+  }
+    return 1;
   case MIXED_VOLUME:
     data->volume = *((float *)value);
     return 1;
@@ -105,9 +105,6 @@ int drain_segment_set(size_t field, void *value, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   
   switch(field){
-  case MIXED_VOLUME:
-    data->volume = *((float *)value);
-    return 1;
   case MIXED_BYPASS:
     if(*(bool *)value){
       memset(data->pack->data, 0, data->pack->size);
@@ -117,14 +114,13 @@ int drain_segment_set(size_t field, void *value, struct mixed_segment *segment){
     }
     return 1;
   default:
-    mixed_err(MIXED_INVALID_FIELD);
-    return 0;
+    return source_segment_set(field, value, segment);
   }
 }
 
 // FIXME: add start method that checks for buffer completeness.
 
-int source_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int packer_segment_get(size_t field, void *value, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   
   switch(field){
@@ -156,9 +152,9 @@ int source_segment_info(struct mixed_segment_info *info, struct mixed_segment *s
                  MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The volume scaling factor.");
 
-  set_info_field(field++, MIXED_PACKED_AUDIO_RESAMPLER,
-                 MIXED_FUNCTION, 1, MIXED_SEGMENT | MIXED_SET,
-                 "The function used to resample the audio if necessary.");
+  set_info_field(field++, MIXED_PACKED_AUDIO_RESAMPLE_TYPE,
+                 MIXED_RESAMPLE_TYPE_ENUM, 1, MIXED_SEGMENT | MIXED_SET,
+                 "The type of resampling algorithm used.");
 
   set_info_field(field++, MIXED_BYPASS,
                  MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
@@ -169,74 +165,17 @@ int source_segment_info(struct mixed_segment_info *info, struct mixed_segment *s
 }
 
 int drain_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
-    info->name = "packer";
-    info->description = "Segment acting as an audio packer.";
-    info->min_inputs = ((struct pack_segment_data *)segment->data)->pack->channels;
-    info->max_inputs = info->min_inputs;
-    info->outputs = 0;
-
-    struct mixed_segment_field_info *field = info->fields;
-    set_info_field(field++, MIXED_BUFFER,
-                   MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_SET,
-                   "The buffer for audio data attached to the location.");
-
-    set_info_field(field++, MIXED_VOLUME,
-                   MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "The volume scaling factor.");
-
-    set_info_field(field++, MIXED_PACKED_AUDIO_RESAMPLER,
-                   MIXED_FUNCTION, 1, MIXED_SEGMENT | MIXED_SET,
-                   "The function used to resample the audio if necessary.");
-
-    set_info_field(field++, MIXED_BYPASS,
-                   MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
-                   "Bypass the segment's processing.");
-    
-    clear_info_field(field++);
-    return 1;
+  source_segment_info(info, segment);
+  info->name = "packer";
+  info->description = "Segment acting as an audio packer.";
+  info->min_inputs = ((struct pack_segment_data *)segment->data)->pack->channels;
+  info->max_inputs = info->min_inputs;
+  info->outputs = 0;
+  return 1;
 }
 
 int initialize_resample_buffers(struct mixed_packed_audio *pack, struct pack_segment_data *data){
-  struct mixed_buffer **resample_buffers = 0;
-  
-  resample_buffers = calloc(pack->channels, sizeof(struct mixed_buffer *));
-  if(!resample_buffers){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    return 0;
-  }
-
-  // Determine max number of samples in source array
-  size_t samples = pack->size / pack->channels / mixed_samplesize(pack->encoding);
-
-  size_t i;
-  for(i=0; i<pack->channels; ++i){
-    struct mixed_buffer *buffer = calloc(1, sizeof(struct mixed_buffer));
-    resample_buffers[i] = buffer;
-      
-    if(!buffer){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      goto cleanup;
-    }
-      
-    if(!mixed_make_buffer(samples, buffer)){
-      goto cleanup;
-    }
-  }
-
-  data->resample_buffers = resample_buffers;
-  return 1;
-  
- cleanup:
-  if(resample_buffers){
-    do{ --i;
-      struct mixed_buffer *buffer = resample_buffers[i];
-      if(buffer){
-        mixed_free_buffer(buffer);
-        free(buffer);
-      }
-    }while(i > 0);
-    free(resample_buffers);
-  }
+  // FIXME: resampling
   return 0;
 }
 
@@ -275,12 +214,11 @@ int make_pack_internal(struct mixed_packed_audio *pack, size_t samplerate, struc
   data->buffers = buffers;
   data->pack = pack;
   data->samplerate = samplerate;
-  data->resampler = mixed_resample_linear;
   data->volume = 1.0;
 
   segment->free = pack_segment_free;
   segment->data = data;
-  segment->get = source_segment_get;
+  segment->get = packer_segment_get;
   return 1;
 
  cleanup:

@@ -1,3 +1,5 @@
+#define CPU_CLIPS_NEGATIVE 0
+#define CPU_CLIPS_POSITIVE 0
 #define HAVE_CALLOC 1
 #define HAVE_CEIL 1
 #define HAVE_DLFCN_H 1
