@@ -269,7 +269,7 @@ extern "C" {
   // The options are the same as in SRC/libsamplerate and the
   // descriptions are copied from its documentation.
   MIXED_EXPORT enum mixed_resample_type{
-    //This is a bandlimited interpolator derived from the
+    // This is a bandlimited interpolator derived from the
     // mathematical sinc function and this is the highest
     // quality sinc based converter, providing a worst case
     // Signal-to-Noise Ratio (SNR) of 97 decibels (dB) at a
@@ -289,7 +289,7 @@ extern "C" {
     MIXED_ZERO_ORDER_HOLD,
     // A linear converter. Again the quality is poor, but
     // the conversion speed is blindingly fast.
-    MIXED_LINEAR_ITNERPOLATION
+    MIXED_LINEAR_INTERPOLATION
   };
 
   // This enum describes the possible preset attenuation functions.
