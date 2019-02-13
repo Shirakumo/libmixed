@@ -59,7 +59,17 @@ int drain_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
   if(data->resample_state){
-    // FIXME: resampling
+    uint8_t channels = data->pack->channels;
+    SRC_DATA src_data = data->resample_data;
+    float *buffers[channels];
+    for(size_t i=0; i<channels; ++i)
+      buffers[i] = data->buffers[i]->data;
+    
+    mixed_transfer_array_to_alternating_float(buffers, data->resample_data->data_in, channels, samples, 1.0);
+    src_data->input_frames = samples;
+    src_process(data->resample_state, src_data);
+    // FIXME: what if src does not provide the exact amount of samples we need
+    // FIXME: get the data out again???
   }else{
     mixed_buffer_to_packed_audio(data->buffers, data->pack, samples, data->volume);
   }
@@ -200,6 +210,8 @@ int initialize_resample_buffers(struct mixed_packed_audio *pack, struct pack_seg
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
+  
+  src_data->output_frames = output_samples / pack->channels;
   
   int err = 0;
   src_state = src_new(MIXED_SINC_FASTEST, pack->channels, &err);

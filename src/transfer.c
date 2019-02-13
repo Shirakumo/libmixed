@@ -186,7 +186,7 @@ MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, s
   uint8_t channels = in->channels;
   void *ind = in->data;
   float *outd[channels];
-  for(int i=0; i<channels; ++i)
+  for(size_t i=0; i<channels; ++i)
     outd[i] = outs[i]->data;
   
   transfer_function_from fun = mixed_transfer_functions_from[pack_table_index(in)];
@@ -224,7 +224,7 @@ MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct 
   uint8_t channels = out->channels;
   void *outd = out->data;
   float *ind[channels];
-  for(int i=0; i<channels; ++i)
+  for(size_t i=0; i<channels; ++i)
     ind[i] = ins[i]->data;
   
   transfer_function_to fun = mixed_transfer_functions_to[pack_table_index(out)];
