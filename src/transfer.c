@@ -151,28 +151,34 @@ DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(float);
 DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(double);
 
 //// Buffer transfer functions
+static inline int pack_table_index(struct mixed_packed_audio *pack){
+  // This works because encodings are 1-10, and layouts are 1-2.
+  // Thus INT16, SEQUENTIAL => 3, 2 => (3-1)*2 + (2-1) = 5 => mixed_transfer_array_XXX_sequential_int16
+  return (pack->encoding-1)*2 + pack->layout-1;
+}
+
 typedef void (*transfer_function_from)(void *, float **, uint8_t, size_t, float);
 
-static transfer_function_from mixed_transfer_functions_from[20] = 
+static transfer_function_from mixed_transfer_functions_from[20] =
   { mixed_transfer_array_from_alternating_int8,
-    mixed_transfer_array_from_alternating_uint8,
-    mixed_transfer_array_from_alternating_int16,
-    mixed_transfer_array_from_alternating_uint16,
-    mixed_transfer_array_from_alternating_int24,
-    mixed_transfer_array_from_alternating_uint24,
-    mixed_transfer_array_from_alternating_int32,
-    mixed_transfer_array_from_alternating_uint32,
-    mixed_transfer_array_from_alternating_float,
-    mixed_transfer_array_from_alternating_double,
     mixed_transfer_array_from_sequential_int8,
+    mixed_transfer_array_from_alternating_uint8,
     mixed_transfer_array_from_sequential_uint8,
+    mixed_transfer_array_from_alternating_int16,
     mixed_transfer_array_from_sequential_int16,
+    mixed_transfer_array_from_alternating_uint16,
     mixed_transfer_array_from_sequential_uint16,
+    mixed_transfer_array_from_alternating_int24,
     mixed_transfer_array_from_sequential_int24,
+    mixed_transfer_array_from_alternating_uint24,
     mixed_transfer_array_from_sequential_uint24,
+    mixed_transfer_array_from_alternating_int32,
     mixed_transfer_array_from_sequential_int32,
+    mixed_transfer_array_from_alternating_uint32,
     mixed_transfer_array_from_sequential_uint32,
+    mixed_transfer_array_from_alternating_float,
     mixed_transfer_array_from_sequential_float,
+    mixed_transfer_array_from_alternating_double,
     mixed_transfer_array_from_sequential_double,
   };
 
@@ -183,7 +189,7 @@ MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, s
   for(int i=0; i<channels; ++i)
     outd[i] = outs[i]->data;
   
-  transfer_function_from fun = mixed_transfer_functions_from[(in->encoding-1) + (in->layout-1)*10];
+  transfer_function_from fun = mixed_transfer_functions_from[pack_table_index(in)];
   fun(ind, outd, channels, samples, volume);
   
   return 1;
@@ -191,26 +197,26 @@ MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, s
 
 typedef void (*transfer_function_to)(float **, void *, uint8_t, size_t, float);
 
-static transfer_function_to mixed_transfer_functions_to[20] = 
+static transfer_function_to mixed_transfer_functions_to[20] =
   { mixed_transfer_array_to_alternating_int8,
-    mixed_transfer_array_to_alternating_uint8,
-    mixed_transfer_array_to_alternating_int16,
-    mixed_transfer_array_to_alternating_uint16,
-    mixed_transfer_array_to_alternating_int24,
-    mixed_transfer_array_to_alternating_uint24,
-    mixed_transfer_array_to_alternating_int32,
-    mixed_transfer_array_to_alternating_uint32,
-    mixed_transfer_array_to_alternating_float,
-    mixed_transfer_array_to_alternating_double,
     mixed_transfer_array_to_sequential_int8,
+    mixed_transfer_array_to_alternating_uint8,
     mixed_transfer_array_to_sequential_uint8,
+    mixed_transfer_array_to_alternating_int16,
     mixed_transfer_array_to_sequential_int16,
+    mixed_transfer_array_to_alternating_uint16,
     mixed_transfer_array_to_sequential_uint16,
+    mixed_transfer_array_to_alternating_int24,
     mixed_transfer_array_to_sequential_int24,
+    mixed_transfer_array_to_alternating_uint24,
     mixed_transfer_array_to_sequential_uint24,
+    mixed_transfer_array_to_alternating_int32,
     mixed_transfer_array_to_sequential_int32,
+    mixed_transfer_array_to_alternating_uint32,
     mixed_transfer_array_to_sequential_uint32,
+    mixed_transfer_array_to_alternating_float,
     mixed_transfer_array_to_sequential_float,
+    mixed_transfer_array_to_alternating_double,
     mixed_transfer_array_to_sequential_double,
   };
 
@@ -221,7 +227,7 @@ MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct 
   for(int i=0; i<channels; ++i)
     ind[i] = ins[i]->data;
   
-  transfer_function_to fun = mixed_transfer_functions_to[(out->encoding-1) + (out->layout-1)*10];
+  transfer_function_to fun = mixed_transfer_functions_to[pack_table_index(out)];
   fun(ind, outd, channels, samples, volume);
   
   return 1;
