@@ -4,7 +4,7 @@
 struct pack_segment_data{
   struct mixed_packed_audio *pack;
   struct mixed_buffer **buffers;
-  float *resample_buffer;
+  SRC_DATA *resample_data;
   SRC_STATE *resample_state;
   size_t samplerate;
   float volume;
@@ -14,8 +14,8 @@ int pack_segment_free(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   if(data){
     free(data->buffers);
-    if(data->resample_buffer){
-      free(data->resample_buffer);
+    if(data->resample_data){
+      free(data->resample_data);
     }
     if(data->resample_state){
       src_delete(data->resample_state);
@@ -47,7 +47,7 @@ int pack_segment_set_buffer(size_t field, size_t location, void *buffer, struct 
 int source_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
-  if(data->resample_buffer){
+  if(data->resample_data){
     // FIXME: resampling
   }else{
     mixed_buffer_from_packed_audio(data->pack, data->buffers, samples, data->volume);
@@ -174,8 +174,55 @@ int drain_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
   return 1;
 }
 
-int initialize_resample_buffers(struct mixed_packed_audio *pack, struct pack_segment_data *data){
-  // FIXME: resampling
+int initialize_resample_buffers(struct mixed_packed_audio *pack, struct pack_segment_data *data, int is_source){
+  SRC_DATA *src_data = 0;
+  SRC_STATE *src_state = 0;
+  
+  src_data = calloc(1, sizeof(SRC_DATA));
+  if(!src_data){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+  
+  src_data->end_of_input = 0;
+  src_data->src_ratio = (is_source)
+    ? ((double)data->samplerate)/((double)pack->samplerate)
+    : ((double)pack->samplerate)/((double)data->samplerate);
+  
+  int input_samples = (is_source)
+    ? (pack->size / mixed_samplesize(pack->encoding))
+    : 1+(int)(pack->size / mixed_samplesize(pack->encoding) / src_data->src_ratio);
+  int output_samples = 1+(int)(input_samples * src_data->src_ratio);
+  
+  src_data->data_in = calloc(input_samples, mixed_samplesize(MIXED_FLOAT));
+  src_data->data_out = calloc(output_samples, mixed_samplesize(MIXED_FLOAT));
+  if(!src_data->data_in || !src_data->data_out){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+  
+  int err = 0;
+  src_state = src_new(MIXED_SINC_FASTEST, pack->channels, &err);
+  if(!src_state){
+    mixed_err(MIXED_RESAMPLE_FAILED);
+    goto cleanup;
+  }
+  
+  data->resample_data = src_data;
+  data->resample_state = src_state;
+  return 1;
+  
+ cleanup:
+  if(src_data){
+    if(src_data->data_in)
+      free((float *)src_data->data_in);
+    if(src_data->data_out)
+      free(src_data->data_out);
+    free(src_data);
+  }
+  if(src_state){
+    src_delete(src_state);
+  }
   return 0;
 }
 
@@ -206,7 +253,7 @@ int make_pack_internal(struct mixed_packed_audio *pack, size_t samplerate, struc
   }
 
   if(samplerate != 0 && samplerate != pack->samplerate){
-    if(!initialize_resample_buffers(pack, data)){
+    if(!initialize_resample_buffers(pack, data, (segment->info == drain_segment_info))){
       goto cleanup;
     }
   }
