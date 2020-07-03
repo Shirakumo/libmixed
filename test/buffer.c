@@ -4,7 +4,9 @@
 define_test(allocate, {
     struct mixed_buffer buffer = {0};
     pass(mixed_make_buffer(1024, &buffer));
-  cleanup:;
+    
+  cleanup:
+    mixed_free_buffer(&buffer);
   });
 
 define_test(write, {
@@ -15,6 +17,7 @@ define_test(write, {
     pass(mixed_buffer_request_write(&area, &size, &buffer));
     is(size, 512);
     pass(mixed_buffer_finish_write(size, &buffer));
+    
   cleanup:
     mixed_free_buffer(&buffer);
   });
@@ -27,6 +30,7 @@ define_test(over_request, {
     pass(mixed_buffer_request_write(&area, &size, &buffer));
     is(size, 1024);
     pass(mixed_buffer_finish_write(size, &buffer));
+    
   cleanup:
     mixed_free_buffer(&buffer);
   });
