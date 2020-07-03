@@ -1,3 +1,4 @@
+#include<stdio.h>
 #include<mixed.h>
 
 struct test{
@@ -41,3 +42,9 @@ struct test *find_test(int id);
   __test->exit = EXIT;                                  \
   return 0;                                             \
   };
+
+#define check(FORM)                                             \
+  if(!FORM){                                                    \
+    int __error = mixed_error();                                \
+    fail(mixed_error(), "%s", mixed_error_string(__error));     \
+  }
