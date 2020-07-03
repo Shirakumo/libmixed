@@ -75,7 +75,7 @@ endif()
 add_executable(tester
   "test/tester.h"
   "test/tester.c"
-  "test/tests.c")
+  "test/buffer.c")
 add_dependencies(tester mixed)
 set_property(TARGET tester PROPERTY C_STANDARD 99)
 target_link_libraries(tester mixed)
