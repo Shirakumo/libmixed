@@ -414,8 +414,12 @@ extern "C" {
   MIXED_EXPORT struct mixed_buffer{
     float *data;
     size_t size;
-    // buffer-allocation-type: whether the allocation was made externally or not
-    // to see whether reallocating is allowed or not.
+    size_t r1_start;
+    size_t r1_size;
+    size_t r2_start;
+    size_t r2_size;
+    size_t reserved_start;
+    size_t reserved_size;
   };
 
   // Information struct to encapsulate a "channel"
@@ -602,6 +606,37 @@ extern "C" {
   // 
   // This clears the entire buffer to hold samples of all zeroes.
   MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer);
+
+  // Reserve a block of memory for a write operation.
+  //
+  // size must contain the requested size of memory to reserve.
+  // If successful, area will be set to the start of the reserved
+  // memory area, ready for write. size will be set to the actual
+  // size of the allocated memory area. writing beyond the address
+  // of area+size is illegal.
+  //
+  // This operation will fail if there is no more free memory or
+  // if a previously reserved block has not yet been committed.
+  MIXED_EXPORT int mixed_buffer_request_write(struct mixed_buffer *buffer, float **area, size_t *size);
+
+  // Commit a reserved block after writing to it.
+  //
+  // attempting to commit more than has been reserved will fail.
+  // Committing less than was reserved will commit that amount and
+  // release the rest.
+  MIXED_EXPORT int mixed_buffer_finish_write(struct mixed_buffer *buffer, size_t size);
+
+  // Retrieve a memory block for reading.
+  //
+  // Stores the start of the block in area and its length in size.
+  // If no block has been reserved, this operation will fail.
+  MIXED_EXPORT int mixed_buffer_request_read(struct mixed_buffer *buffer, float **area, size_t *size);
+
+  // Free part of a block after reading from it.
+  //
+  // This operation will fail if there is no block to free, or
+  // if the amount of space to free is more than is committed.
+  MIXED_EXPORT int mixed_buffer_finish_read(struct mixed_buffer *buffer, size_t size);
 
   // Resize the buffer to a new size.
   //
