@@ -617,26 +617,26 @@ extern "C" {
   //
   // This operation will fail if there is no more free memory or
   // if a previously reserved block has not yet been committed.
-  MIXED_EXPORT int mixed_buffer_request_write(struct mixed_buffer *buffer, float **area, size_t *size);
+  MIXED_EXPORT int mixed_buffer_request_write(float **area, size_t *size, struct mixed_buffer *buffer);
 
   // Commit a reserved block after writing to it.
   //
   // attempting to commit more than has been reserved will fail.
   // Committing less than was reserved will commit that amount and
   // release the rest.
-  MIXED_EXPORT int mixed_buffer_finish_write(struct mixed_buffer *buffer, size_t size);
+  MIXED_EXPORT int mixed_buffer_finish_write(size_t size, struct mixed_buffer *buffer);
 
   // Retrieve a memory block for reading.
   //
   // Stores the start of the block in area and its length in size.
   // If no block has been reserved, this operation will fail.
-  MIXED_EXPORT int mixed_buffer_request_read(struct mixed_buffer *buffer, float **area, size_t *size);
+  MIXED_EXPORT int mixed_buffer_request_read(float **area, size_t *size, struct mixed_buffer *buffer);
 
   // Free part of a block after reading from it.
   //
   // This operation will fail if there is no block to free, or
   // if the amount of space to free is more than is committed.
-  MIXED_EXPORT int mixed_buffer_finish_read(struct mixed_buffer *buffer, size_t size);
+  MIXED_EXPORT int mixed_buffer_finish_read(size_t size, struct mixed_buffer *buffer);
 
   // Resize the buffer to a new size.
   //

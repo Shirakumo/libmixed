@@ -37,7 +37,7 @@ static inline size_t free_after_r1(struct mixed_buffer *buffer){
   return buffer->size - buffer->r1_start - buffer->r2_size;
 }
 
-MIXED_EXPORT int mixed_buffer_request_write(struct mixed_buffer *buffer, float **area, size_t *size){
+MIXED_EXPORT int mixed_buffer_request_write(float **area, size_t *size, struct mixed_buffer *buffer){
   if(buffer->r2_size){
     size_t free = free_for_r2(buffer);
     if(*size < free) free = *size;
@@ -66,7 +66,7 @@ MIXED_EXPORT int mixed_buffer_request_write(struct mixed_buffer *buffer, float *
   return 1;
 }
 
-MIXED_EXPORT int mixed_buffer_finish_write(struct mixed_buffer *buffer, size_t size){
+MIXED_EXPORT int mixed_buffer_finish_write(size_t size, struct mixed_buffer *buffer){
   if(buffer->reserved_size < size) return 0;
   if(size == 0){
     buffer->reserved_size = 0;
@@ -84,14 +84,14 @@ MIXED_EXPORT int mixed_buffer_finish_write(struct mixed_buffer *buffer, size_t s
   return 1;
 }
 
-MIXED_EXPORT int mixed_buffer_request_read(struct mixed_buffer *buffer, float **area, size_t *size){
+MIXED_EXPORT int mixed_buffer_request_read(float **area, size_t *size, struct mixed_buffer *buffer){
   if(buffer->r1_size == 0) return 0;
   *size = buffer->r1_size;
   *area = buffer->data + buffer->r1_start;
   return 1;
 }
 
-MIXED_EXPORT int mixed_buffer_finish_read(struct mixed_buffer *buffer, size_t size){
+MIXED_EXPORT int mixed_buffer_finish_read(size_t size, struct mixed_buffer *buffer){
   if(buffer->r1_size < size) return 0;
   if(buffer->r1_size == size){
     buffer->r1_start = buffer->r2_start;
