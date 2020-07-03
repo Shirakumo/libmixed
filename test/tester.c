@@ -18,7 +18,7 @@ int register_test(char *suite, char *name, int (*fun)()){
 struct test *find_test(int id){
   if(id < 0 || MAX_TESTS <= id || tests[id].name[0] == 0)
     return 0;
-  return &tests[test_count];
+  return &tests[id];
 }
 
 struct test *search_test(const char *name){
@@ -33,7 +33,7 @@ struct test *search_test(const char *name){
 int run_test(struct test *test){
   printf("Running %-10s %-36s \033[0;90m...\033[0;0m ", test->suite, test->name);
   int result = test->fun();
-  printf((result==0)?" \033[1;31m[FAIL]":"\033[0;32m[OK  ]");
+  printf((result==0)?"\033[1;31m[FAIL]":"\033[0;32m[OK  ]");
   printf("\033[0;0m\n");
   return result;
 }

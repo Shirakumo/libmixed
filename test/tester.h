@@ -29,22 +29,64 @@ struct test *find_test(int id);
   static int __TEST_ID(TITLE);                                          \
   int __TEST_FUN(TITLE)(){                                              \
     int __testid = __TEST_ID(TITLE);                                    \
+    int __testresult = 1;                                               \
     __VA_ARGS__                                                         \
-      return 1;                                                         \
+      return __testresult;                                              \
   }                                                                     \
   __attribute__((constructor)) static void __TEST_INIT(TITLE)(){        \
     __TEST_ID(TITLE) = register_test(__NAME(__TEST_SUITE), # TITLE, __TEST_FUN(TITLE)); \
   }
 
-#define fail(EXIT, ...) {                               \
-  struct test *__test = find_test(__testid);            \
-  snprintf(__test->reason, 1024, __VA_ARGS__);          \
-  __test->exit = EXIT;                                  \
-  return 0;                                             \
+#define fail_test(EXIT, ...){                           \
+    struct test *__test = find_test(__testid);          \
+    snprintf(__test->reason, 1024, __VA_ARGS__);        \
+    __test->exit = EXIT;                                \
+    __testresult = 0;                                   \
+    goto cleanup;                                       \
   };
 
-#define check(FORM)                                             \
-  if(!FORM){                                                    \
-    int __error = mixed_error();                                \
-    fail(mixed_error(), "%s", mixed_error_string(__error));     \
+#define pass(FORM)                                                      \
+  if(!FORM){                                                            \
+    int __error = mixed_error();                                        \
+    fail_test(mixed_error(), "%s", mixed_error_string(__error));        \
+  }
+
+#define fail(FORM)                                              \
+  if(FORM){                                                     \
+    fail_test(-1, "Expected form to fail, but it succeeded.");  \
+  }
+
+#define is(A, B){                                                       \
+    ssize_t __a = (ssize_t) A;                                          \
+    ssize_t __b = (ssize_t) B;                                          \
+    if(__a != __b)                                                      \
+      fail_test(-2, "Value was %i but should have been %i", __a, __b);  \
+  }
+
+#define isnt(A, B){                                                     \
+    ssize_t __a = (ssize_t) A;                                          \
+    ssize_t __b = (ssize_t) B;                                          \
+    if(__a == __b)                                                      \
+      fail_test(-2, "Value was %i but should not have been.", __a);     \
+  }
+
+#define is_ui(A, B){                                                    \
+    size_t __a = (size_t) A;                                            \
+    size_t __b = (size_t) B;                                            \
+    if(__a != __b)                                                      \
+      fail_test(-2, "Value was %u but should have been %u", __a, __b);  \
+  }
+
+#define is_f(A, B){                                                     \
+    float __a = (float) A;                                              \
+    float __b = (float) B;                                              \
+    if(__a != __b)                                                      \
+      fail_test(-2, "Value was %f but should have been %f", __a, __b);  \
+  }
+
+#define is_p(A, B){                                                     \
+    void *__a = (void *)A;                                              \
+    void *__b = (void *)B;                                              \
+    if(__a != __b)                                                      \
+      fail_test(-2, "Value was %p but should have been %p", __a, __b);  \
   }
