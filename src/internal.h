@@ -22,6 +22,9 @@
 #endif
 #define BASE_VECTOR_SIZE 32
 
+#define IGNORE(...) __ignore(0, __VA_ARGS__)
+static inline void __ignore(char _, ...){(void)_;}
+
 struct vector{
   void **data;
   size_t count;

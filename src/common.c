@@ -17,6 +17,7 @@ MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
 }
 
 int mix_noop(size_t samples, struct mixed_segment *segment){
+  IGNORE(samples, segment);
   return 1;
 }
 
@@ -73,7 +74,7 @@ MIXED_EXPORT char *mixed_error_string(int code){
 }
 
 MIXED_EXPORT char *mixed_version(){
-  return VERSION;
+  return MIXED_VERSION;
 }
 
 void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){

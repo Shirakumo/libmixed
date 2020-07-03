@@ -45,7 +45,7 @@ endif()
 
 include(FindPackageHandleStandardArgs)
 
-find_package_handle_standard_args(MPG123 
+find_package_handle_standard_args(mpg123
   REQUIRED_VARS
   MPG123_INCLUDE_DIR
   MPG123_LIBRARIES

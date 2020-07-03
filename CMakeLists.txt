@@ -15,7 +15,6 @@ if (GIT_SCM AND GITDIR)
 else()
   file(READ "VERSION" VERSION)
 endif()
-add_definitions( -DVERSION="${VERSION}" )
 
 ## Libsamplerate
 file(GLOB samplerate_src "libsamplerate/*.c")
@@ -23,8 +22,34 @@ add_library(samplerate OBJECT ${samplerate_src})
 
 ## Main Library
 include_directories("src/")
-file(GLOB mixed_src "src/*.c" "src/segments/*.c")
-add_library(mixed SHARED ${mixed_src} $<TARGET_OBJECTS:samplerate>)
+add_library(mixed SHARED
+  "src/buffer.c"
+  "src/common.c"
+  "src/encoding.c"
+  "src/encoding.h"
+  "src/internal.h"
+  "src/ladspa.h"
+  "src/mixed.h"
+  "src/pitch.c"
+  "src/segment.c"
+  "src/segment_sequence.c"
+  "src/transfer.c"
+  "src/vector.c"
+  "src/segments/basic_mixer.c"
+  "src/segments/delay.c"
+  "src/segments/fade.c"
+  "src/segments/frequency_pass.c"
+  "src/segments/gate.c"
+  "src/segments/generator.c"
+  "src/segments/ladspa.c"
+  "src/segments/noise.c"
+  "src/segments/packer.c"
+  "src/segments/pitch.c"
+  "src/segments/queue.c"
+  "src/segments/repeat.c"
+  "src/segments/space_mixer.c"
+  "src/segments/volume_control.c"
+  $<TARGET_OBJECTS:samplerate>)
 string(REGEX MATCH "([0-9]+)\\.([0-9]+)-[0-9]+-(.+)" TMP ${VERSION})
 set(MIXED_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(MIXED_VERSION_MINOR ${CMAKE_MATCH_2})
@@ -34,8 +59,8 @@ set_property(TARGET mixed PROPERTY VERSION ${MIXED_VERSION_STRING})
 set_property(TARGET mixed PROPERTY SOVERSION ${MIXED_VERSION_MAJOR})
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_compile_definitions(mixed PRIVATE MIXED_BUILD=1)
-target_compile_options(mixed PRIVATE -mrdrnd)
+target_compile_definitions(mixed PRIVATE MIXED_BUILD=1 MIXED_VERSION="${MIXED_VERSION_STRING}")
+target_compile_options(mixed PRIVATE -mrdrnd -mavx2 -mfma -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang"
     OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(mixed PRIVATE -fvisibility=hidden)
@@ -46,27 +71,28 @@ else()
   target_link_libraries(mixed dl m)
 endif()
 
-## Test Programs
+## Tester
+add_executable(tester
+  "test/tester.h"
+  "test/tester.c"
+  "test/tests.c")
+add_dependencies(tester mixed)
+set_property(TARGET tester PROPERTY C_STANDARD 99)
+target_link_libraries(tester mixed)
+
+## Example Programs
 find_package(mpg123)
 find_package(out123)
 if(OUT123_FOUND AND MPG123_FOUND)
-  file(GLOB test_src "test/*.c")
-  foreach(test_file ${test_src})
-    get_filename_component(test_name ${test_file} NAME_WE)
-    set(test_name "test_${test_name}")
-    add_executable(${test_name} ${test_file})
-    add_dependencies(${test_name} mixed)
-    set_property(TARGET ${test_name} PROPERTY C_STANDARD 99)
-    target_link_libraries(${test_name} mixed ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
+  file(GLOB example_src "examples/*.c")
+  foreach(example_file ${example_src})
+    get_filename_component(example_name ${example_file} NAME_WE)
+    set(example_name "example_${example_name}")
+    add_executable(${example_name} ${example_file})
+    add_dependencies(${example_name} mixed)
+    set_property(TARGET ${example_name} PROPERTY C_STANDARD 99)
+    target_link_libraries(${example_name} mixed ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
   endforeach()
 endif()
-
-## Warnings
-if(CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake)")
-  add_definitions(/W2)
-elseif(CMAKE_BUILD_TOOL MATCHES "(gcc|clang)")
-  add_definitions(-W -Wall -Wextra -pedantic)
-endif()
-add_definitions(-Wno-ignored-attributes)
 
 install(TARGETS mixed DESTINATION /usr/local/lib)

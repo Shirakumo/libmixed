@@ -45,7 +45,7 @@ endif()
 
 include(FindPackageHandleStandardArgs)
 
-find_package_handle_standard_args(OUT123 
+find_package_handle_standard_args(out123
   REQUIRED_VARS
   OUT123_INCLUDE_DIR
   OUT123_LIBRARIES

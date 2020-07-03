@@ -414,6 +414,8 @@ extern "C" {
   MIXED_EXPORT struct mixed_buffer{
     float *data;
     size_t size;
+    // buffer-allocation-type: whether the allocation was made externally or not
+    // to see whether reallocating is allowed or not.
   };
 
   // Information struct to encapsulate a "channel"
