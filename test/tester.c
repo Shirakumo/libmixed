@@ -6,7 +6,8 @@
 struct test tests[MAX_TESTS] = {0};
 int test_count = 0;
 
-int register_test(char *name, int (*fun)()){
+int register_test(char *suite, char *name, int (*fun)()){
+  tests[test_count].suite = suite;
   tests[test_count].name = name;
   tests[test_count].exit = -1;
   tests[test_count].reason[0] = 0;
@@ -22,14 +23,15 @@ struct test *find_test(int id){
 
 struct test *search_test(const char *name){
   for(int i=0; i<test_count; ++i){
-    if(strncmp(name, tests[i].name, strlen(tests[i].name)) == 0)
+    if(strncmp(name, tests[i].suite, strlen(tests[i].suite)) == 0
+       || strncmp(name, tests[i].name, strlen(tests[i].name)) == 0)
       return &tests[i];
   }
   return 0;
 }
 
 int run_test(struct test *test){
-  printf("Running %-36s \033[0;90m...\033[0;0m ", test->name);
+  printf("Running %-10s %-36s \033[0;90m...\033[0;0m ", test->suite, test->name);
   int result = test->fun();
   printf((result==0)?" \033[1;31m[FAIL]":"\033[0;32m[OK  ]");
   printf("\033[0;0m\n");
@@ -57,7 +59,7 @@ int run_tests(struct test *tests[], int test_count){
     fprintf(stderr, "\033[1;33m --> \033[0;0mThe following tests failed:\n");
     for(int i=0; i<failures; ++i){
       struct test *test = failed[i];
-      fprintf(stderr, "%s: %s\n", test->name, test->reason);
+      fprintf(stderr, "%s %s: \s  %s\n", test->suite, test->name, test->reason);
     }
   }
   return (failures == 0);
