@@ -96,3 +96,8 @@ if(OUT123_FOUND AND MPG123_FOUND)
 endif()
 
 install(TARGETS mixed DESTINATION /usr/local/lib)
+
+add_custom_target(test
+  COMMAND "${CMAKE_BINARY_DIR}/tester"
+  DEPENDS tester)
+  
