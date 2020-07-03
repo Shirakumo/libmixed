@@ -1,11 +1,12 @@
 #include <stdio.h>
+#include <string.h>
 #include "tester.h"
 
-#define MAX_TESTS = 1024;
+#define MAX_TESTS 1024
 struct test tests[MAX_TESTS] = {0};
 int test_count = 0;
 
-int register_test(const char *name, int (*fun)()){
+int register_test(char *name, int (*fun)()){
   tests[test_count].name = name;
   tests[test_count].exit = -1;
   tests[test_count].reason[0] = 0;
@@ -30,12 +31,12 @@ struct test *search_test(const char *name){
 int run_test(struct test *test){
   printf("Running %-36s \033[0;90m...\033[0;0m ", test->name);
   int result = test->fun();
-  printf((ret==0)?" \033[1;31m[FAIL]":"\033[0;32m[OK  ]");
+  printf((result==0)?" \033[1;31m[FAIL]":"\033[0;32m[OK  ]");
   printf("\033[0;0m\n");
   return result;
 }
 
-int run_tests(struct test *tests, int test_count){
+int run_tests(struct test *tests[], int test_count){
   printf("This is libmixed %s\n", mixed_version());
   printf("\033[1;33m --> \033[0;0mWill run %i tests.\n", test_count);
   struct test *failed[test_count];

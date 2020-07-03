@@ -60,12 +60,12 @@ int drain_segment_mix(size_t samples, struct mixed_segment *segment){
 
   if(data->resample_state){
     uint8_t channels = data->pack->channels;
-    SRC_DATA src_data = data->resample_data;
+    SRC_DATA *src_data = data->resample_data;
     float *buffers[channels];
     for(size_t i=0; i<channels; ++i)
       buffers[i] = data->buffers[i]->data;
     
-    mixed_transfer_array_to_alternating_float(buffers, data->resample_data->data_in, channels, samples, 1.0);
+    //mixed_transfer_array_to_alternating_float(buffers, data->resample_data->data_in, channels, samples, 1.0);
     src_data->input_frames = samples;
     src_process(data->resample_state, src_data);
     // FIXME: what if src does not provide the exact amount of samples we need

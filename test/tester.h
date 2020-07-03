@@ -7,7 +7,7 @@ struct test{
   int (*fun)();
 };
 
-int register_test(const char *name, int (*fun)());
+int register_test(char *name, int (*fun)());
 struct test *find_test(int id);
 
 #define define_test(TITLE, ...)                                         \
