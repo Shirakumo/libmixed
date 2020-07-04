@@ -59,7 +59,7 @@ int run_tests(struct test *tests[], int test_count){
     fprintf(stderr, "\033[1;33m --> \033[0;0mThe following tests failed:\n");
     for(int i=0; i<failures; ++i){
       struct test *test = failed[i];
-      fprintf(stderr, "%s %s (%i):\n  %s\n", test->suite, test->name, test->form, test->reason);
+      fprintf(stderr, "%s %s %s:%i (%i):\n  %s\n", test->suite, test->name, test->file, test->line, test->form, test->reason);
     }
   }
   return (failures == 0);

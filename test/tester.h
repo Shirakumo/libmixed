@@ -4,6 +4,8 @@
 struct test{
   char *suite;
   char *name;
+  char *file;
+  int line;
   int form;
   char reason[1024];
   int (*fun)();
@@ -41,6 +43,8 @@ struct test *find_test(int id);
 #define fail_test(...){                                 \
     struct test *__test = find_test(__testid);          \
     snprintf(__test->reason, 1024, __VA_ARGS__);        \
+    __test->file = __FILE__;                            \
+    __test->line = __LINE__;                            \
     __test->form = __formid;                            \
     __testresult = 0;                                   \
     goto cleanup;                                       \
