@@ -4,7 +4,7 @@
 struct test{
   char *suite;
   char *name;
-  int exit;
+  int form;
   char reason[1024];
   int (*fun)();
 };
@@ -30,6 +30,7 @@ struct test *find_test(int id);
   int __TEST_FUN(TITLE)(){                                              \
     int __testid = __TEST_ID(TITLE);                                    \
     int __testresult = 1;                                               \
+    int __formid = 0;                                                   \
     __VA_ARGS__                                                         \
       return __testresult;                                              \
   }                                                                     \
@@ -37,56 +38,69 @@ struct test *find_test(int id);
     __TEST_ID(TITLE) = register_test(__NAME(__TEST_SUITE), # TITLE, __TEST_FUN(TITLE)); \
   }
 
-#define fail_test(EXIT, ...){                           \
+#define fail_test(...){                                 \
     struct test *__test = find_test(__testid);          \
     snprintf(__test->reason, 1024, __VA_ARGS__);        \
-    __test->exit = EXIT;                                \
+    __test->form = __formid;                            \
     __testresult = 0;                                   \
     goto cleanup;                                       \
-  };
+  }
 
 #define pass(FORM)                                                      \
   if(!FORM){                                                            \
     int __error = mixed_error();                                        \
-    fail_test(mixed_error(), "%s", mixed_error_string(__error));        \
-  }
+    fail_test("%s", mixed_error_string(__error));                       \
+  }else ++__formid;
 
-#define fail(FORM)                                              \
-  if(FORM){                                                     \
-    fail_test(-1, "Expected form to fail, but it succeeded.");  \
-  }
+#define fail(FORM)                                                      \
+  if(FORM){                                                             \
+    fail_test("Expected form to fail, but it succeeded.");              \
+  }else ++__formid;
 
 #define is(A, B){                                                       \
     ssize_t __a = (ssize_t) A;                                          \
     ssize_t __b = (ssize_t) B;                                          \
     if(__a != __b)                                                      \
-      fail_test(-2, "Value was %i but should have been %i", __a, __b);  \
+      fail_test("Value was %i but should have been %i", __a, __b)       \
+    else ++__formid;                                                    \
   }
 
 #define isnt(A, B){                                                     \
     ssize_t __a = (ssize_t) A;                                          \
     ssize_t __b = (ssize_t) B;                                          \
     if(__a == __b)                                                      \
-      fail_test(-2, "Value was %i but should not have been.", __a);     \
+      fail_test("Value was %i but should not have been.", __a)          \
+    else ++__formid;                                                    \
   }
 
 #define is_ui(A, B){                                                    \
     size_t __a = (size_t) A;                                            \
     size_t __b = (size_t) B;                                            \
     if(__a != __b)                                                      \
-      fail_test(-2, "Value was %u but should have been %u", __a, __b);  \
+      fail_test("Value was %u but should have been %u", __a, __b)       \
+    else ++__formid;                                                    \
   }
 
 #define is_f(A, B){                                                     \
     float __a = (float) A;                                              \
     float __b = (float) B;                                              \
     if(__a != __b)                                                      \
-      fail_test(-2, "Value was %f but should have been %f", __a, __b);  \
+      fail_test("Value was %f but should have been %f", __a, __b)       \
+    else ++__formid;                                                    \
   }
 
 #define is_p(A, B){                                                     \
     void *__a = (void *)A;                                              \
     void *__b = (void *)B;                                              \
     if(__a != __b)                                                      \
-      fail_test(-2, "Value was %p but should have been %p", __a, __b);  \
+      fail_test("Value was %p but should have been %p", __a, __b)       \
+    else ++__formid;                                                    \
+  }
+
+#define isnt_p(A, B){                                                   \
+    void *__a = (void *)A;                                              \
+    void *__b = (void *)B;                                              \
+    if(__a == __b)                                                      \
+      fail_test("Value was %p but should not have been", __a)           \
+    else ++__formid;                                                    \
   }

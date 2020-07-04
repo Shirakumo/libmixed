@@ -74,7 +74,16 @@ extern "C" {
     // for some reason.
     MIXED_LADSPA_INSTANTIATION_FAILED,
     // A libsamplerate operation failed.
-    MIXED_RESAMPLE_FAILED
+    MIXED_RESAMPLE_FAILED,
+    // The buffer is empty and there's nothing that can be
+    // read from it.
+    MIXED_BUFFER_EMPTY,
+    // The buffer is full and there's nothing that can be
+    // written to it.
+    MIXED_BUFFER_FULL,
+    // The amount of data that is attempted to be committed
+    // to the buffer is more than was requested.
+    MIXED_BUFFER_OVERCOMMIT
   };
 
   // This enum describes the possible sample encodings.
@@ -556,8 +565,8 @@ extern "C" {
 
   // Most functions in this API return an int, which will be either
   // 1 for success, or 0 for failure. In the case of failure you
-  // should immediately call mixed_err to get the corresponding error
-  // code.
+  // should call mixed_err to get the corresponding error code before
+  // you call any other API functions on the same thread.
 
   // All of the make* functions in this API expect to be passed a
   // pointer to a struct. This struct has to be alloced by you and it
@@ -617,25 +626,34 @@ extern "C" {
   //
   // This operation will fail if there is no more free memory or
   // if a previously reserved block has not yet been committed.
+  // In the case of a failure, size will be set to zero and area
+  // will be left untouched.
   MIXED_EXPORT int mixed_buffer_request_write(float **area, size_t *size, struct mixed_buffer *buffer);
 
   // Commit a reserved block after writing to it.
   //
-  // attempting to commit more than has been reserved will fail.
+  // Attempting to commit more than has been reserved will fail.
   // Committing less than was reserved will commit that amount and
   // release the rest.
+  // Using the previously obtained area pointer after finishing a
+  // write is illegal.
   MIXED_EXPORT int mixed_buffer_finish_write(size_t size, struct mixed_buffer *buffer);
 
   // Retrieve a memory block for reading.
   //
   // Stores the start of the block in area and its length in size.
-  // If no block has been reserved, this operation will fail.
+  // Reading beyond area+size is illegal.
+  // If no block has been written to, this operation will fail.
+  // In the case of a failure, size will be set to zero, and area
+  // will be left untouched.
   MIXED_EXPORT int mixed_buffer_request_read(float **area, size_t *size, struct mixed_buffer *buffer);
 
   // Free part of a block after reading from it.
   //
   // This operation will fail if there is no block to free, or
   // if the amount of space to free is more than is committed.
+  // Using the previously obtained area pointer after finishing a
+  // read is illegal.
   MIXED_EXPORT int mixed_buffer_finish_read(size_t size, struct mixed_buffer *buffer);
 
   // Resize the buffer to a new size.

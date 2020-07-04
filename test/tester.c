@@ -9,7 +9,7 @@ int test_count = 0;
 int register_test(char *suite, char *name, int (*fun)()){
   tests[test_count].suite = suite;
   tests[test_count].name = name;
-  tests[test_count].exit = -1;
+  tests[test_count].form = -1;
   tests[test_count].reason[0] = 0;
   tests[test_count].fun = fun;
   return test_count++;
@@ -59,7 +59,7 @@ int run_tests(struct test *tests[], int test_count){
     fprintf(stderr, "\033[1;33m --> \033[0;0mThe following tests failed:\n");
     for(int i=0; i<failures; ++i){
       struct test *test = failed[i];
-      fprintf(stderr, "%s %s: \n  %s\n", test->suite, test->name, test->reason);
+      fprintf(stderr, "%s %s (%i):\n  %s\n", test->suite, test->name, test->form, test->reason);
     }
   }
   return (failures == 0);

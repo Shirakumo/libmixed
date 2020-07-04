@@ -68,6 +68,12 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "Instantiation of the LADSPA plugin has failed.";
   case MIXED_RESAMPLE_FAILED:
     return "An error happened in the libsamplerate library.";
+  case MIXED_BUFFER_EMPTY:
+    return "A read was requested on a buffer with no committed write data.";
+  case MIXED_BUFFER_FULL:
+    return "A write was requested on a buffer with no available space.";
+  case MIXED_BUFFER_OVERCOMMIT:
+    return "More data was attempted to be committed to the buffer than was requested.";
   default:
     return "Unknown error code.";
   }
