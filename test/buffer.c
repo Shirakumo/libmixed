@@ -1,12 +1,13 @@
+#include <string.h>
 #include "tester.h"
 #define __TEST_SUITE buffer
 
 define_test(make, {
     struct mixed_buffer buffer = {0};
     pass(mixed_make_buffer(1024, &buffer));
-    
-  cleanup:
     mixed_free_buffer(&buffer);
+    
+  cleanup:;
   });
 
 define_test(write_allocation, {
@@ -86,6 +87,83 @@ define_test(partial_read_write, {
     pass(mixed_buffer_finish_write(w_size, &buffer));
     pass(mixed_buffer_request_read(&r_area, &r_size, &buffer));
     pass(mixed_buffer_finish_read(r_size, &buffer));
+    
+  cleanup:
+    mixed_free_buffer(&buffer);
+  });
+
+define_test(transfer, {
+    struct mixed_buffer a={0}, b={0};
+    float *area;
+    size_t size = 1024;
+    float mem[size];
+    // Allocate
+    pass(mixed_make_buffer(size, &a));
+    pass(mixed_make_buffer(size, &b));
+    for(int i=0; i<1024; i++)
+      mem[i] = rand();
+    // Write to a
+    pass(mixed_buffer_request_write(&area, &size, &a));
+    memcpy(mem, area, sizeof(float)*size);
+    pass(mixed_buffer_finish_write(size, &a));
+    // Transfer
+    pass(mixed_buffer_transfer(&a, &b));
+    // Check contents of b
+    pass(mixed_buffer_request_read(&area, &size, &b));
+    is(size, 1024);
+    is(memcmp(mem, area, sizeof(float)*size), 0);
+    // Ensure a is empty
+    fail(mixed_buffer_request_read(&area, &size, &a));
+
+  cleanup:
+    mixed_free_buffer(&a);
+    mixed_free_buffer(&b);
+  });
+
+define_test(copy, {
+    struct mixed_buffer a={0}, b={0};
+    float *area;
+    size_t size = 1024;
+    float mem[size];
+    // Allocate
+    pass(mixed_make_buffer(size, &a));
+    pass(mixed_make_buffer(size, &b));
+    for(int i=0; i<1024; i++)
+      mem[i] = rand();
+    // Write to a
+    pass(mixed_buffer_request_write(&area, &size, &a));
+    memcpy(mem, area, sizeof(float)*size);
+    pass(mixed_buffer_finish_write(size, &a));
+    // Transfer
+    pass(mixed_buffer_copy(&a, &b));
+    // Check contents of b
+    pass(mixed_buffer_request_read(&area, &size, &b));
+    is(size, 1024);
+    is(memcmp(mem, area, sizeof(float)*size), 0);
+    // Ensure a is full
+    pass(mixed_buffer_request_read(&area, &size, &a));
+    is(size, 1024);
+    is(memcmp(mem, area, sizeof(float)*size), 0);
+    
+  cleanup:
+    mixed_free_buffer(&a);
+    mixed_free_buffer(&b);
+  });
+
+define_test(resize, {
+    struct mixed_buffer buffer = {0};
+    pass(mixed_make_buffer(1024, &buffer));
+    float *w_area=0;
+    size_t w_size=512;
+    // Write to buffer a bit
+    pass(mixed_buffer_request_write(&w_area, &w_size, &buffer));
+    pass(mixed_buffer_finish_write(256, &buffer));
+    // Start reading back
+    pass(mixed_buffer_request_read(&r_area, &r_size, &buffer));
+    // Write some more
+    pass(mixed_buffer_request_write(&w_area, &w_size, &buffer));
+    // Resize
+    pass(mixed_buffer_resize(2048, &buffer));
     
   cleanup:
     mixed_free_buffer(&buffer);
