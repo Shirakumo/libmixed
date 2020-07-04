@@ -38,6 +38,7 @@ static inline size_t free_after_r1(struct mixed_buffer *buffer){
 }
 
 MIXED_EXPORT int mixed_buffer_request_write(float **area, size_t *size, struct mixed_buffer *buffer){
+  mixed_err(MIXED_NO_ERROR);
   if(buffer->r2_size){
     size_t free = free_for_r2(buffer);
     if(*size < free) free = *size;
@@ -79,6 +80,7 @@ MIXED_EXPORT int mixed_buffer_request_write(float **area, size_t *size, struct m
 }
 
 MIXED_EXPORT int mixed_buffer_finish_write(size_t size, struct mixed_buffer *buffer){
+  mixed_err(MIXED_NO_ERROR);
   if(buffer->reserved_size < size){
     mixed_err(MIXED_BUFFER_OVERCOMMIT);
     return 0;
@@ -100,6 +102,7 @@ MIXED_EXPORT int mixed_buffer_finish_write(size_t size, struct mixed_buffer *buf
 }
 
 MIXED_EXPORT int mixed_buffer_request_read(float **area, size_t *size, struct mixed_buffer *buffer){
+  mixed_err(MIXED_NO_ERROR);
   if(buffer->r1_size == 0){
     *size = 0;
     mixed_err(MIXED_BUFFER_EMPTY);
@@ -111,6 +114,7 @@ MIXED_EXPORT int mixed_buffer_request_read(float **area, size_t *size, struct mi
 }
 
 MIXED_EXPORT int mixed_buffer_finish_read(size_t size, struct mixed_buffer *buffer){
+  mixed_err(MIXED_NO_ERROR);
   if(buffer->r1_size < size){
     mixed_err(MIXED_BUFFER_OVERCOMMIT);
     return 0;
@@ -127,15 +131,31 @@ MIXED_EXPORT int mixed_buffer_finish_read(size_t size, struct mixed_buffer *buff
   return 1;
 }
 
+MIXED_EXPORT int mixed_buffer_transfer(struct mixed_buffer *from, struct mixed_buffer *to){
+  mixed_err(MIXED_NO_ERROR);
+  if(from != to){
+    float *read, *write;
+    size_t rsize, wsize;
+    mixed_buffer_request_read(&read, &rsize, from);
+    mixed_buffer_request_write(&write, &wsize, to);
+    size_t size = (rsize < wsize)? rsize : wsize;
+    memcpy(read, write, sizeof(float)*size);
+    mixed_buffer_finish_read(size, from);
+    mixed_buffer_finish_write(size, to);
+  }
+  return 1;
+}
+
 MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to){
   mixed_err(MIXED_NO_ERROR);
-  // FIXME: fixup
   if(from != to){
-    size_t size = (to->size<from->size)? from->size : to->size;
-    memcpy(to->data, from->data, sizeof(float)*size);
-    if(size < to->size){
-      memset(to->data+size, 0, sizeof(float)*(to->size-size));
-    }
+    float *read, *write;
+    size_t rsize, wsize;
+    mixed_buffer_request_read(&read, &rsize, from);
+    mixed_buffer_request_write(&write, &wsize, to);
+    size_t size = (rsize < wsize)? rsize : wsize;
+    memcpy(read, write, sizeof(float)*size);
+    mixed_buffer_finish_write(size, to);
   }
   return 1;
 }

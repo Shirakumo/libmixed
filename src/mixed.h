@@ -604,11 +604,23 @@ extern "C" {
   // in the resulting channel.
   MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t samples, float volume);
 
-  // Copy a buffer to another.
+  // Transfers data from one buffer to the other.
   //
-  // This only copies as many samples as viable, meaning that if
-  // one buffer is smaller than the other, only as many samples as
-  // the smaller buffer can carry are copied.
+  // This is equivalent to requesting a read from the from buffer,
+  // and a write from the to buffer, then memcpying as much as
+  // possible over, and finally committing the read/write ops.
+  // Note that doing this will effectively remove all transferred
+  // data from the from buffer.
+  MIXED_EXPORT int mixed_buffer_transfer(struct mixed_buffer *from, struct mixed_buffer *to);
+
+  // Copies data from one buffer to the other.
+  //
+  // This is equivalent to requesting a read from the from buffer,
+  // and a write from the to buffer, then memcyping as much as
+  // possible over, and finally committing the write.
+  // Note that this will /not/ remove the transferred data from
+  // the from buffer and it is up to you to finish the read and
+  // decommission the buffered data whenever appropriate.
   MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to);
 
   // Clear the buffer to make it empty again.
