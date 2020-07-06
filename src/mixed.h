@@ -420,8 +420,12 @@ extern "C" {
   // An internal audio data buffer.
   //
   // The sample array is always stored in floats.
+  // You should /not/ touch any of these fields yourself,
+  // including the data array. Use the request functions to
+  // retrieve proper pointers into the array for read/write
+  // operations.
   MIXED_EXPORT struct mixed_buffer{
-    float *data;
+    float *_data;
     size_t size;
     size_t r1_start;
     size_t r1_size;
@@ -627,6 +631,12 @@ extern "C" {
   // 
   // This clears the entire buffer to hold samples of all zeroes.
   MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer);
+
+  // Returns the number of floats available for writing in the buffer.
+  MIXED_EXPORT size_t mixed_buffer_available_write(struct mixed_buffer *buffer);
+
+  // Returns the number of floats available for reading in the buffer.
+  MIXED_EXPORT size_t mixed_buffer_available_read(struct mixed_buffer *buffer);
 
   // Reserve a block of memory for a write operation.
   //
