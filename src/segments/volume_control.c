@@ -49,27 +49,39 @@ int volume_control_segment_set_out(size_t field, size_t location, void *buffer, 
   }
 }
 
-int volume_control_segment_mix(size_t samples, struct mixed_segment *segment){
+int volume_control_segment_mix(struct mixed_segment *segment){
   struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
   float lvolume = data->volume * ((0.0<data->pan)?(1.0f-data->pan):1.0f);
   float rvolume = data->volume * ((data->pan<0.0)?(1.0f+data->pan):1.0f);
+  float *in, *out;
+  size_t samples;
 
-  for(size_t i=0; i<samples; ++i){
-    data->out[MIXED_LEFT]->data[i] = data->in[MIXED_LEFT]->data[i]*lvolume;
-    data->out[MIXED_RIGHT]->data[i] = data->in[MIXED_RIGHT]->data[i]*rvolume;
-  }
+  mixed_buffer_request_read(&in, &samples, data->in[MIXED_LEFT]);
+  mixed_buffer_request_write(&out, &samples, data->out[MIXED_LEFT]);
+  for(size_t i=0; i<samples; ++i)
+    out[i] = in[i]*lvolume;
+  mixed_buffer_finish_read(samples, data->in[MIXED_LEFT]);
+  mixed_buffer_finish_write(samples, data->out[MIXED_LEFT]);
+  
+  mixed_buffer_request_read(&in, &samples, data->in[MIXED_RIGHT]);
+  mixed_buffer_request_write(&out, &samples, data->out[MIXED_RIGHT]);
+  for(size_t i=0; i<samples; ++i)
+    out[i] = in[i]*rvolume;
+  mixed_buffer_finish_read(samples, data->in[MIXED_RIGHT]);
+  mixed_buffer_finish_write(samples, data->out[MIXED_RIGHT]);
   return 1;
 }
 
-int volume_control_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int volume_control_segment_mix_bypass(struct mixed_segment *segment){
   struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
 
-  mixed_buffer_copy(data->in[MIXED_LEFT], data->out[MIXED_LEFT]);
-  mixed_buffer_copy(data->in[MIXED_RIGHT], data->out[MIXED_RIGHT]);
+  mixed_buffer_transfer(data->in[MIXED_LEFT], data->out[MIXED_LEFT]);
+  mixed_buffer_transfer(data->in[MIXED_RIGHT], data->out[MIXED_RIGHT]);
   return 1;
 }
 
 int volume_control_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
+  IGNORE(segment);
   info->name = "volume_control";
   info->description = "General segment for volume adjustment and panning.";
   info->flags = MIXED_INPLACE;
