@@ -88,7 +88,7 @@ void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   size_t oldsize = oldcount*size;
   ptr = realloc(ptr, newsize);
   if(ptr && oldsize < newsize){
-    memset(ptr+oldsize, 0, newsize-oldsize);
+    memset(((char*)ptr)+oldsize, 0, newsize-oldsize);
   }
   return ptr;
 }
@@ -134,7 +134,7 @@ float mixed_random_rdrand(){
   uint32_t random;
   while(retries--){
     if (_rdrand32_step(&random)) {
-      return (float)random/UINT32_MAX;
+      return (float)(random/UINT32_MAX);
     }
   }
   return mixed_random_m();
