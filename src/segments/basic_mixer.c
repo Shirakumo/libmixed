@@ -1,12 +1,7 @@
 #include "internal.h"
 
-struct mixer_source{
-  struct mixed_segment *segment;
-  struct mixed_buffer *buffer;
-};
-
 struct basic_mixer_data{
-  struct mixer_source **sources;
+  struct mixed_buffer **in;
   size_t count;
   size_t size;
   struct mixed_buffer **out;
@@ -43,15 +38,9 @@ int basic_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed
   case MIXED_BUFFER:
     if(buffer){ // Add or set an element
       if(location < data->count){
-        data->sources[location]->buffer = (struct mixed_buffer *)buffer;
+        data->in[location] = (struct mixed_buffer *)buffer;
       }else{
-        struct mixer_source *source = calloc(1, sizeof(struct mixer_source));
-        if(!source){
-          mixed_err(MIXED_OUT_OF_MEMORY);
-          return 0;
-        }
-        source->buffer = (struct mixed_buffer *)buffer;
-        return vector_add(source, (struct vector *)data);
+        return vector_add(buffer, (struct vector *)data);
       }
     }else{ // Remove an element
       if(data->count <= location){
@@ -61,20 +50,13 @@ int basic_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed
       return vector_remove_pos(location, (struct vector *)data);
     }
     return 1;
-  case MIXED_SOURCE:
-    if(data->count <= location){
-      mixed_err(MIXED_INVALID_LOCATION);
-      return 0;
-    }
-    data->sources[location]->segment = (struct mixed_segment *)buffer;
-    return 1;
   default:
     mixed_err(MIXED_INVALID_FIELD);
     return 0;
   }
 }
 
-int basic_mixer_mix(size_t samples, struct mixed_segment *segment){
+int basic_mixer_mix(struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   size_t buffers = data->count / data->channels;
   if(0 < buffers){
@@ -83,69 +65,38 @@ int basic_mixer_mix(size_t samples, struct mixed_segment *segment){
     float div = volume;
 
     for(size_t c=0; c<channels; ++c){
-      float *out = data->out[c]->data;
+      // Compute how much we can mix on this channel.
+      size_t samples = mixed_buffer_available_write(data->out[c]), _=0;
+      for(size_t b=0; b<buffers; ++b)
+        samples = MIN(samples, mixed_buffer_available_read(data->in[b*buffers+c]));
+
+      float *in=0, *out=0;
+      mixed_buffer_request_write(&out, &samples, data->out[c]);
 
       // Mix first buffer directly.
-      struct mixer_source *source = data->sources[c];
-      struct mixed_segment *segment = source->segment;
-      float *in = source->buffer->data;
-      if(segment){
-        // FIXME: This is not optimal. Ideally we'd avoid mixing entirely.
-        if(!segment->mix(samples, segment))
-          memset(in, 0, samples*sizeof(float));
-      }
-      
+      struct mixed_buffer *buffer = data->in[c];
+      mixed_buffer_request_read(&in, &_, buffer);
       for(size_t i=0; i<samples; ++i){
         out[i] = in[i]*div;
       }
+      mixed_buffer_finish_read(samples, buffer);
+
       // Mix other buffers additively.
       for(size_t b=1; b<buffers; ++b){
-        source = data->sources[b*channels+c];
-        segment = source->segment;
-        in = source->buffer->data;
-        
-        if(segment){
-          if(!segment->mix(samples, segment))
-            memset(in, 0, samples*sizeof(float));
-        }
-        
+        struct mixed_buffer *buffer = data->in[b*buffers+c];
+        mixed_buffer_request_read(&in, &_, buffer);
         for(size_t i=0; i<samples; ++i){
           out[i] += in[i]*div;
         }
+        mixed_buffer_finish_read(samples, buffer);
       }
-    }
-  }else{
-    for(size_t c=0; c<data->channels; ++c){
-      memset(data->out[c]->data, 0, samples*sizeof(float));
+      mixed_buffer_finish_write(samples, data->out[c]);
     }
   }
   return 1;
 }
 
 // FIXME: add start method that checks for buffer completeness.
-
-int basic_mixer_start(struct mixed_segment *segment){
-  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
-  for(size_t i=0; i<data->count; ++i){
-    if(data->sources[i]->segment){
-      if(!mixed_segment_start(data->sources[i]->segment))
-        return 0;
-    }
-  }
-  return 1;
-}
-
-int basic_mixer_end(struct mixed_segment *segment){
-  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
-  for(size_t i=0; i<data->count; ++i){
-    if(data->sources[i]->segment){
-      if(!mixed_segment_end(data->sources[i]->segment))
-        return 0;
-    }
-  }
-  return 1;
-}
-
 int basic_mixer_set(size_t field, void *value, struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   
@@ -214,9 +165,7 @@ MIXED_EXPORT int mixed_make_segment_basic_mixer(size_t channels, struct mixed_se
   }
   
   segment->free = basic_mixer_free;
-  segment->start = basic_mixer_start;
   segment->mix = basic_mixer_mix;
-  segment->end = basic_mixer_end;
   segment->set = basic_mixer_set;
   segment->get = basic_mixer_get;
   segment->set_in = basic_mixer_set_in;
