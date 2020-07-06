@@ -65,15 +65,15 @@ struct test *find_test(int id);
     ssize_t __a = (ssize_t) A;                                          \
     ssize_t __b = (ssize_t) B;                                          \
     if(__a != __b)                                                      \
-      fail_test("Value was %i but should have been %i", __a, __b)       \
-    else ++__formid;                                                    \
+      fail_test("Value was %li but should have been %li", __a, __b)     \
+      else ++__formid;                                                  \
   }
 
 #define isnt(A, B){                                                     \
     ssize_t __a = (ssize_t) A;                                          \
     ssize_t __b = (ssize_t) B;                                          \
     if(__a == __b)                                                      \
-      fail_test("Value was %i but should not have been.", __a)          \
+      fail_test("Value was %li but should not have been.", __a)         \
     else ++__formid;                                                    \
   }
 
