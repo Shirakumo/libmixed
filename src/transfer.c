@@ -181,15 +181,18 @@ static transfer_function_from mixed_transfer_functions_from[20] =
     mixed_transfer_array_from_sequential_double,
   };
 
-MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, size_t samples, float volume){
+MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, size_t *samples, float volume){
   uint8_t channels = in->channels;
   void *ind = in->data;
   float *outd[channels];
   for(size_t i=0; i<channels; ++i)
-    outd[i] = outs[i]->data;
+    mixed_buffer_request_write(&outd[i], samples, outs[i]);
   
   transfer_function_from fun = mixed_transfer_functions_from[pack_table_index(in)];
-  fun(ind, outd, channels, samples, volume);
+  fun(ind, outd, channels, *samples, volume);
+
+  for(size_t i=0; i<channels; ++i)
+    mixed_buffer_finish_write(*samples, outs[i]);
   
   return 1;
 }
@@ -219,15 +222,18 @@ static transfer_function_to mixed_transfer_functions_to[20] =
     mixed_transfer_array_to_sequential_double,
   };
 
-MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t samples, float volume){
+MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t *samples, float volume){
   uint8_t channels = out->channels;
   void *outd = out->data;
   float *ind[channels];
   for(size_t i=0; i<channels; ++i)
-    ind[i] = ins[i]->data;
+    mixed_buffer_request_read(&ind[i], samples, ins[i]);
   
   transfer_function_to fun = mixed_transfer_functions_to[pack_table_index(out)];
-  fun(ind, outd, channels, samples, volume);
+  fun(ind, outd, channels, *samples, volume);
+
+  for(size_t i=0; i<channels; ++i)
+    mixed_buffer_finish_read(*samples, ins[i]);
   
   return 1;
 }

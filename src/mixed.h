@@ -597,7 +597,11 @@ extern "C" {
   // at least as long as the channel's channel count.
   // The volume is a multiplier you can pass to adjust the volume
   // in the resulting buffers.
-  MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, size_t samples, float volume);
+  // Samples should be set to the number of samples in the input
+  // pack, and will be set to the number of samples that have actually
+  // been read from the packed buffer. This may be less if the
+  // output buffers do not have enough space.
+  MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, size_t *samples, float volume);
 
   // Convert buffer data to the packed data.
   //
@@ -606,7 +610,11 @@ extern "C" {
   // at least as long as the channel's channel count.
   // The volume is a multiplier you can pass to adjust the volume
   // in the resulting channel.
-  MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t samples, float volume);
+  // Samples should be set to the number of samples in the input
+  // pack, and will be set to the number of samples that have actually
+  // been read from the buffers. This may be less if the input
+  // buffers do not have enough data available.
+  MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t *samples, float volume);
 
   // Transfers data from one buffer to the other.
   //
