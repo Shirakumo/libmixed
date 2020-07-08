@@ -64,47 +64,16 @@ extern inline void mixed_transfer_sample_to_uint24(float *in, size_t is, void *o
 
 //// Array transfer functions
 #define DEF_MIXED_TRANSFER_ARRAY_FROM_ALTERNATING(datatype)             \
-  void mixed_transfer_array_from_alternating_##datatype(void *in, float **outs, uint8_t channels, size_t samples, float volume) { \
-    for(uint8_t channel=0; channel<channels; ++channel){                \
-      float *out = outs[channel];                                       \
-      for(size_t sample=0; sample<samples; ++sample){                   \
-        mixed_transfer_sample_from_##datatype(in, sample*channels+channel, out, sample, volume); \
-      }                                                                 \
-    }                                                                   \
-  }
-
-#define DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(datatype)              \
-  void mixed_transfer_array_from_sequential_##datatype(void *in, float **outs, uint8_t channels, size_t samples, float volume) { \
-    size_t offset = 0;                                                  \
-    for(uint8_t channel=0; channel<channels; ++channel){                \
-      float *out = outs[channel];                                       \
-      for(size_t sample=0; sample<samples; ++sample){                   \
-        mixed_transfer_sample_from_##datatype(in, sample+offset, out, sample, volume); \
-      }                                                                 \
-      offset += samples;                                                \
+  void mixed_transfer_array_from_alternating_##datatype(void *in, float *out, uint8_t stride, size_t samples, float volume) { \
+    for(size_t sample=0; sample<samples; ++sample){                     \
+      mixed_transfer_sample_from_##datatype(in, sample*stride, out, sample, volume); \
     }                                                                   \
   }
 
 #define DEF_MIXED_TRANSFER_ARRAY_TO_ALTERNATING(datatype)               \
-  static inline void mixed_transfer_array_to_alternating_##datatype(float **ins, void *out, uint8_t channels, size_t samples, float volume){ \
-    for(size_t channel=0; channel<channels; ++channel){                 \
-      float *in = ins[channel];                                         \
-      for(size_t sample=0; sample<samples; ++sample){                   \
-        mixed_transfer_sample_to_##datatype(in, sample, out, sample*channels+channel, volume); \
-      }                                                                 \
-    }                                                                   \
-  }
-
-#define DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(datatype)                \
-  static inline void mixed_transfer_array_to_sequential_##datatype(float **ins, void *out, uint8_t channels, size_t samples, float volume){ \
-    size_t offset = 0;                                                  \
-    for(uint8_t channel=0; channel<channels; ++channel){                \
-      float *in = ins[channel];                                         \
-      for(size_t sample=0; sample<samples; ++sample){                   \
-        mixed_transfer_sample_to_##datatype(in, sample, out, sample+offset, volume); \
-        ++sample;                                                       \
-      }                                                                 \
-      offset += samples;                                                \
+  static inline void mixed_transfer_array_to_alternating_##datatype(float *in, void *out, uint8_t stride, size_t samples, float volume){ \
+    for(size_t sample=0; sample<samples; ++sample){                     \
+      mixed_transfer_sample_to_##datatype(in, sample, out, sample*stride, volume); \
     }                                                                   \
   }
 
@@ -118,16 +87,6 @@ DEF_MIXED_TRANSFER_ARRAY_FROM_ALTERNATING(int32)
 DEF_MIXED_TRANSFER_ARRAY_FROM_ALTERNATING(uint32)
 DEF_MIXED_TRANSFER_ARRAY_FROM_ALTERNATING(float)
 DEF_MIXED_TRANSFER_ARRAY_FROM_ALTERNATING(double)
-DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(int8)
-DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(uint8)
-DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(int16)
-DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(uint16)
-DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(int24)
-DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(uint24)
-DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(int32)
-DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(uint32)
-DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(float)
-DEF_MIXED_TRANSFER_ARRAY_FROM_SEQUENTIAL(double)
 DEF_MIXED_TRANSFER_ARRAY_TO_ALTERNATING(int8)
 DEF_MIXED_TRANSFER_ARRAY_TO_ALTERNATING(uint8)
 DEF_MIXED_TRANSFER_ARRAY_TO_ALTERNATING(int16)
@@ -138,48 +97,24 @@ DEF_MIXED_TRANSFER_ARRAY_TO_ALTERNATING(int32)
 DEF_MIXED_TRANSFER_ARRAY_TO_ALTERNATING(uint32)
 DEF_MIXED_TRANSFER_ARRAY_TO_ALTERNATING(float)
 DEF_MIXED_TRANSFER_ARRAY_TO_ALTERNATING(double)
-DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(int8)
-DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(uint8)
-DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(int16)
-DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(uint16)
-DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(int24)
-DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(uint24)
-DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(int32)
-DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(uint32)
-DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(float)
-DEF_MIXED_TRANSFER_ARRAY_TO_SEQUENTIAL(double)
 
 //// Buffer transfer functions
-static inline int pack_table_index(struct mixed_packed_audio *pack){
-  // This works because encodings are 1-10, and layouts are 1-2.
-  // Thus INT16, SEQUENTIAL => 3, 2 => (3-1)*2 + (2-1) = 5 => mixed_transfer_array_XXX_sequential_int16
-  return (pack->encoding-1)*2 + pack->layout-1;
-}
-
-typedef void (*transfer_function_from)(void *, float **, uint8_t, size_t, float);
-
-static transfer_function_from mixed_transfer_functions_from[20] =
+static mixed_transfer_function_from transfer_array_functions_from[20] =
   { mixed_transfer_array_from_alternating_int8,
-    mixed_transfer_array_from_sequential_int8,
     mixed_transfer_array_from_alternating_uint8,
-    mixed_transfer_array_from_sequential_uint8,
     mixed_transfer_array_from_alternating_int16,
-    mixed_transfer_array_from_sequential_int16,
     mixed_transfer_array_from_alternating_uint16,
-    mixed_transfer_array_from_sequential_uint16,
     mixed_transfer_array_from_alternating_int24,
-    mixed_transfer_array_from_sequential_int24,
     mixed_transfer_array_from_alternating_uint24,
-    mixed_transfer_array_from_sequential_uint24,
     mixed_transfer_array_from_alternating_int32,
-    mixed_transfer_array_from_sequential_int32,
     mixed_transfer_array_from_alternating_uint32,
-    mixed_transfer_array_from_sequential_uint32,
     mixed_transfer_array_from_alternating_float,
-    mixed_transfer_array_from_sequential_float,
     mixed_transfer_array_from_alternating_double,
-    mixed_transfer_array_from_sequential_double,
   };
+
+MIXED_EXPORT mixed_transfer_function_from mixed_translator_from(enum mixed_encoding encoding){
+  return transfer_array_functions_from[encoding-1];
+}
 
 MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, size_t *samples, float volume){
   uint8_t channels = in->channels;
@@ -188,8 +123,9 @@ MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, s
   for(size_t i=0; i<channels; ++i)
     mixed_buffer_request_write(&outd[i], samples, outs[i]);
   
-  transfer_function_from fun = mixed_transfer_functions_from[pack_table_index(in)];
-  fun(ind, outd, channels, *samples, volume);
+  mixed_transfer_function_from fun = transfer_array_functions_from[in->encoding-1];
+  for(int8_t c=0; c<channels; ++c)
+    fun(ind, outd[c], channels, *samples, volume);
 
   for(size_t i=0; i<channels; ++i)
     mixed_buffer_finish_write(*samples, outs[i]);
@@ -197,30 +133,22 @@ MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, s
   return 1;
 }
 
-typedef void (*transfer_function_to)(float **, void *, uint8_t, size_t, float);
-
-static transfer_function_to mixed_transfer_functions_to[20] =
+static mixed_transfer_function_to transfer_array_functions_to[20] =
   { mixed_transfer_array_to_alternating_int8,
-    mixed_transfer_array_to_sequential_int8,
     mixed_transfer_array_to_alternating_uint8,
-    mixed_transfer_array_to_sequential_uint8,
     mixed_transfer_array_to_alternating_int16,
-    mixed_transfer_array_to_sequential_int16,
     mixed_transfer_array_to_alternating_uint16,
-    mixed_transfer_array_to_sequential_uint16,
     mixed_transfer_array_to_alternating_int24,
-    mixed_transfer_array_to_sequential_int24,
     mixed_transfer_array_to_alternating_uint24,
-    mixed_transfer_array_to_sequential_uint24,
     mixed_transfer_array_to_alternating_int32,
-    mixed_transfer_array_to_sequential_int32,
     mixed_transfer_array_to_alternating_uint32,
-    mixed_transfer_array_to_sequential_uint32,
     mixed_transfer_array_to_alternating_float,
-    mixed_transfer_array_to_sequential_float,
     mixed_transfer_array_to_alternating_double,
-    mixed_transfer_array_to_sequential_double,
   };
+
+MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding encoding){
+  return transfer_array_functions_to[encoding-1];
+}
 
 MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t *samples, float volume){
   uint8_t channels = out->channels;
@@ -229,8 +157,9 @@ MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct 
   for(size_t i=0; i<channels; ++i)
     mixed_buffer_request_read(&ind[i], samples, ins[i]);
   
-  transfer_function_to fun = mixed_transfer_functions_to[pack_table_index(out)];
-  fun(ind, outd, channels, *samples, volume);
+  mixed_transfer_function_to fun = transfer_array_functions_to[out->encoding-1];
+  for(int8_t c=0; c<channels; ++c)
+    fun(ind[c], outd, channels, *samples, volume);
 
   for(size_t i=0; i<channels; ++i)
     mixed_buffer_finish_read(*samples, ins[i]);

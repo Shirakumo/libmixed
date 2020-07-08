@@ -35,9 +35,6 @@ extern "C" {
     // The sample encoding you specified is unknown.
     // Please see the mixed_encoding enum.
     MIXED_UNKNOWN_ENCODING,
-    // The channel layout you specified is unknown.
-    // Please see the mixed_layout enum.
-    MIXED_UNKNOWN_LAYOUT,
     // The mixing process failed for some reason.
     MIXED_MIXING_FAILED,
     // The segment does not implement the method you
@@ -101,16 +98,6 @@ extern "C" {
   };
 
   #define MIXED_ENCODING_COUNT 10
-
-  // This enum describes the possible channel layouts.
-  MIXED_EXPORT enum mixed_layout{
-    // Channels are stored in alternating format.
-    // Essentially: (C₁C₂...)ⁿ
-    MIXED_ALTERNATING = 1,
-    // Channels are stored in sequential format.
-    // Essentially: C₁ⁿC₂ⁿ...
-    MIXED_SEQUENTIAL
-  };
 
   // This enum describes all possible flags of the
   // standard segments this library provides.
@@ -446,16 +433,18 @@ extern "C" {
   // segment to include the external audio into the mix.
   MIXED_EXPORT struct mixed_packed_audio{
     // Pointer to the encoded sample data that this channel
-    // consumes or provides.
+    // consumes or provides. Samples must be interleaved,
+    // meaning, eg for stereo: C1 C2 C1 C2 C1 C2 ...
     void *data;
     // The length of the data array in bytes.
     size_t size;
+    // The number of frames actually filled in the data array.
+    // A frame is channels number of samples.
+    size_t frames;
     // The sample encoding in the byte array.
     enum mixed_encoding encoding;
     // The number of channels that are packed into the array.
     uint8_t channels;
-    // The layout the channels have within the array.
-    enum mixed_layout layout;
     // The sample rate at which data is encoded in Hz.
     size_t samplerate;
   };
@@ -597,11 +586,11 @@ extern "C" {
   // at least as long as the channel's channel count.
   // The volume is a multiplier you can pass to adjust the volume
   // in the resulting buffers.
-  // Samples should be set to the number of samples in the input
-  // pack, and will be set to the number of samples that have actually
+  // Frames should be set to the number of frames in the input
+  // pack, and will be set to the number of frames that have actually
   // been read from the packed buffer. This may be less if the
   // output buffers do not have enough space.
-  MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, size_t *samples, float volume);
+  MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, size_t *frames, float volume);
 
   // Convert buffer data to the packed data.
   //
@@ -610,11 +599,11 @@ extern "C" {
   // at least as long as the channel's channel count.
   // The volume is a multiplier you can pass to adjust the volume
   // in the resulting channel.
-  // Samples should be set to the number of samples in the input
-  // pack, and will be set to the number of samples that have actually
+  // Frames should be set to the number of frames in the input
+  // pack, and will be set to the number of frames that have actually
   // been read from the buffers. This may be less if the input
   // buffers do not have enough data available.
-  MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t *samples, float volume);
+  MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t *frames, float volume);
 
   // Transfers data from one buffer to the other.
   //
@@ -1084,6 +1073,12 @@ extern "C" {
 
   // Return the size of a sample in the given encoding in bytes.
   MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding);
+  
+  typedef void (*mixed_transfer_function_from)(void *in, float *out, uint8_t stride, size_t samples, float volume);
+  typedef void (*mixed_transfer_function_to)(float *in, void *out, uint8_t stride, size_t samples, float volume);
+
+  MIXED_EXPORT mixed_transfer_function_from mixed_translator_from(enum mixed_encoding encoding);
+  MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding encoding);
 
   // Return the current error code.
   //
