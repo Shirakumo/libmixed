@@ -36,18 +36,18 @@ add_library(mixed SHARED
   "src/transfer.c"
   "src/vector.c"
   "src/segments/basic_mixer.c"
-  "src/segments/delay.c"
-  "src/segments/fade.c"
-  "src/segments/frequency_pass.c"
-  "src/segments/gate.c"
-  "src/segments/generator.c"
-  "src/segments/ladspa.c"
-  "src/segments/noise.c"
+  #"src/segments/delay.c"
+  #"src/segments/fade.c"
+  #"src/segments/frequency_pass.c"
+  #"src/segments/gate.c"
+  #"src/segments/generator.c"
+  #"src/segments/ladspa.c"
+  #"src/segments/noise.c"
   "src/segments/packer.c"
-  "src/segments/pitch.c"
-  "src/segments/queue.c"
-  "src/segments/repeat.c"
-  "src/segments/space_mixer.c"
+  #"src/segments/pitch.c"
+  #"src/segments/queue.c"
+  #"src/segments/repeat.c"
+  #"src/segments/space_mixer.c"
   "src/segments/volume_control.c"
   $<TARGET_OBJECTS:samplerate>)
 string(REGEX MATCH "([0-9]+)\\.([0-9]+)-[0-9]+-(.+)" TMP ${VERSION})
@@ -76,7 +76,8 @@ add_executable(tester
   "test/tester.h"
   "test/tester.c"
   "test/buffer.c"
-  "test/pack.c")
+  "test/pack.c"
+  "test/resample.c")
 add_dependencies(tester mixed)
 set_property(TARGET tester PROPERTY C_STANDARD 99)
 target_link_libraries(tester mixed)

@@ -73,7 +73,7 @@ int main(int argc, char **argv){
       ((uint8_t *)mp3->pack.data)[j] = 0;
     }
     
-    mixed_segment_sequence_mix(samples, &sequence);
+    mixed_segment_sequence_mix(&sequence);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;

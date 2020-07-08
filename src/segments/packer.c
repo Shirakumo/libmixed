@@ -45,6 +45,10 @@ int pack_segment_set_buffer(size_t field, size_t location, void *buffer, struct 
   }
 }
 
+// FIXME: by using separate states per channel we could alias the
+//        SRC_DATA arrays with the input buffer arrays and avoid
+//        extra allocation and copying on at least one side.
+
 int source_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
