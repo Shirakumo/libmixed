@@ -7,6 +7,7 @@ struct pack_segment_data{
   SRC_DATA *resample_data;
   SRC_STATE *resample_state;
   size_t samplerate;
+  size_t max_frames;
   float volume;
 };
 
@@ -47,31 +48,67 @@ int pack_segment_set_buffer(size_t field, size_t location, void *buffer, struct 
 int source_segment_mix(size_t samples, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
-  if(data->resample_data){
-    // FIXME: resampling
+  if(data->pack->samplerate == data->samplerate){
+    mixed_buffer_from_packed_audio(&data->pack, data->buffers, &data->pack->frames, data->volume);
   }else{
-    mixed_buffer_from_packed_audio(data->pack, data->buffers, samples, data->volume);
+    SRC_DATA *src_data = data->resample_data;
+    size_t frames = data->max_frames;
+    uint8_t channels = data->pack->channels;
+    // Step 1: determine available space
+    
+    // Step 2: unpack to contiguous floats
+    mixed_transfer_function_from decoder = mixed_translator_from(data->pack->encoding);
+    decoder(data->pack->data, src_data->data_in, 1, data->pack->frames*channels, data->volume); 
+    // Step 3: resample
+    src_data->input_frames = data->pack->frames;
+    if(src_process(data->resample_state, src_data)){
+      mixed_error(MIXED_RESAMPLE_FAILED);
+      return 0;
+    }
+    // Step 4: transfer from contigous to separate buffers
+    frames = src_data->output_frames_gen;
+    for(size_t i=0; i<frames*channels; ++i){
+      
+    }
+    // Step 5: update consumed samples
+    data->pack->frames = src_data->input_frames_used;
   }
   return 1;
 }
 
-int drain_segment_mix(size_t samples, struct mixed_segment *segment){
+int drain_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
-  if(data->resample_state){
-    uint8_t channels = data->pack->channels;
-    SRC_DATA *src_data = data->resample_data;
-    float *buffers[channels];
-    for(size_t i=0; i<channels; ++i)
-      buffers[i] = data->buffers[i]->data;
-    
-    //mixed_transfer_array_to_alternating_float(buffers, data->resample_data->data_in, channels, samples, 1.0);
-    src_data->input_frames = samples;
-    src_process(data->resample_state, src_data);
-    // FIXME: what if src does not provide the exact amount of samples we need
-    // FIXME: get the data out again???
+  if(data->pack->samplerate == data->samplerate){
+    data->pack->frames = data->max_frames;
+    mixed_buffer_to_packed_audio(data->buffers, &data->pack, &data->pack->frames, data->volume);
   }else{
-    mixed_buffer_to_packed_audio(data->buffers, data->pack, samples, data->volume);
+    SRC_DATA *src_data = data->resample_data;
+    size_t frames = data->max_frames;
+    size_t channels = data->pack->channels;
+    // Step 1: pack to contigous, alternating float array
+    for(size_t c=0; c<channels; ++c){
+      float *source;
+      mixed_buffer_request_read(&source, &frames, data->buffers[c]);
+      for(size_t i=0; i<frames; ++i)
+        data_in[c+i*channels] = source[i];
+    }
+    // Step 2: resample
+    src_data->input_frames = frames;
+    if(src_process(data->resample_state, src_data)){
+      mixed_error(MIXED_RESAMPLE_FAILED);
+      return 0;
+    }
+    // Step 3: re-encode
+    size_t out_frames = src_data->output_frames_gen;
+    mixed_transfer_function_to encoder = mixed_translator_to(data->pack->encoding);
+    for(size_t c=0; c<channels; ++c)
+      encoder(src_data->data_out, data->pack->data, channels, out_frames, data->volume);
+    // Step 4: update consumed buffers
+    data->pack->frames = out_frames;
+    frames = src_data->input_frames_used;
+    for(size_t c=0; c<channels; ++c)
+      mixed_buffer_finish_read(frames, data->buffers[c])
   }
   return 1;
 }
@@ -98,7 +135,7 @@ int source_segment_set(size_t field, void *value, struct mixed_segment *segment)
   case MIXED_BYPASS:
     if(*(bool *)value){
       for(size_t i=0; i<data->pack->channels; ++i){
-        memset(data->buffers[i]->data, 0, data->buffers[i]->size*4);
+        mixed_buffer_clear(data->buffers[i]);
       }
       segment->mix = mix_noop;
     }else{
@@ -274,6 +311,7 @@ int make_pack_internal(struct mixed_packed_audio *pack, size_t samplerate, struc
   data->pack = pack;
   data->samplerate = samplerate;
   data->volume = 1.0;
+  data->max_frames = pack->size / (pack->channels*mixed_samplesize(pack->encoding));
 
   segment->free = pack_segment_free;
   segment->data = data;
