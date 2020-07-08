@@ -1,5 +1,5 @@
 #include<stdio.h>
-#include<mixed.h>
+#include"../src/mixed.h"
 
 struct test{
   char *suite;
@@ -10,6 +10,10 @@ struct test{
   char reason[1024];
   int (*fun)();
 };
+
+#ifndef __TEST_SUITE
+#error "__TEST_SUITE is not defined."
+#endif
 
 int register_test(char *suite, char *name, int (*fun)());
 struct test *find_test(int id);

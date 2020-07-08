@@ -1,6 +1,6 @@
+#define __TEST_SUITE buffer
 #include <string.h>
 #include "tester.h"
-#define __TEST_SUITE buffer
 
 define_test(make, {
     struct mixed_buffer buffer = {0};

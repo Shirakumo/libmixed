@@ -1,14 +1,13 @@
-#include <string.h>
-#include "tester.h"
 #define __TEST_SUITE pack
+#include "tester.h"
 
 int make_pack(enum mixed_encoding encoding, int channels, struct mixed_packed_audio *pack){
   pack->data = calloc(16, mixed_samplesize(encoding));
   if(pack->data == 0) return 0;
-  pack->size = 16;
+  pack->size = 16*mixed_samplesize(encoding);
+  pack->frames = 16 / channels;
   pack->encoding = encoding;
   pack->channels = channels;
-  pack->layout = MIXED_ALTERNATING;
   pack->samplerate = 1;
   return 1;
 }
@@ -35,7 +34,7 @@ define_test(single_channel, {
 
   cleanup:
     mixed_free_buffer(&buffer);
-    free(data);
+    if(pack.data) free(pack.data);
   })
 
 define_test(dual_channel, {
@@ -52,14 +51,14 @@ define_test(dual_channel, {
     for(int i=0; i<pack.size; ++i)
       data[i] = rand()%128;
     // Convert to buffers
-    pass(mixed_buffer_from_packed_audio(&pack, barray, &pack.size, 1.0));
+    pass(mixed_buffer_from_packed_audio(&pack, barray, &pack.frames, 1.0));
     is(mixed_buffer_available_read(&buffers[0]), buffers[0].size);
     is(mixed_buffer_available_read(&buffers[1]), buffers[1].size);
-    for(int i=0; i<pack.size; ++i)
+    for(int i=0; i<pack.frames*pack.channels; ++i)
       is(buffers[i%2]._data[i/2], mixed_from_int8(data[i]));
     // Convert from buffers
-    pass(mixed_buffer_to_packed_audio(barray, &pack, &pack.size, 1.0));
-    for(int i=0; i<pack.size; ++i)
+    pass(mixed_buffer_to_packed_audio(barray, &pack, &pack.frames, 1.0));
+    for(int i=0; i<pack.frames*pack.channels; ++i)
       is(data[i], mixed_to_int8(buffers[i%2]._data[i/2]));
     is(mixed_buffer_available_read(&buffers[0]), 0);
     is(mixed_buffer_available_read(&buffers[1]), 0);
@@ -67,7 +66,7 @@ define_test(dual_channel, {
   cleanup:
     mixed_free_buffer(&buffers[0]);
     mixed_free_buffer(&buffers[1]);
-    free(data);
+    if(pack.data) free(pack.data);
   })
 
 define_test(dual_channel_uneven, {
@@ -84,14 +83,14 @@ define_test(dual_channel_uneven, {
     for(int i=0; i<pack.size; ++i)
       data[i] = rand()%128;
     // Convert to buffers
-    pass(mixed_buffer_from_packed_audio(&pack, barray, &pack.size, 1.0));
+    pass(mixed_buffer_from_packed_audio(&pack, barray, &pack.frames, 1.0));
     is(mixed_buffer_available_read(&buffers[0]), buffers[0].size);
     is(mixed_buffer_available_read(&buffers[1]), buffers[0].size);
-    for(int i=0; i<pack.size; ++i)
+    for(int i=0; i<pack.frames*pack.channels; ++i)
       is(buffers[i%2]._data[i/2], mixed_from_int8(data[i]));
     // Convert from buffers
-    pass(mixed_buffer_to_packed_audio(barray, &pack, &pack.size, 1.0));
-    for(int i=0; i<pack.size; ++i)
+    pass(mixed_buffer_to_packed_audio(barray, &pack, &pack.frames, 1.0));
+    for(int i=0; i<pack.frames*pack.channels; ++i)
       is(data[i], mixed_to_int8(buffers[i%2]._data[i/2]));
     is(mixed_buffer_available_read(&buffers[0]), 0);
     is(mixed_buffer_available_read(&buffers[1]), 0);
@@ -99,7 +98,7 @@ define_test(dual_channel_uneven, {
   cleanup:
     mixed_free_buffer(&buffers[0]);
     mixed_free_buffer(&buffers[1]);
-    free(data);
+    if(pack.data) free(pack.data);
   })
 
 #undef __TEST_SUITE
