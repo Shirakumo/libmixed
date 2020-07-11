@@ -15,6 +15,7 @@ struct test{
 #error "__TEST_SUITE is not defined."
 #endif
 
+void maybe_invoke_debugger();
 int register_test(char *suite, char *name, int (*fun)());
 struct test *find_test(int id);
 
@@ -45,6 +46,7 @@ struct test *find_test(int id);
   }
 
 #define fail_test(...){                                 \
+    maybe_invoke_debugger();                            \
     struct test *__test = find_test(__testid);          \
     snprintf(__test->reason, 1024, __VA_ARGS__);        \
     __test->file = __FILE__;                            \

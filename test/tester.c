@@ -1,10 +1,26 @@
+#define __TEST_SUITE
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 #include "tester.h"
 
 #define MAX_TESTS 1024
 struct test tests[MAX_TESTS] = {0};
 int test_count = 0;
+
+static int _debugger_present = -1;
+static void _sigtrap_handler(int signum){
+  _debugger_present = 0;
+  signal(SIGTRAP, SIG_DFL);
+}
+
+void maybe_invoke_debugger(){
+  if (-1 == _debugger_present) {
+    _debugger_present = 1;
+    signal(SIGTRAP, _sigtrap_handler);
+    raise(SIGTRAP);
+  }
+}
 
 int register_test(char *suite, char *name, int (*fun)()){
   tests[test_count].suite = suite;
