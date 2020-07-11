@@ -116,19 +116,25 @@ MIXED_EXPORT mixed_transfer_function_from mixed_translator_from(enum mixed_encod
   return transfer_array_functions_from[encoding-1];
 }
 
-MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, size_t *samples, float volume){
+MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, float volume){
   uint8_t channels = in->channels;
-  void *ind = in->data;
+  size_t frames = in->frames;
+  char *ind = in->data;
   float *outd[channels];
   for(size_t i=0; i<channels; ++i)
-    mixed_buffer_request_write(&outd[i], samples, outs[i]);
+    mixed_buffer_request_write(&outd[i], &frames, outs[i]);
   
   mixed_transfer_function_from fun = transfer_array_functions_from[in->encoding-1];
-  for(int8_t c=0; c<channels; ++c)
-    fun(ind, outd[c], channels, *samples, volume);
+  uint8_t size = mixed_samplesize(in->encoding);
+  for(int8_t c=0; c<channels; ++c){
+    fun(ind, outd[c], channels, frames, volume);
+    ind += size;
+  }
 
   for(size_t i=0; i<channels; ++i)
-    mixed_buffer_finish_write(*samples, outs[i]);
+    mixed_buffer_finish_write(frames, outs[i]);
+
+  in->frames = frames;
   
   return 1;
 }
@@ -150,19 +156,25 @@ MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding 
   return transfer_array_functions_to[encoding-1];
 }
 
-MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, size_t *samples, float volume){
+MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, float volume){
   uint8_t channels = out->channels;
-  void *outd = out->data;
+  size_t frames = out->frames;
+  char *outd = out->data;
   float *ind[channels];
   for(size_t i=0; i<channels; ++i)
-    mixed_buffer_request_read(&ind[i], samples, ins[i]);
+    mixed_buffer_request_read(&ind[i], &frames, ins[i]);
   
   mixed_transfer_function_to fun = transfer_array_functions_to[out->encoding-1];
-  for(int8_t c=0; c<channels; ++c)
-    fun(ind[c], outd, channels, *samples, volume);
+  uint8_t size = mixed_samplesize(out->encoding);
+  for(int8_t c=0; c<channels; ++c){
+    fun(ind[c], outd, channels, frames, volume);
+    outd += size;
+  }
 
   for(size_t i=0; i<channels; ++i)
-    mixed_buffer_finish_read(*samples, ins[i]);
+    mixed_buffer_finish_read(frames, ins[i]);
+
+  out->frames = frames;
   
   return 1;
 }

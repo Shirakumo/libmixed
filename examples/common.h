@@ -149,7 +149,6 @@ int load_out_segment(size_t samples, struct out **_out){
   // Prepare pipeline segments
   out->pack.encoding = fmt123_to_mixed(out_encoding);
   out->pack.channels = out_channels;
-  out->pack.layout = MIXED_ALTERNATING;
   out->pack.samplerate = out_samplerate;
   out_samplesize = mixed_samplesize(out->pack.encoding);
   out->pack.size = samples*out_samplesize*out_channels;
@@ -253,7 +252,6 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
 
   mp3->pack.encoding = fmt123_to_mixed(mp3_encoding);
   mp3->pack.channels = mp3_channels;
-  mp3->pack.layout = MIXED_ALTERNATING;
   mp3->pack.samplerate = mp3_samplerate;
   mp3_samplesize = mixed_samplesize(mp3->pack.encoding);
   mp3->pack.size = samples*mp3_samplesize*mp3_channels;
