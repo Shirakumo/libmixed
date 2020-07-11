@@ -61,7 +61,7 @@ void free_pitch_data(struct pitch_data *data);
 int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, struct pitch_data *data);
 void pitch_shift(float pitch, float *in, float *out, size_t samples, struct pitch_data *data);
 
-int mix_noop(size_t samples, struct mixed_segment *segment);
+int mix_noop(struct mixed_segment *segment);
 
 void mixed_err(int errorcode);
 

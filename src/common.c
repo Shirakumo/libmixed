@@ -16,8 +16,8 @@ MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
   }
 }
 
-int mix_noop(size_t samples, struct mixed_segment *segment){
-  IGNORE(samples, segment);
+int mix_noop(struct mixed_segment *segment){
+  IGNORE(segment);
   return 1;
 }
 
@@ -40,8 +40,6 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "An allocation has failed. You are likely out of memory.";
   case MIXED_UNKNOWN_ENCODING:
     return "The specified sample encoding is unknown.";
-  case MIXED_UNKNOWN_LAYOUT:
-    return "The specified sample layout is unknown.";
   case MIXED_MIXING_FAILED:
     return "An error occurred during the mixing of a segment.";
   case MIXED_NOT_IMPLEMENTED:
