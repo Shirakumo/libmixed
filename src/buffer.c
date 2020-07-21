@@ -108,7 +108,7 @@ MIXED_EXPORT int mixed_buffer_request_read(float **area, size_t *size, struct mi
     mixed_err(MIXED_BUFFER_EMPTY);
     return 0;
   }
-  *size = buffer->r1_size;
+  *size = MIN(*size, buffer->r1_size);
   *area = buffer->_data + buffer->r1_start;
   return 1;
 }

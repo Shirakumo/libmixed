@@ -97,8 +97,6 @@ extern "C" {
     MIXED_DOUBLE
   };
 
-  #define MIXED_ENCODING_COUNT 10
-
   // This enum describes all possible flags of the
   // standard segments this library provides.
   MIXED_EXPORT enum mixed_segment_fields{
@@ -660,7 +658,10 @@ extern "C" {
 
   // Retrieve a memory block for reading.
   //
-  // Stores the start of the block in area and its length in size.
+  // Stores the start of the block in area and the minimum between
+  // the passed value of size and the available number of samples
+  // to be read in size. If you would like to get the maximal
+  // available read size, set size to SIZE_MAX first.
   // Reading beyond area+size is illegal.
   // If no block has been written to, this operation will fail.
   // In the case of a failure, size will be set to zero, and area
