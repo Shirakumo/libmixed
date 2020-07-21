@@ -95,7 +95,7 @@ int drain_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
   if(data->pack->samplerate == data->samplerate){
-    data->pack->frames = data->max_frames;
+    data->pack->frames = SIZE_MAX;
     mixed_buffer_to_packed_audio(data->buffers, data->pack, data->volume);
   }else{
     SRC_DATA *src_data = data->resample_data;
@@ -111,7 +111,9 @@ int drain_segment_mix(struct mixed_segment *segment){
     }
     // Step 2: resample
     src_data->input_frames = frames;
-    if(src_process(data->resample_state, src_data)){
+    int e = src_process(data->resample_state, src_data);
+    if(e){
+      printf("%s\n", src_strerror(e));
       mixed_error(MIXED_RESAMPLE_FAILED);
       return 0;
     }
@@ -237,7 +239,7 @@ int drain_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
   return 1;
 }
 
-int initialize_resample_buffers(struct mixed_packed_audio *pack, struct pack_segment_data *data, int is_source){
+int initialize_resample_buffers(struct mixed_packed_audio *pack, struct pack_segment_data *data, int quality, int is_source){
   SRC_DATA *src_data = 0;
   SRC_STATE *src_state = 0;
   
@@ -252,10 +254,16 @@ int initialize_resample_buffers(struct mixed_packed_audio *pack, struct pack_seg
     ? ((double)data->samplerate)/((double)pack->samplerate)
     : ((double)pack->samplerate)/((double)data->samplerate);
   
-  int input_samples = (is_source)
-    ? (pack->size / mixed_samplesize(pack->encoding))
-    : 1+(int)(pack->size / mixed_samplesize(pack->encoding) / src_data->src_ratio);
-  int output_samples = 1+(int)(input_samples * src_data->src_ratio);
+  int input_samples, output_samples;
+  if(is_source){
+    input_samples = pack->size / mixed_samplesize(pack->encoding);
+    output_samples = 1+(int)(input_samples * src_data->src_ratio);
+    data->max_frames = output_samples;
+  }else{
+    output_samples = pack->size / mixed_samplesize(pack->encoding);
+    input_samples = 1+(int)(output_samples / src_data->src_ratio);
+    data->max_frames = input_samples;
+  }
   
   src_data->data_in = calloc(input_samples, mixed_samplesize(MIXED_FLOAT));
   src_data->data_out = calloc(output_samples, mixed_samplesize(MIXED_FLOAT));
@@ -267,7 +275,7 @@ int initialize_resample_buffers(struct mixed_packed_audio *pack, struct pack_seg
   src_data->output_frames = output_samples / pack->channels;
   
   int err = 0;
-  src_state = src_new(MIXED_SINC_FASTEST, pack->channels, &err);
+  src_state = src_new(quality, pack->channels, &err);
   if(!src_state){
     mixed_err(MIXED_RESAMPLE_FAILED);
     goto cleanup;
@@ -291,7 +299,7 @@ int initialize_resample_buffers(struct mixed_packed_audio *pack, struct pack_seg
   return 0;
 }
 
-int make_pack_internal(struct mixed_packed_audio *pack, size_t samplerate, struct mixed_segment *segment){
+int make_pack_internal(struct mixed_packed_audio *pack, size_t samplerate, int quality, struct mixed_segment *segment){
   struct pack_segment_data *data = 0;
   struct mixed_buffer **buffers = 0;
 
@@ -316,14 +324,13 @@ int make_pack_internal(struct mixed_packed_audio *pack, size_t samplerate, struc
   data->pack = pack;
   data->samplerate = samplerate;
   data->volume = 1.0;
-  data->max_frames = pack->size / (pack->channels*mixed_samplesize(pack->encoding));
 
   segment->free = pack_segment_free;
   segment->data = data;
   segment->get = packer_segment_get;
 
   if(samplerate != 0 && samplerate != pack->samplerate){
-    if(!initialize_resample_buffers(pack, data, (segment->info == drain_segment_info))){
+    if(!initialize_resample_buffers(pack, data, quality, (segment->info == source_segment_info))){
       goto cleanup;
     }
   }
@@ -344,7 +351,7 @@ MIXED_EXPORT int mixed_make_segment_unpacker(struct mixed_packed_audio *pack, si
   segment->info = source_segment_info;
   segment->set = source_segment_set;
   segment->set_out = pack_segment_set_buffer;
-  return make_pack_internal(pack, samplerate, segment);
+  return make_pack_internal(pack, samplerate, MIXED_SINC_FASTEST, segment);
 }
 
 MIXED_EXPORT int mixed_make_segment_packer(struct mixed_packed_audio *pack, size_t samplerate, struct mixed_segment *segment){
@@ -352,5 +359,5 @@ MIXED_EXPORT int mixed_make_segment_packer(struct mixed_packed_audio *pack, size
   segment->info = drain_segment_info;
   segment->set = drain_segment_set;
   segment->set_in = pack_segment_set_buffer;
-  return make_pack_internal(pack, samplerate, segment);
+  return make_pack_internal(pack, samplerate, MIXED_SINC_FASTEST, segment);
 }
