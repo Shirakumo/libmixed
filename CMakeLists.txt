@@ -45,7 +45,7 @@ add_library(mixed SHARED
   "src/segments/noise.c"
   "src/segments/packer.c"
   "src/segments/pitch.c"
-  #"src/segments/queue.c"
+  "src/segments/queue.c"
   #"src/segments/repeat.c"
   "src/segments/space_mixer.c"
   "src/segments/volume_control.c"
