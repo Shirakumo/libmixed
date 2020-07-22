@@ -90,10 +90,7 @@ int main(int argc, char **argv){
       fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
       goto cleanup;
     }
-    
-    for(size_t j=read; j<mp3->pack.size; ++j){
-      ((uint8_t *)mp3->pack.data)[j] = 0;
-    }
+    mp3->pack.frames = read / (mp3->pack.channels*mixed_samplesize(mp3->pack.encoding));
     
     // Calculate new position
     phi += dphi * dt;
@@ -105,8 +102,9 @@ int main(int argc, char **argv){
 
     mixed_segment_set_in(MIXED_SPACE_LOCATION, 0, pos, &space);
     mixed_segment_set_in(MIXED_SPACE_VELOCITY, 0, vel, &space);
-    
+
     mixed_segment_sequence_mix(&sequence);
+    mixed_buffer_clear(&mp3->right);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
