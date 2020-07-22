@@ -4,7 +4,6 @@ struct delay_segment_data{
   struct mixed_buffer *in;
   struct mixed_buffer *out;
   struct mixed_buffer buffer;
-  size_t buffer_index;
   float time;
   size_t samplerate;
 };
@@ -22,8 +21,15 @@ int delay_segment_free(struct mixed_segment *segment){
 
 int delay_segment_start(struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
-  data->buffer_index = 0.0;
   mixed_buffer_clear(&data->buffer);
+  // Fill the entire buffer with nothing to initiate the delay.
+  size_t samples = SIZE_MAX;
+  float *out;
+  mixed_buffer_request_write(&out, &samples, &data->buffer);
+  for(size_t i=0; i<samples; ++i){
+    out[i] = 0.0f;
+  }
+  mixed_buffer_finish_write(samples, &data->buffer);
   return 1;
 }
 
@@ -61,27 +67,33 @@ int delay_segment_set_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
-int delay_segment_mix(size_t samples, struct mixed_segment *segment){
+int delay_segment_mix(struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
 
-  size_t delay_samples = data->buffer.size;
-  size_t index = data->buffer_index;
+  float *buf, *in, *out;
 
-  float *buf = data->buffer.data;
-  float *in = data->in->data;
-  float *out = data->out->data;
+  size_t samples = SIZE_MAX;
+  mixed_buffer_request_write(&out, &samples, data->out);
+  mixed_buffer_request_read(&buf, &samples, &data->buffer);
   for(size_t i=0; i<samples; ++i){
-    float in_sample = in[i];
-    out[i] = buf[index];
-    buf[index] = in_sample;
-    index = (index+1)%delay_samples;
+    out[i] = buf[i];
   }
+  mixed_buffer_finish_write(samples, data->out);
+  mixed_buffer_finish_read(samples, &data->buffer);
 
-  data->buffer_index = index;
+  samples = SIZE_MAX;
+  mixed_buffer_request_write(&buf, &samples, &data->buffer);
+  mixed_buffer_request_read(&in, &samples, data->in);
+  for(size_t i=0; i<samples; ++i){
+    buf[i] = in[i];
+  }
+  mixed_buffer_finish_write(samples, &data->buffer);
+  mixed_buffer_finish_read(samples, data->in);
+
   return 1;
 }
 
-int delay_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int delay_segment_mix_bypass(struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
   
   return mixed_buffer_copy(data->in, data->out);
