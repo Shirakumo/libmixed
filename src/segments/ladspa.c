@@ -3,15 +3,21 @@
 #else
 #  include <windows.h>
 #endif
-#include "ladspa.h"
-#include "internal.h"
+#include "../ladspa.h"
+#include "../internal.h"
+
+struct ladspa_port{
+  struct mixed_buffer *buffer;
+  char direction;
+  float control;
+};
 
 struct ladspa_segment_data{
   LADSPA_Descriptor *descriptor;
   LADSPA_Handle *handle;
-  float *control;
   char active;
   size_t samplerate;
+  struct ladspa_port *ports;
 };
 
 int ladspa_segment_free(struct mixed_segment *segment){
@@ -21,8 +27,8 @@ int ladspa_segment_free(struct mixed_segment *segment){
       data->descriptor->deactivate(data->handle);
     if(data->descriptor->cleanup)
       data->descriptor->cleanup(data->handle);
-    if(data->control)
-      free(data->control);
+    if(data->ports)
+      free(data->ports);
     free(segment->data);
   }
   segment->data = 0;
@@ -41,7 +47,8 @@ int ladspa_segment_set_in(size_t field, size_t location, void *buffer, struct mi
       const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
       if(LADSPA_IS_PORT_AUDIO(port) && LADSPA_IS_PORT_INPUT(port)){
         if(index == location){
-          data->descriptor->connect_port(data->handle, i, ((struct mixed_buffer *)buffer)->data);
+          data->ports[i].buffer = ((struct mixed_buffer *)buffer);
+          data->ports[i].direction = MIXED_IN;
           return 1;
         }
         ++index;
@@ -65,8 +72,9 @@ int ladspa_segment_set_out(size_t field, size_t location, void *buffer, struct m
       const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
       if(LADSPA_IS_PORT_AUDIO(port) && LADSPA_IS_PORT_OUTPUT(port)){
         if(index == location){
-          data->descriptor->connect_port(data->handle, i, ((struct mixed_buffer *)buffer)->data);
-        return 1;
+          data->ports[i].buffer = ((struct mixed_buffer *)buffer);
+          data->ports[i].direction = MIXED_OUT;
+          return 1;
         }
         ++index;
       }
@@ -79,9 +87,30 @@ int ladspa_segment_set_out(size_t field, size_t location, void *buffer, struct m
   }
 }
 
-int ladspa_segment_mix(size_t samples, struct mixed_segment *segment){
+int ladspa_segment_mix(struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
+  size_t samples = SIZE_MAX;
+  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+    struct ladspa_port *port = &data->ports[i];
+    if(port->buffer){
+      float *buffer;
+      if(port->direction == MIXED_IN)
+        mixed_buffer_request_read(&buffer, &samples, port->buffer);
+      else
+        mixed_buffer_request_write(&buffer, &samples, port->buffer);
+      data->descriptor->connect_port(data->handle, i, buffer);
+    }
+  }
   data->descriptor->run(data->handle, samples);
+  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+    struct ladspa_port *port = &data->ports[i];
+    if(port->buffer){
+      if(port->direction == MIXED_IN)
+        mixed_buffer_finish_read(samples, port->buffer);
+      else
+        mixed_buffer_finish_write(samples, port->buffer);
+    }
+  }
   return 1;
 }
 
@@ -155,10 +184,9 @@ int ladspa_segment_get(size_t field, void *value, struct mixed_segment *segment)
   size_t index = 0;
   for(size_t i=0; i<data->descriptor->PortCount; ++i){
     const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
-    if(   LADSPA_IS_PORT_CONTROL(port)
-       && LADSPA_IS_PORT_OUTPUT(port)){
+    if(LADSPA_IS_PORT_CONTROL(port) && LADSPA_IS_PORT_OUTPUT(port)){
       if(index == field){
-        *((float *)value) = data->control[i];
+        *((float *)value) = data->ports[i].control;
         return 1;
       }
       ++index;
@@ -173,10 +201,9 @@ int ladspa_segment_set(size_t field, void *value, struct mixed_segment *segment)
   size_t index = 0;
   for(size_t i=0; i<data->descriptor->PortCount; ++i){
     const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
-    if(   LADSPA_IS_PORT_CONTROL(port)
-       && LADSPA_IS_PORT_INPUT(port)){
+    if(LADSPA_IS_PORT_CONTROL(port) && LADSPA_IS_PORT_INPUT(port)){
       if(index == field){
-        data->control[i] = *((float *)value);
+        data->ports[i].control = *((float *)value);
         return 1;
       }
       ++index;
@@ -253,8 +280,8 @@ MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samp
     goto cleanup;
   }
 
-  data->control = calloc(data->descriptor->PortCount, sizeof(float));
-  if(!data->control){
+  data->ports = calloc(data->descriptor->PortCount, sizeof(struct ladspa_port));
+  if(!data->ports){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
@@ -267,7 +294,7 @@ MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samp
 
   // Connect all ports to shims
   for(size_t i=0; i<data->descriptor->PortCount; ++i){
-    data->descriptor->connect_port(data->handle, i, &data->control[i]);
+    data->descriptor->connect_port(data->handle, i, &data->ports[i].control);
   }
 
   segment->free = ladspa_segment_free;
@@ -284,8 +311,8 @@ MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samp
 
  cleanup:
   if(data){
-    if(data->control)
-      free(data->control);
+    if(data->ports)
+      free(data->ports);
     free(data);
   }
   

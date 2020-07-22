@@ -41,7 +41,7 @@ add_library(mixed SHARED
   "src/segments/frequency_pass.c"
   "src/segments/gate.c"
   "src/segments/generator.c"
-  #"src/segments/ladspa.c"
+  "src/segments/ladspa.c"
   "src/segments/noise.c"
   "src/segments/packer.c"
   "src/segments/pitch.c"
