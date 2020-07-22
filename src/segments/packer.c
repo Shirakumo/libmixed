@@ -95,7 +95,7 @@ int drain_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
   if(data->pack->samplerate == data->samplerate){
-    data->pack->frames = SIZE_MAX;
+    data->pack->frames = data->pack->size / (data->pack->channels * mixed_samplesize(data->pack->encoding));
     mixed_buffer_to_packed_audio(data->buffers, data->pack, data->volume);
   }else{
     SRC_DATA *src_data = data->resample_data;
