@@ -120,6 +120,13 @@ define_test(transfer, {
     is(memcmp(mem, area, sizeof(float)*size), 0);
     // Ensure a is empty
     fail(mixed_buffer_request_read(&area, &size, &a));
+    // Transfer from b to b
+    pass(mixed_buffer_transfer(&b, &b));
+    // Check b has stuff to read from
+    size = SIZE_MAX;
+    pass(mixed_buffer_request_read(&area, &size, &b));
+    is(size, 1024);
+    is(memcmp(mem, area, sizeof(float)*size), 0);
 
   cleanup:
     mixed_free_buffer(&a);
@@ -173,6 +180,46 @@ define_test(resize, {
     
   cleanup:
     mixed_free_buffer(&buffer);
+  });
+
+define_test(with_transfer, {
+    float *area;
+    size_t size = 1024;
+    float mem[size];
+    struct mixed_buffer a = {0}, b = {0};
+    pass(mixed_make_buffer(size, &a));
+    pass(mixed_make_buffer(size, &b));
+    for(int i=0; i<size; i++)
+      mem[i] = rand();
+    // Write to a
+    pass(mixed_buffer_request_write(&area, &size, &a));
+    memcpy(mem, area, sizeof(float)*size);
+    pass(mixed_buffer_finish_write(size, &a));
+    // Transfer
+    with_mixed_buffer_transfer(i, samples, af, &a, bf, &b, {
+        is(samples, 1024);
+        is_f(af[i], mem[i]);
+        bf[i] = af[i];
+      });
+    // Check
+    pass(mixed_buffer_request_read(&area, &size, &b));
+    is(size, 1024);
+    is(memcmp(mem, area, sizeof(float)*size), 0);
+    // Write b->b
+    with_mixed_buffer_transfer(i, samples, af, &b, bf, &b, {
+        is(samples, 1024);
+        is_f(af[i], mem[i]);
+        bf[i] = af[i]+1;
+      });
+    // Check
+    pass(mixed_buffer_request_read(&area, &size, &b));
+    is(size, 1024);
+    for(int i=0; i<size; ++i)
+      is_f(area[i], mem[i]+1);
+    
+  cleanup:
+    mixed_free_buffer(&a);
+    mixed_free_buffer(&b);
   });
 
 #undef __TEST_SUITE

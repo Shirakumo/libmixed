@@ -687,12 +687,19 @@ extern "C" {
     struct mixed_buffer *__in = in;                                     \
     struct mixed_buffer *__out = out;                                   \
     float *inv, *outv;                                                  \
-    mixed_buffer_request_read(&inv, &samples, __in);                    \
-    mixed_buffer_request_write(&outv, &samples, __out);                 \
-    for(size_t i=0; i<samples; ++i)                                     \
-      body;                                                             \
-    mixed_buffer_finish_read(samples, __in);                            \
-    mixed_buffer_finish_write(samples, __out);                          \
+    if(__in == __out){                                                  \
+      mixed_buffer_request_read(&inv, &samples, __in);                  \
+      outv = inv;                                                       \
+      for(size_t i=0; i<samples; ++i)                                   \
+        body;                                                           \
+    }else{                                                              \
+      mixed_buffer_request_read(&inv, &samples, __in);                  \
+      mixed_buffer_request_write(&outv, &samples, __out);               \
+      for(size_t i=0; i<samples; ++i)                                   \
+        body;                                                           \
+      mixed_buffer_finish_read(samples, __in);                          \
+      mixed_buffer_finish_write(samples, __out);                        \
+    }                                                                   \
   }
 
   // Free the segment's internal data.
