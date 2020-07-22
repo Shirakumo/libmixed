@@ -255,7 +255,6 @@ int space_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed
       return vector_remove_pos(location, (struct vector *)data);
     }
     return 1;
-  case MIXED_SOURCE:
   case MIXED_SPACE_LOCATION:
   case MIXED_SPACE_VELOCITY:
     if(data->count <= location){
@@ -507,10 +506,6 @@ int space_mixer_info(struct mixed_segment_info *info, struct mixed_segment *segm
   set_info_field(field++, MIXED_SPACE_ATTENUATION,
                  MIXED_FUNCTION, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The function that calculates the attenuation curve that defines the volume of a source by its distance.");
-
-  set_info_field(field++, MIXED_SOURCE,
-                 MIXED_SEGMENT_POINTER, 1, MIXED_IN | MIXED_SET | MIXED_GET,
-                 "The segment that needs to be mixed before its buffer has any useful data.");
 
   clear_info_field(field++);
   return 1;

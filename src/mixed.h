@@ -103,14 +103,6 @@ extern "C" {
     // Access the backing buffer for this in/out.
     // The value must be a mixed_buffer struct.
     MIXED_BUFFER,
-    // Access to the segment providing the data in
-    // the buffer of this input. The source is an
-    // attribute of the buffer and as such can only
-    // be set once the buffer has been set, and is
-    // also automatically removed when the buffer is
-    // removed.
-    // The value must be a mixed_segment struct.
-    MIXED_SOURCE,
     // Whether to bypass the segment and effectively
     // disable its effects. The value is a bool.
     MIXED_BYPASS,
