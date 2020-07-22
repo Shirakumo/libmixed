@@ -37,7 +37,7 @@ add_library(mixed SHARED
   "src/vector.c"
   "src/segments/basic_mixer.c"
   #"src/segments/delay.c"
-  #"src/segments/fade.c"
+  "src/segments/fade.c"
   #"src/segments/frequency_pass.c"
   #"src/segments/gate.c"
   #"src/segments/generator.c"
