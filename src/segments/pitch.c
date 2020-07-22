@@ -20,7 +20,7 @@ int pitch_segment_free(struct mixed_segment *segment){
 // FIXME: add start method that checks for buffer completeness.
 
 int pitch_segment_start(struct mixed_segment *segment){
-  struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
+  IGNORE(segment);
   return 1;
 }
 
@@ -58,25 +58,32 @@ int pitch_segment_set_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
-int pitch_segment_mix(size_t samples, struct mixed_segment *segment){
+int pitch_segment_mix(struct mixed_segment *segment){
   struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
 
   if(data->pitch == 1.0){
-    mixed_buffer_copy(data->in, data->out);
+    mixed_buffer_transfer(data->in, data->out);
   }else{
-    pitch_shift(data->pitch, data->in->data, data->out->data, samples, &data->pitch_data);
+    float *in, *out;
+    size_t samples = SIZE_MAX;
+    mixed_buffer_request_read(&in, &samples, data->in);
+    mixed_buffer_request_write(&out, &samples, data->out);
+    pitch_shift(data->pitch, in, out, samples, &data->pitch_data);
+    mixed_buffer_finish_read(samples, data->in);
+    mixed_buffer_finish_write(samples, data->out);
   }
   return 1;
 }
 
-int pitch_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int pitch_segment_mix_bypass(struct mixed_segment *segment){
   struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
   
-  return mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_transfer(data->in, data->out);
 }
 
 int pitch_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
-  struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
+  IGNORE(segment);
+  
   info->name = "pitch";
   info->description = "Shift the pitch of the audio.";
   info->flags = MIXED_INPLACE;

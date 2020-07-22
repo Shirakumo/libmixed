@@ -3,7 +3,7 @@
 
 struct noise_segment_data{
   struct mixed_buffer *out;
-  enum mixed_noise_type type;
+  float (*type)(struct noise_segment_data *data);
   float volume;
   int64_t pink_rows[30];
   int64_t pink_running_sum;
@@ -37,6 +37,7 @@ int noise_segment_set_out(size_t field, size_t location, void *buffer, struct mi
 }
 
 float noise_white(struct noise_segment_data *data){
+  IGNORE(data);
   return mixed_random()*2.0-1.0;
 }
 
@@ -72,26 +73,24 @@ float noise_brown(struct noise_segment_data *data){
   return data->brown * 0.06250;
 }
 
-int noise_segment_mix(size_t samples, struct mixed_segment *segment){
+int noise_segment_mix(struct mixed_segment *segment){
   struct noise_segment_data *data = (struct noise_segment_data *)segment->data;
 
-  float (*noise)(struct noise_segment_data *data) = 0;
+  float (*noise)(struct noise_segment_data *data) = data->type;
   float volume = data->volume;
-  float *out = data->out->data;
-  
-  switch(data->type){
-  case MIXED_WHITE_NOISE: noise = noise_white; break;
-  case MIXED_PINK_NOISE: noise = noise_pink; break;
-  case MIXED_BROWN_NOISE: noise = noise_brown; break;
-  }
-
+  float *out;
+  size_t samples = SIZE_MAX;
+  mixed_buffer_request_write(&out, &samples, data->out);
   for(size_t i=0; i<samples; ++i){
     out[i] = noise(data) * volume;
   }
+  mixed_buffer_finish_write(samples, data->out);
   return 1;
 }
 
 int noise_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
+  IGNORE(segment);
+  
   info->name = "noise";
   info->description = "Noise generator segment";
   info->min_inputs = 0;
@@ -123,7 +122,12 @@ int noise_segment_get(size_t field, void *value, struct mixed_segment *segment){
     *((float *)value) = data->volume;
     break;
   case MIXED_GENERATOR_TYPE:
-    *((enum mixed_noise_type *)value) = data->type;
+    if(data->type == noise_white)
+      *((enum mixed_noise_type *)value) = MIXED_WHITE_NOISE;
+    else if(data->type == noise_pink)
+      *((enum mixed_noise_type *)value) = MIXED_PINK_NOISE;
+    else if(data->type == noise_brown)
+      *((enum mixed_noise_type *)value) = MIXED_BROWN_NOISE;
     break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
@@ -137,14 +141,18 @@ int noise_segment_set(size_t field, void *value, struct mixed_segment *segment){
   case MIXED_VOLUME:
     data->volume = *((float *)value);
     break;
-  case MIXED_NOISE_TYPE:
-    if(*(enum mixed_noise_type *)value < MIXED_WHITE_NOISE ||
-       MIXED_BROWN_NOISE < *(enum mixed_noise_type *)value){
+  case MIXED_NOISE_TYPE: {
+    enum mixed_noise_type type = *(enum mixed_noise_type *)value;
+    switch(type){
+    case MIXED_WHITE_NOISE: data->type = noise_white; break;
+    case MIXED_PINK_NOISE: data->type = noise_pink; break;
+    case MIXED_BROWN_NOISE: data->type = noise_brown; break;
+    default: 
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    data->type = *(enum mixed_noise_type *)value;
     break;
+  }
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
@@ -156,8 +164,9 @@ MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type type, struct mix
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
-  
-  data->type = type;
+  segment->data = data;
+
+  noise_segment_set(MIXED_NOISE_TYPE, &type, segment);
   data->volume = 1.0f;
 
   data->pink_index = 0;
@@ -173,6 +182,5 @@ MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type type, struct mix
   segment->info = noise_segment_info;
   segment->get = noise_segment_get;
   segment->set = noise_segment_set;
-  segment->data = data;
   return 1;
 }

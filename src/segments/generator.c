@@ -53,11 +53,10 @@ float sawtooth_wave(float frequency, float phase, float samplerate){
   return fmod(phase, length) / length * 2.0 - 1.0;
 }
 
-int generator_segment_mix(size_t samples, struct mixed_segment *segment){
+int generator_segment_mix(struct mixed_segment *segment){
   struct generator_segment_data *data = (struct generator_segment_data *)segment->data;
   size_t phase = data->phase;
   float (*generator)(float frequency, float phase, float samplerate) = 0;
-  float *out = data->out->data;
   float volume = data->volume;
 
   switch(data->type){
@@ -67,16 +66,22 @@ int generator_segment_mix(size_t samples, struct mixed_segment *segment){
   case MIXED_SAWTOOTH: generator = sawtooth_wave; break;
   }
   
+  float *out;
+  size_t samples = SIZE_MAX;
+  mixed_buffer_request_write(&out, &samples, data->out);
   for(size_t i=0; i<samples; ++i){
     out[i] = generator(data->frequency, phase, data->samplerate) * volume;
     phase = (phase+1) % data->samplerate;
   }
+  mixed_buffer_finish_write(samples, data->out);
 
   data->phase = phase;
   return 1;
 }
 
 int generator_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
+  IGNORE(segment);
+  
   info->name = "generator";
   info->description = "Wave generator source segment";
   info->min_inputs = 0;

@@ -39,8 +39,7 @@ int ladspa_segment_set_in(size_t field, size_t location, void *buffer, struct mi
   case MIXED_BUFFER:
     for(size_t i=0; i<data->descriptor->PortCount; ++i){
       const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
-      if(LADSPA_IS_PORT_AUDIO(port) &&
-         LADSPA_IS_PORT_INPUT(port)){
+      if(LADSPA_IS_PORT_AUDIO(port) && LADSPA_IS_PORT_INPUT(port)){
         if(index == location){
           data->descriptor->connect_port(data->handle, i, ((struct mixed_buffer *)buffer)->data);
           return 1;
@@ -64,8 +63,7 @@ int ladspa_segment_set_out(size_t field, size_t location, void *buffer, struct m
   case MIXED_BUFFER:
     for(size_t i=0; i<data->descriptor->PortCount; ++i){
       const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
-      if(   LADSPA_IS_PORT_AUDIO(port)
-            && LADSPA_IS_PORT_OUTPUT(port)){
+      if(LADSPA_IS_PORT_AUDIO(port) && LADSPA_IS_PORT_OUTPUT(port)){
         if(index == location){
           data->descriptor->connect_port(data->handle, i, ((struct mixed_buffer *)buffer)->data);
         return 1;

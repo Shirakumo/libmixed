@@ -70,25 +70,8 @@ int delay_segment_set_out(size_t field, size_t location, void *buffer, struct mi
 int delay_segment_mix(struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
 
-  float *buf, *in, *out;
-
-  size_t samples = SIZE_MAX;
-  mixed_buffer_request_write(&out, &samples, data->out);
-  mixed_buffer_request_read(&buf, &samples, &data->buffer);
-  for(size_t i=0; i<samples; ++i){
-    out[i] = buf[i];
-  }
-  mixed_buffer_finish_write(samples, data->out);
-  mixed_buffer_finish_read(samples, &data->buffer);
-
-  samples = SIZE_MAX;
-  mixed_buffer_request_write(&buf, &samples, &data->buffer);
-  mixed_buffer_request_read(&in, &samples, data->in);
-  for(size_t i=0; i<samples; ++i){
-    buf[i] = in[i];
-  }
-  mixed_buffer_finish_write(samples, &data->buffer);
-  mixed_buffer_finish_read(samples, data->in);
+  mixed_buffer_transfer(&data->buffer, data->out);
+  mixed_buffer_transfer(data->in, &data->buffer);
 
   return 1;
 }
@@ -96,11 +79,12 @@ int delay_segment_mix(struct mixed_segment *segment){
 int delay_segment_mix_bypass(struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
   
-  return mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_transfer(data->in, data->out);
 }
 
 int delay_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
-  struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
+  IGNORE(segment);
+  
   info->name = "delay";
   info->description = "Delay the output by some time.";
   info->flags = MIXED_INPLACE;

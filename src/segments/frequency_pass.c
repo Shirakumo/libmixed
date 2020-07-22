@@ -84,62 +84,48 @@ int frequency_pass_segment_set_out(size_t field, size_t location, void *buffer, 
 int low_pass_segment_mix(struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
 
-  size_t samples = SIZE_MAX;
-  float *in, *out;
   float *x = data->x;
   float *y = data->y;
   float *a = data->a;
   float *b = data->b;
   float k = data->k;
-  
-  mixed_buffer_request_write(&out, &samples, data->out);
-  mixed_buffer_request_read(&in, &samples, data->in);
-  for(size_t i=0; i<samples; ++i){
-    float s = in[i];
-    out[i] = k*s + k*b[0]*x[0] + k*b[1]*x[1] - a[0]*y[0] - a[1]*y[1];
-    x[1] = x[0];
-    x[0] = s;
-    y[1] = y[0];
-    y[0] = out[i];
-  }
-  mixed_buffer_finish_write(samples, data->out);
-  mixed_buffer_finish_read(samples, data->in);
 
+  with_mixed_buffer_transfer(i, samples, in, data->in, out, data->out, {
+      float s = in[i];
+      out[i] = k*s + k*b[0]*x[0] + k*b[1]*x[1] - a[0]*y[0] - a[1]*y[1];
+      x[1] = x[0];
+      x[0] = s;
+      y[1] = y[0];
+      y[0] = out[i];
+    })
   return 1;
 }
 
 int high_pass_segment_mix(struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
 
-  size_t samples = SIZE_MAX;
-  float *in, *out;
   float *x = data->x;
   float *y = data->y;
   float *a = data->a;
   float *b = data->b;
   float k = data->k;
 
-  mixed_buffer_request_write(&out, &samples, data->out);
-  mixed_buffer_request_read(&in, &samples, data->in);
-  for(size_t i=0; i<samples; ++i){
-    float s = in[i];
-    out[i] = k*s + k*b[0]*x[0] + k*b[1]*x[1] - a[0]*y[0] - a[1]*y[1];
-    x[1] = x[0];
-    x[0] = s;
-    y[1] = y[0];
-    y[0] = out[i];
-    out[i] = s-out[i];
-  }
-  mixed_buffer_finish_write(samples, data->out);
-  mixed_buffer_finish_read(samples, data->in);
-
+  with_mixed_buffer_transfer(i, samples, in, data->in, out, data->out, {
+      float s = in[i];
+      out[i] = k*s + k*b[0]*x[0] + k*b[1]*x[1] - a[0]*y[0] - a[1]*y[1];
+      x[1] = x[0];
+      x[0] = s;
+      y[1] = y[0];
+      y[0] = out[i];
+      out[i] = s-out[i];
+    })
   return 1;
 }
 
 int frequency_pass_segment_mix_bypass(struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
   
-  return mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_transfer(data->in, data->out);
 }
 
 int frequency_pass_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){

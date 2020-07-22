@@ -65,7 +65,7 @@ int queue_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
 
   size_t i=0;
   for(; i<data->out_count && i<data->in_count; ++i){
-    mixed_buffer_copy(data->in[i], data->out[i]);
+    mixed_buffer_transfer(data->in[i], data->out[i]);
   }
   for(; i<data->out_count; ++i){
     mixed_buffer_clear(data->out[i]);

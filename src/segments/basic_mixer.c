@@ -66,7 +66,7 @@ int basic_mixer_mix(struct mixed_segment *segment){
 
     for(size_t c=0; c<channels; ++c){
       // Compute how much we can mix on this channel.
-      size_t samples = mixed_buffer_available_write(data->out[c]), _=0;
+      size_t samples = mixed_buffer_available_write(data->out[c]);
       for(size_t b=0; b<buffers; ++b)
         samples = MIN(samples, mixed_buffer_available_read(data->in[b*buffers+c]));
 
@@ -75,7 +75,7 @@ int basic_mixer_mix(struct mixed_segment *segment){
 
       // Mix first buffer directly.
       struct mixed_buffer *buffer = data->in[c];
-      mixed_buffer_request_read(&in, &_, buffer);
+      mixed_buffer_request_read(&in, &samples, buffer);
       for(size_t i=0; i<samples; ++i){
         out[i] = in[i]*div;
       }
@@ -84,7 +84,7 @@ int basic_mixer_mix(struct mixed_segment *segment){
       // Mix other buffers additively.
       for(size_t b=1; b<buffers; ++b){
         struct mixed_buffer *buffer = data->in[b*buffers+c];
-        mixed_buffer_request_read(&in, &_, buffer);
+        mixed_buffer_request_read(&in, &samples, buffer);
         for(size_t i=0; i<samples; ++i){
           out[i] += in[i]*div;
         }

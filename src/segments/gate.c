@@ -79,7 +79,7 @@ int gate_segment_set_out(size_t field, size_t location, void *buffer, struct mix
   }
 }
 
-int gate_segment_mix(size_t samples, struct mixed_segment *segment){
+int gate_segment_mix(struct mixed_segment *segment){
   struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
 
   float stime = 1.0/data->samplerate;
@@ -89,72 +89,71 @@ int gate_segment_mix(size_t samples, struct mixed_segment *segment){
   float attack = data->attack;
   float hold = data->hold;
   float release = data->release;
-  float *in = data->in->data;
-  float *out = data->out->data;
   float volume = 1.0;
-  for(size_t i=0; i<samples; ++i){
-    float sample = in[i];
-    switch(data->state){
-    case CLOSED:
-      volume = 0.0;
-      if(open <= sample){
-        time = 0.0;
-        data->state = ATTACKING;
-      }
-      break;
-    case ATTACKING:
-      if(attack < time){
-        data->state = OPEN;
-      }else{
-        volume = time/attack;
-        time += stime;
-      }
-      break;
-    case OPEN:
-      if(sample < close){
-        time = hold;
-        data->state = HOLDING;
-      }
-      break;
-    case HOLDING:
-      if(open <= sample){
-        data->state = OPEN;
-      }else if(time <= 0){
-        time = release;
-        data->state = RELEASING;
-      }else{
-        time -= stime;
-      }
-      break;
-    case RELEASING:
-      if(open <= sample){
-        volume = time/release;
-        time = time/release*attack;
-        data->state = ATTACKING;
-      }else if(time <= 0){
+  
+  with_mixed_buffer_transfer(i, samples, in, data->in, out, data->out, {
+      float sample = in[i];
+      switch(data->state){
+      case CLOSED:
         volume = 0.0;
-        time = 0.0;
-        data->state = CLOSED;
-      }else{
-        volume = time/release;
-        time -= stime;
+        if(open <= sample){
+          time = 0.0;
+          data->state = ATTACKING;
+        }
+        break;
+      case ATTACKING:
+        if(attack < time){
+          data->state = OPEN;
+        }else{
+          volume = time/attack;
+          time += stime;
+        }
+        break;
+      case OPEN:
+        if(sample < close){
+          time = hold;
+          data->state = HOLDING;
+        }
+        break;
+      case HOLDING:
+        if(open <= sample){
+          data->state = OPEN;
+        }else if(time <= 0){
+          time = release;
+          data->state = RELEASING;
+        }else{
+          time -= stime;
+        }
+        break;
+      case RELEASING:
+        if(open <= sample){
+          volume = time/release;
+          time = time/release*attack;
+          data->state = ATTACKING;
+        }else if(time <= 0){
+          volume = 0.0;
+          time = 0.0;
+          data->state = CLOSED;
+        }else{
+          volume = time/release;
+          time -= stime;
+        }
+        break;
       }
-      break;
-    }
-    out[i] = sample * volume;
-  }
+      out[i] = sample * volume;
+    })
   data->time = time;
   return 1;
 }
 
-int gate_segment_mix_bypass(size_t samples, struct mixed_segment *segment){
+int gate_segment_mix_bypass(struct mixed_segment *segment){
   struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
   
-  return mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_transfer(data->in, data->out);
 }
 
 int gate_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
-  struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
+  IGNORE(segment);
   
   info->name = "gate";
   info->description = "A noise gate segment to filter out low-volume frequencies.";

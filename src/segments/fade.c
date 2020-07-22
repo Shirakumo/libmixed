@@ -104,19 +104,12 @@ int fade_segment_mix(struct mixed_segment *segment){
   //       for the entirety of the sample range if the total duration
   //       of the buffer is small enough (~1ms?) as the human ear
   //       wouldn't be able to properly notice it.
-  size_t samples = SIZE_MAX;
-  float *in, *out;
-  mixed_buffer_request_write(&out, &samples, data->out);
-  mixed_buffer_request_read(&in, &samples, data->in);
-  for(size_t i=0; i<samples; ++i){
-    float x = (time < endtime)? time/endtime : 1.0f;
-    float fade = from+ease(x)*range;
-    out[i] = in[i]*fade;
-    time += sampletime;
-  }
-  mixed_buffer_finish_read(samples, data->in);
-  mixed_buffer_finish_write(samples, data->out);
-
+  with_mixed_buffer_transfer(i, samples, in, data->in, out, data->out, {
+      float x = (time < endtime)? time/endtime : 1.0f;
+      float fade = from+ease(x)*range;
+      out[i] = in[i]*fade;
+      time += sampletime;
+    });
   data->time_passed = time;
   return 1;
 }
@@ -124,7 +117,7 @@ int fade_segment_mix(struct mixed_segment *segment){
 int fade_segment_mix_bypass(struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
   
-  return mixed_buffer_copy(data->in, data->out);
+  return mixed_buffer_transfer(data->in, data->out);
 }
 
 int fade_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){

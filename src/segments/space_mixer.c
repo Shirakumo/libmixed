@@ -1,7 +1,6 @@
 #include "internal.h"
 
 struct space_source{
-  struct mixed_segment *segment;
   struct mixed_buffer *buffer;
   float location[3];
   float velocity[3];
@@ -40,33 +39,13 @@ int space_mixer_free(struct mixed_segment *segment){
 
 // FIXME: add start method that checks for buffer completeness.
 
-int space_mixer_start(struct mixed_segment *segment){
-  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
-  for(size_t i=0; i<data->count; ++i){
-    if(data->sources[i]->segment){
-      if(!mixed_segment_start(data->sources[i]->segment))
-        return 0;
-    }
-  }
-  return 1;
-}
-
-int space_mixer_end(struct mixed_segment *segment){
-  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
-  for(size_t i=0; i<data->count; ++i){
-    if(data->sources[i]->segment){
-      if(!mixed_segment_end(data->sources[i]->segment))
-        return 0;
-    }
-  }
-  return 1;
-}
-
 float attenuation_none(float min, float max, float dist, float roll){
+  IGNORE(min, max, dist, roll);
   return 1.0;
 }
 
 float attenuation_inverse(float min, float max, float dist, float roll){
+  IGNORE(max);
   return min / (min + roll * (dist-min));
 }
 
@@ -75,6 +54,7 @@ float attenuation_linear(float min, float max, float dist, float roll){
 }
 
 float attenuation_exponential(float min, float max, float dist, float roll){
+  IGNORE(max);
   return 1.0/pow(dist / min, roll);
 }
 
@@ -160,7 +140,7 @@ float calculate_pitch_shift(struct space_mixer_data *listener, struct space_sour
   return (SS - DF*vls) / (SS - DF*vss);
 }
 
-int space_mixer_mix(size_t samples, struct mixed_segment *segment){
+int space_mixer_mix(struct mixed_segment *segment){
   struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
 
   // Shift frequencies
@@ -168,14 +148,21 @@ int space_mixer_mix(size_t samples, struct mixed_segment *segment){
     struct space_source *source = data->sources[s];
     float pitch = clamp(0.5, calculate_pitch_shift(data, source), 2.0);
     if(pitch != 1.0){
-      struct mixed_buffer *buffer = source->buffer;
-      pitch_shift(pitch, buffer->data, buffer->data, samples, &data->pitch_data);
+      float *inout;
+      size_t samples = SIZE_MAX;
+      mixed_buffer_request_read(&inout, &samples, source->buffer);
+      pitch_shift(pitch, inout, inout, samples, &data->pitch_data);
     }
   }
 
-  float *left = data->left->data;
-  float *right = data->right->data;
+  float *left, *right, *in;
   size_t count = data->count;
+  size_t samples = SIZE_MAX;
+  for(size_t s=0; s<count; ++s)
+    samples = MIN(samples, mixed_buffer_available_read(data->sources[s]->buffer));
+  
+  mixed_buffer_request_write(&left, &samples, data->left);
+  mixed_buffer_request_write(&right, &samples, data->right);
   if(count == 0){
     memset(left, 0, samples*sizeof(float));
     memset(right, 0, samples*sizeof(float));
@@ -183,42 +170,30 @@ int space_mixer_mix(size_t samples, struct mixed_segment *segment){
     float lvolume, rvolume;
     // Mix the first source directly to avoid a clearing loop.
     struct space_source *source = data->sources[0];
-    // Invoke segment's mixing function if necessary.
-    struct mixed_segment *segment = source->segment;
-    float *in = source->buffer->data;
-
-    if(segment){
-      // FIXME: This is not optimal. Ideally we'd avoid mixing entirely.
-      if(!segment->mix(samples, segment))
-        memset(in, 0, samples*sizeof(float));
-    }
     
-    // Perform mix.
+    mixed_buffer_request_read(&in, &samples, source->buffer);
     calculate_volumes(&lvolume, &rvolume, source, data);
     for(size_t i=0; i<samples; ++i){
       left[i] = in[i] * lvolume;
       right[i] = in[i] * rvolume;
     }
+    mixed_buffer_finish_read(samples, source->buffer);
+    
     // Mix the rest of the sources additively.
     for(size_t s=1; s<count; ++s){
       source = data->sources[s];
-      // Invoke segment's mixing function if necessary.
-      segment = source->segment;
-      in = source->buffer->data;
-
-      if(segment){
-        if(!segment->mix(samples, segment))
-          memset(in, 0, samples*sizeof(float));
-      }
-
-      // Perform mix.
+      
+      mixed_buffer_request_read(&in, &samples, source->buffer);
       calculate_volumes(&lvolume, &rvolume, source, data);
       for(size_t i=0; i<samples; ++i){
         left[i] += in[i] * lvolume;
         right[i] += in[i] * rvolume;
       }
+      mixed_buffer_finish_read(samples, source->buffer);
     }
   }
+  mixed_buffer_finish_write(samples, data->left);
+  mixed_buffer_finish_read(samples, data->right);
   return 1;
 }
 
@@ -290,9 +265,6 @@ int space_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed
     struct space_source *source = data->sources[location];
     float *value = (float *)buffer;
     switch(field){
-    case MIXED_SOURCE:
-      source->segment = (struct mixed_segment *)buffer;
-      break;
     case MIXED_SPACE_LOCATION:
       source->location[0] = value[0];
       source->location[1] = value[1];
@@ -322,9 +294,6 @@ int space_mixer_get_in(size_t field, size_t location, void *buffer, struct mixed
   struct space_source *source = data->sources[location];
 
   switch(field){
-  case MIXED_SOURCE:
-    *(struct mixed_segment **)buffer = source->segment;
-    return 1;
   case MIXED_BUFFER:
     *(struct mixed_buffer **)buffer = source->buffer;
     return 1;
@@ -428,6 +397,7 @@ int space_mixer_set(size_t field, void *value, struct mixed_segment *segment){
     data->velocity[0] = parts[0];
     data->velocity[1] = parts[1];
     data->velocity[2] = parts[2];
+    break;
   case MIXED_SPACE_DIRECTION:
     data->direction[0] = parts[0];
     data->direction[1] = parts[1];
@@ -480,6 +450,8 @@ int space_mixer_set(size_t field, void *value, struct mixed_segment *segment){
 }
 
 int space_mixer_info(struct mixed_segment_info *info, struct mixed_segment *segment){
+  IGNORE(segment);
+  
   info->name = "space_mixer";
   info->description = "Mixes multiple sources while simulating 3D space.";
   info->flags = MIXED_MODIFIES_INPUT;
@@ -569,9 +541,7 @@ MIXED_EXPORT int mixed_make_segment_space_mixer(size_t samplerate, struct mixed_
   
   segment->free = space_mixer_free;
   segment->info = space_mixer_info;
-  segment->start = space_mixer_start;
   segment->mix = space_mixer_mix;
-  segment->end = space_mixer_end;
   segment->set_in = space_mixer_set_in;
   segment->get_in = space_mixer_get_in;
   segment->set_out = space_mixer_set_out;

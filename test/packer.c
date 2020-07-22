@@ -1,5 +1,6 @@
 #define __TEST_SUITE packer
 #include "tester.h"
+#include <math.h>
 
 static int make_pack(enum mixed_encoding encoding, int channels, struct mixed_packed_audio *pack){
   int samples = channels*500;

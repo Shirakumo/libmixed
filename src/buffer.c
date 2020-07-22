@@ -143,7 +143,7 @@ MIXED_EXPORT int mixed_buffer_transfer(struct mixed_buffer *from, struct mixed_b
   mixed_err(MIXED_NO_ERROR);
   if(from != to){
     float *read, *write;
-    size_t rsize, wsize;
+    size_t rsize = SIZE_MAX, wsize = SIZE_MAX;
     mixed_buffer_request_read(&read, &rsize, from);
     mixed_buffer_request_write(&write, &wsize, to);
     size_t size = (rsize < wsize)? rsize : wsize;
@@ -158,7 +158,7 @@ MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffe
   mixed_err(MIXED_NO_ERROR);
   if(from != to){
     float *read, *write;
-    size_t rsize, wsize;
+    size_t rsize = SIZE_MAX, wsize = SIZE_MAX;
     mixed_buffer_request_read(&read, &rsize, from);
     mixed_buffer_request_write(&write, &wsize, to);
     size_t size = (rsize < wsize)? rsize : wsize;

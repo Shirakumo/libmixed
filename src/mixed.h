@@ -682,6 +682,27 @@ extern "C" {
   // old data is preserved and the buffer is not changed.
   MIXED_EXPORT int mixed_buffer_resize(size_t size, struct mixed_buffer *buffer);
 
+  // Convenience macro for the common operation of transferring
+  // from one buffer to another.
+  //
+  // i, samples, inv, and outv should be variable names.
+  // in, out should be expressions for pointers to mixed_buffer
+  // structures.
+  // body should be a statement that is executed for every
+  // sample that should be transferred.
+#define with_mixed_buffer_transfer(i, samples, inv, in, outv, out, body){ \
+    size_t samples = SIZE_MAX;                                          \
+    struct mixed_buffer *__in = in;                                     \
+    struct mixed_buffer *__out = out;                                   \
+    float *inv, *outv;                                                  \
+    mixed_buffer_request_read(&inv, &samples, __in);                    \
+    mixed_buffer_request_write(&outv, &samples, __out);                 \
+    for(size_t i=0; i<samples; ++i)                                     \
+      body;                                                             \
+    mixed_buffer_finish_read(samples, __in);                            \
+    mixed_buffer_finish_write(samples, __out);                          \
+  }
+
   // Free the segment's internal data.
   //
   // If the method is not implemented, the error is set to
