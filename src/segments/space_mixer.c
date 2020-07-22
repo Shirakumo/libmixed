@@ -193,7 +193,7 @@ int space_mixer_mix(struct mixed_segment *segment){
     }
   }
   mixed_buffer_finish_write(samples, data->left);
-  mixed_buffer_finish_read(samples, data->right);
+  mixed_buffer_finish_write(samples, data->right);
   return 1;
 }
 
