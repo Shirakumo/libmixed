@@ -106,15 +106,16 @@ int main(int argc, char **argv){
     mixed_segment_set_in(MIXED_SPACE_LOCATION, 0, pos, &space);
     mixed_segment_set_in(MIXED_SPACE_VELOCITY, 0, vel, &space);
     
-    mixed_segment_sequence_mix(samples, &sequence);
+    mixed_segment_sequence_mix(&sequence);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
     
-    played = out123_play(out->handle, out->pack.data, out->pack.size);
-    if(played < out->pack.size){
-      fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, samples);
+    size_t bytes = out->pack.frames * out->pack.channels * mixed_samplesize(out->pack.encoding);
+    played = out123_play(out->handle, out->pack.data, bytes);
+    if(played < bytes){
+      fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
     }
   }while(read && !interrupted);
   

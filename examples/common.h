@@ -117,7 +117,7 @@ int load_out_segment(size_t samples, struct out **_out){
     if(fmts[i].rate != -1){
       fmt_index = i;
       const char *encname = out123_enc_longname(fmts[i].encoding);
-      fprintf(stderr, "OUT %i: %i channels @ %li Hz, %s\n",
+      fprintf(stderr, "Candidate %i: %i channels @ %li Hz, %s\n",
               i, fmts[i].channels, fmts[i].rate, encname);
     }
   }
@@ -144,7 +144,7 @@ int load_out_segment(size_t samples, struct out **_out){
   }
 
   out_encname = (char *)out123_enc_longname(out_encoding);
-  fprintf(stderr, "OUT: %i channels @ %li Hz, %s %i\n", out_channels, out_samplerate, out_encname);
+  fprintf(stderr, "Selected: %i channels @ %li Hz, %s %i\n", out_channels, out_samplerate, out_encname);
   
   // Prepare pipeline segments
   out->pack.encoding = fmt123_to_mixed(out_encoding);
