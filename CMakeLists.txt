@@ -20,8 +20,14 @@ endif()
 file(GLOB samplerate_src "libsamplerate/*.c")
 add_library(samplerate OBJECT ${samplerate_src})
 
+## Spiralfft
+file(GLOB spiralfft_src "spiralfft/*.c")
+add_library(spiralfft STATIC
+  ${spiralfft_src})
+target_compile_options(spiralfft PRIVATE -O3 -mavx2 -mfma -flto)
+
 ## Main Library
-include_directories("src/")
+include_directories("src/" "spiralfft/")
 add_library(mixed SHARED
   "src/buffer.c"
   "src/common.c"
@@ -66,9 +72,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang"
   target_compile_options(mixed PRIVATE -fvisibility=hidden)
 endif()
 if(WIN32)
-  target_link_libraries(mixed m)
+  target_link_libraries(mixed spiralfft m)
 else()
-  target_link_libraries(mixed dl m)
+  target_link_libraries(mixed spiralfft dl m)
 endif()
 
 ## Tester

@@ -17,6 +17,7 @@
  *****************************************************************************/ 
 
 #include "internal.h"
+#include "spiral_fft.h"
 
 void fft(float *fftBuffer, long framesize, long sign){
   float wr, wi, arg, *p1, *p2, temp;
@@ -184,7 +185,7 @@ void pitch_shift(float pitch, float *in, float *out, size_t samples, struct pitc
 
       /* ***************** ANALYSIS ******************* */
       /* do transform */
-      fft(fft_workspace, framesize, -1);
+      spiral_rfftfwd_float(framesize, fft_workspace, fft_workspace);
 
       /* this is the analysis step */
       for (k = 0; k <= framesize2; k++) {
@@ -267,7 +268,7 @@ void pitch_shift(float pitch, float *in, float *out, size_t samples, struct pitc
       for (k = framesize+2; k < 2*framesize; k++) fft_workspace[k] = 0.;
 
       /* do inverse transform */
-      fft(fft_workspace, framesize, 1);
+      spiral_rfftinv_float(framesize, fft_workspace, fft_workspace);
 
       /* do windowing and add to output accumulator */ 
       for(k=0; k < framesize; k++) {
