@@ -146,7 +146,7 @@ MIXED_EXPORT int mixed_buffer_transfer(struct mixed_buffer *from, struct mixed_b
     size_t samples = SIZE_MAX;
     mixed_buffer_request_read(&read, &samples, from);
     mixed_buffer_request_write(&write, &samples, to);
-    memcpy(read, write, sizeof(float)*samples);
+    memcpy(write, read, sizeof(float)*samples);
     mixed_buffer_finish_read(samples, from);
     mixed_buffer_finish_write(samples, to);
   }
@@ -160,7 +160,7 @@ MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffe
     size_t samples = SIZE_MAX;
     mixed_buffer_request_read(&read, &samples, from);
     mixed_buffer_request_write(&write, &samples, to);
-    memcpy(read, write, sizeof(float)*samples);
+    memcpy(write, read, sizeof(float)*samples);
     mixed_buffer_finish_write(samples, to);
   }
   return 1;

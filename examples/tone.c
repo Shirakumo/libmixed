@@ -71,7 +71,6 @@ int main(int argc, char **argv){
     mixed_buffer_copy(&out->left, &out->right);
 
     size_t bytes = out->pack.frames * out->pack.channels * mixed_samplesize(out->pack.encoding);
-    printf("%i\n", bytes);
     played = out123_play(out->handle, out->pack.data, bytes);
     if(played < bytes){
       fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);

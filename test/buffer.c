@@ -110,7 +110,7 @@ define_test(transfer, {
       mem[i] = rand();
     // Write to a
     pass(mixed_buffer_request_write(&area, &size, &a));
-    memcpy(mem, area, sizeof(float)*size);
+    memcpy(area, mem, sizeof(float)*size);
     pass(mixed_buffer_finish_write(size, &a));
     // Transfer
     pass(mixed_buffer_transfer(&a, &b));
@@ -145,7 +145,7 @@ define_test(copy, {
       mem[i] = rand();
     // Write to a
     pass(mixed_buffer_request_write(&area, &size, &a));
-    memcpy(mem, area, sizeof(float)*size);
+    memcpy(area, mem, sizeof(float)*size);
     pass(mixed_buffer_finish_write(size, &a));
     // Transfer
     pass(mixed_buffer_copy(&a, &b));
@@ -193,7 +193,7 @@ define_test(with_transfer, {
       mem[i] = rand();
     // Write to a
     pass(mixed_buffer_request_write(&area, &size, &a));
-    memcpy(mem, area, sizeof(float)*size);
+    memcpy(area, mem, sizeof(float)*size);
     pass(mixed_buffer_finish_write(size, &a));
     // Transfer
     with_mixed_buffer_transfer(i, samples, af, &a, bf, &b, {
