@@ -58,9 +58,17 @@ int basic_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed
 
 int basic_mixer_mix(struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
-  size_t buffers = data->count / data->channels;
-  if(0 < buffers){
-    size_t channels = data->channels;
+  size_t channels = data->channels;
+  size_t buffers = data->count / channels;
+  if(buffers == 0){
+    for(size_t c=0; c<channels; ++c){
+      float *out;
+      size_t samples = SIZE_MAX;
+      mixed_buffer_request_write(&out, &samples, data->out[c]);
+      memset(out, 0, samples*sizeof(float));
+      mixed_buffer_finish_write(samples, data->out[c]);
+    }
+  }else{
     float volume = data->volume;
     float div = volume;
 
