@@ -28,80 +28,68 @@ typedef enum {
 } spiral_status_t;
 
 /*****************************************************
- *  spiral_rfftfwd_float
- *  Real DFT.
+ *  spiral_fft_float
+ *  Complex DFT
  */
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float)(int n, const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_2)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_4)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_8)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_16)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_32)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_64)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_128)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_256)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_512)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_1024)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_2048)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_4096)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_float_8192)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fft_float)(int n, int sign, const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_2)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_4)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_8)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_16)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_32)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_64)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_128)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_256)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_512)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_1024)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_2048)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_4096)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_float_8192)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_2)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_4)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_8)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_16)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_32)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_64)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_128)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_256)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_512)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_1024)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_2048)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_4096)(const float *pSrc, float *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_float_8192)(const float *pSrc, float *pDst );
 
 /*****************************************************
- *  spiral_rfftinv_float
- *  Real DFT.
+ *  spiral_fft_double
+ *  Complex DFT
  */
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float)(int n, const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_2)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_4)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_8)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_16)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_32)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_64)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_128)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_256)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_512)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_1024)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_2048)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_4096)(const float *pSrc, float *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_float_8192)(const float *pSrc, float *pDst );
-
-/*****************************************************
- *  spiral_rfftfwd_double
- *  Real DFT.
- */
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double)(int n, const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_2)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_4)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_8)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_16)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_32)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_64)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_128)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_256)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_512)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_1024)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_2048)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_4096)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftfwd_double_8192)(const double *pSrc, double *pDst );
-
-/*****************************************************
- *  spiral_rfftinv_double
- *  Real DFT.
- */
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double)(int n, const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_2)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_4)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_8)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_16)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_32)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_64)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_128)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_256)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_512)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_1024)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_2048)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_4096)(const double *pSrc, double *pDst );
-SPIRAL_API(spiral_status_t, spiral_rfftinv_double_8192)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fft_double)(int n, int sign, const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_2)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_4)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_8)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_16)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_32)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_64)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_128)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_256)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_512)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_1024)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_2048)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_4096)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftinv_double_8192)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_2)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_4)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_8)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_16)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_32)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_64)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_128)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_256)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_512)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_1024)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_2048)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_4096)(const double *pSrc, double *pDst );
+SPIRAL_API(spiral_status_t, spiral_fftfwd_double_8192)(const double *pSrc, double *pDst );
 
 
 #ifdef __cplusplus

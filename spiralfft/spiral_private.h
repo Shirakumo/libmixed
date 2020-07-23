@@ -20,14 +20,14 @@
 #include <xmmintrin.h>
 #include <emmintrin.h>
 
-#define SPIRAL_MALLOC(size)	malloc(size)
+#define SPIRAL_MALLOC(size)     malloc(size)
 #define __INLINE  static inline
 
-#define SPIRAL_PRIV(res, name)	static res name
+#define SPIRAL_PRIV(res, name)  static res name
 #ifdef __GNUC__
-#define SPIRAL_ALIGNED(a)	a __attribute__((aligned(16)))
+#define SPIRAL_ALIGNED(a)       a __attribute__((aligned(16)))
 #else
-#define SPIRAL_ALIGNED(a)	__declspec(align(16)) a
+#define SPIRAL_ALIGNED(a)       __declspec(align(16)) a
 #endif
 
 typedef struct {
@@ -81,6 +81,7 @@ typedef struct {
 #define NEG_FLT(a) _mm_sub_pd(C_FLT(0), a)
 
 /* mixed real/integer arithmetic */
+#define SUB_INT_INT(a, b) ((a)-(b))
 #define MUL_INT_FLT(a, b) (MUL_FLT_FLT(C_FLT(a), b))
 #define ADD_INT_FLT(a,b) ADD_FLT_FLT(C_FLT(a), b)
 #define ADD_FLT_INT(a,b) ADD_FLT_FLT(a, C_FLT(b))
@@ -173,170 +174,80 @@ __INLINE float sinpi(double a) { return sin(SPIRAL_PI*a); }
 extern "C" {
 #endif
 
-extern  SPIRAL_ALIGNED(__m128 D1[48]);
-       
-extern  SPIRAL_ALIGNED(__m128 D2[48]);
-       
-extern  SPIRAL_ALIGNED(__m128 D3[112]);
-       
-extern  SPIRAL_ALIGNED(__m128 D4[112]);
-       
-extern  SPIRAL_ALIGNED(__m128 D5[240]);
-       
-extern  SPIRAL_ALIGNED(__m128 D6[240]);
-       
-extern  SPIRAL_ALIGNED(__m128 D7[496]);
-       
-extern  SPIRAL_ALIGNED(__m128 D8[32]);
-       
-extern  SPIRAL_ALIGNED(__m128 D9[496]);
-       
-extern  SPIRAL_ALIGNED(__m128 D10[32]);
-       
-extern  SPIRAL_ALIGNED(__m128 D11[1008]);
-       
-extern  SPIRAL_ALIGNED(__m128 D12[96]);
-       
-extern  SPIRAL_ALIGNED(__m128 D13[1008]);
-       
-extern  SPIRAL_ALIGNED(__m128 D14[96]);
-       
-extern  SPIRAL_ALIGNED(__m128 D15[2032]);
-       
-extern  SPIRAL_ALIGNED(__m128 D16[224]);
-       
-extern  SPIRAL_ALIGNED(__m128 D17[2032]);
-       
-extern  SPIRAL_ALIGNED(__m128 D18[224]);
-       
-extern  SPIRAL_ALIGNED(__m128 D19[48]);
-       
-extern  SPIRAL_ALIGNED(__m128 D20[48]);
-       
-extern  SPIRAL_ALIGNED(__m128 D21[112]);
-       
-extern  SPIRAL_ALIGNED(__m128 D22[112]);
-       
-extern  SPIRAL_ALIGNED(__m128 D23[240]);
-       
-extern  SPIRAL_ALIGNED(__m128 D24[240]);
-       
-extern  SPIRAL_ALIGNED(__m128 D25[32]);
-       
-extern  SPIRAL_ALIGNED(__m128 D26[496]);
-       
-extern  SPIRAL_ALIGNED(__m128 D27[32]);
-       
-extern  SPIRAL_ALIGNED(__m128 D28[496]);
-       
-extern  SPIRAL_ALIGNED(__m128 D29[96]);
-       
-extern  SPIRAL_ALIGNED(__m128 D30[1008]);
-       
-extern  SPIRAL_ALIGNED(__m128 D31[96]);
-       
-extern  SPIRAL_ALIGNED(__m128 D32[1008]);
-       
-extern  SPIRAL_ALIGNED(__m128 D33[224]);
-       
-extern  SPIRAL_ALIGNED(__m128 D34[2032]);
-       
-extern  SPIRAL_ALIGNED(__m128 D35[224]);
-       
-extern  SPIRAL_ALIGNED(__m128 D36[2032]);
-       
-extern  SPIRAL_ALIGNED(__m128d D37[96]);
-       
-extern  SPIRAL_ALIGNED(__m128d D38[96]);
-       
-extern  SPIRAL_ALIGNED(__m128d D39[96]);
-       
-extern  SPIRAL_ALIGNED(__m128d D40[224]);
-       
-extern  SPIRAL_ALIGNED(__m128d D41[224]);
-       
-extern  SPIRAL_ALIGNED(__m128d D42[224]);
-       
-extern  SPIRAL_ALIGNED(__m128d D43[480]);
-       
-extern  SPIRAL_ALIGNED(__m128d D44[480]);
-       
-extern  SPIRAL_ALIGNED(__m128d D45[480]);
-       
-extern  SPIRAL_ALIGNED(__m128d D46[992]);
-       
-extern  SPIRAL_ALIGNED(__m128d D47[992]);
-       
-extern  SPIRAL_ALIGNED(__m128d D48[992]);
-       
-extern  SPIRAL_ALIGNED(__m128d D49[2032]);
-       
-extern  SPIRAL_ALIGNED(__m128d D50[2032]);
-       
-extern  SPIRAL_ALIGNED(__m128d D51[508]);
-       
-extern  SPIRAL_ALIGNED(__m128d D52[224]);
-       
-extern  SPIRAL_ALIGNED(__m128d D53[2032]);
-       
-extern  SPIRAL_ALIGNED(__m128d D54[508]);
-       
-extern  SPIRAL_ALIGNED(__m128d D55[224]);
-       
-extern  SPIRAL_ALIGNED(__m128d D56[4080]);
-       
-extern  SPIRAL_ALIGNED(__m128d D57[4080]);
-       
-extern  SPIRAL_ALIGNED(__m128d D58[1020]);
-       
-extern  SPIRAL_ALIGNED(__m128d D59[480]);
-       
-extern  SPIRAL_ALIGNED(__m128d D60[4080]);
-       
-extern  SPIRAL_ALIGNED(__m128d D61[1020]);
-       
-extern  SPIRAL_ALIGNED(__m128d D62[480]);
-       
-extern  SPIRAL_ALIGNED(__m128d D63[112]);
-       
-extern  SPIRAL_ALIGNED(__m128d D64[112]);
-       
-extern  SPIRAL_ALIGNED(__m128d D65[112]);
-       
-extern  SPIRAL_ALIGNED(__m128d D66[240]);
-       
-extern  SPIRAL_ALIGNED(__m128d D67[240]);
-       
-extern  SPIRAL_ALIGNED(__m128d D68[240]);
-       
-extern  SPIRAL_ALIGNED(__m128d D69[496]);
-       
-extern  SPIRAL_ALIGNED(__m128d D70[496]);
-       
-extern  SPIRAL_ALIGNED(__m128d D71[496]);
-       
-extern  SPIRAL_ALIGNED(__m128d D72[992]);
-       
-extern  SPIRAL_ALIGNED(__m128d D73[992]);
-       
-extern  SPIRAL_ALIGNED(__m128d D74[992]);
-       
-extern  SPIRAL_ALIGNED(__m128d D75[1984]);
-       
-extern  SPIRAL_ALIGNED(__m128d D76[2046]);
-       
-extern  SPIRAL_ALIGNED(__m128d D77[1984]);
-       
-extern  SPIRAL_ALIGNED(__m128d D78[496]);
-       
-extern  SPIRAL_ALIGNED(__m128d D79[4080]);
-       
-extern  SPIRAL_ALIGNED(__m128d D80[4080]);
-       
-extern  SPIRAL_ALIGNED(__m128d D81[496]);
-       
-extern  SPIRAL_ALIGNED(__m128d D82[4080]);
-       
+extern  SPIRAL_ALIGNED(__m128 D962[32]);
+
+extern  SPIRAL_ALIGNED(__m128 D963[32]);
+
+extern  SPIRAL_ALIGNED(__m128 D964[64]);
+
+extern  SPIRAL_ALIGNED(__m128 D965[128]);
+
+extern  SPIRAL_ALIGNED(__m128 D966[128]);
+
+extern  SPIRAL_ALIGNED(__m128 D967[256]);
+
+extern  SPIRAL_ALIGNED(__m128 D968[512]);
+
+extern  SPIRAL_ALIGNED(__m128 D969[1024]);
+
+extern  SPIRAL_ALIGNED(__m128 D970[64]);
+
+extern  SPIRAL_ALIGNED(__m128 D971[2048]);
+
+extern  SPIRAL_ALIGNED(__m128 D972[4096]);
+
+extern  SPIRAL_ALIGNED(__m128 D973[512]);
+
+extern  SPIRAL_ALIGNED(__m128 D974[4096]);
+
+extern  SPIRAL_ALIGNED(__m128 D975[32]);
+
+extern  SPIRAL_ALIGNED(__m128 D976[32]);
+
+extern  SPIRAL_ALIGNED(__m128 D977[64]);
+
+extern  SPIRAL_ALIGNED(__m128 D978[128]);
+
+extern  SPIRAL_ALIGNED(__m128 D979[128]);
+
+extern  SPIRAL_ALIGNED(__m128 D980[256]);
+
+extern  SPIRAL_ALIGNED(__m128 D981[512]);
+
+extern  SPIRAL_ALIGNED(__m128 D982[1024]);
+
+extern  SPIRAL_ALIGNED(__m128 D983[64]);
+
+extern  SPIRAL_ALIGNED(__m128 D984[2048]);
+
+extern  SPIRAL_ALIGNED(__m128 D985[4096]);
+
+extern  SPIRAL_ALIGNED(__m128 D986[512]);
+
+extern  SPIRAL_ALIGNED(__m128 D987[4096]);
+
+extern  SPIRAL_ALIGNED(FLT D989[210]);
+
+extern  SPIRAL_ALIGNED(FLT D992[378]);
+
+extern  SPIRAL_ALIGNED(FLT D996[882]);
+
+extern  SPIRAL_ALIGNED(FLT D1003[1890]);
+
+extern  SPIRAL_ALIGNED(FLT D1010[2046]);
+
+extern  SPIRAL_ALIGNED(FLT D1011[1778]);
+
+extern  SPIRAL_ALIGNED(FLT D1012[210]);
+
+extern  SPIRAL_ALIGNED(FLT D1018[7154]);
+
+extern  SPIRAL_ALIGNED(FLT D1040[2046]);
+
+extern  SPIRAL_ALIGNED(FLT D1041[1778]);
+
+extern  SPIRAL_ALIGNED(FLT D1042[210]);
+
 
 #ifdef __cplusplus
 }

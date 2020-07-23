@@ -19,12 +19,13 @@ endif()
 ## Libsamplerate
 file(GLOB samplerate_src "libsamplerate/*.c")
 add_library(samplerate OBJECT ${samplerate_src})
+target_compile_options(samplerate PRIVATE -O3 -mavx2 -mfma)
 
 ## Spiralfft
 file(GLOB spiralfft_src "spiralfft/*.c")
 add_library(spiralfft STATIC
   ${spiralfft_src})
-target_compile_options(spiralfft PRIVATE -O3 -mavx2 -mfma -flto)
+target_compile_options(spiralfft PRIVATE -O3 -mavx2 -mfma)
 
 ## Main Library
 include_directories("src/" "spiralfft/")
@@ -55,7 +56,8 @@ add_library(mixed SHARED
   #"src/segments/repeat.c"
   "src/segments/space_mixer.c"
   "src/segments/volume_control.c"
-  $<TARGET_OBJECTS:samplerate>)
+  $<TARGET_OBJECTS:samplerate>
+  $<TARGET_OBJECTS:spiralfft>)
 string(REGEX MATCH "([0-9]+)\\.([0-9]+)-[0-9]+-(.+)" TMP ${VERSION})
 set(MIXED_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(MIXED_VERSION_MINOR ${CMAKE_MATCH_2})
@@ -66,16 +68,18 @@ set_property(TARGET mixed PROPERTY SOVERSION ${MIXED_VERSION_MAJOR})
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(mixed PRIVATE MIXED_BUILD=1 MIXED_VERSION="${MIXED_VERSION_STRING}")
-target_compile_options(mixed PRIVATE -mrdrnd -mavx2 -mfma -flto -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes)
-target_link_options(mixed PRIVATE -flto)
+target_compile_options(mixed PRIVATE -mrdrnd -mavx2 -mfma -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes)
+target_link_options(mixed PRIVATE)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang"
     OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  target_compile_options(spiralfft PRIVATE -fvisibility=hidden)
   target_compile_options(mixed PRIVATE -fvisibility=hidden)
 endif()
 if(WIN32)
-  target_link_libraries(mixed spiralfft m)
+  target_link_libraries(mixed m)
 else()
-  target_link_libraries(mixed spiralfft dl m)
+  target_link_libraries(mixed dl m)
 endif()
 
 ## Tester
