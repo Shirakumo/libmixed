@@ -248,6 +248,8 @@ extern "C" {
     // Returns the current segment in the queue.
     // The value is a pointer to a struct mixed_segment.
     MIXED_CURRENT_SEGMENT,
+    // ACcess the speed factor
+    MIXED_SPEED_FACTOR,
   };
 
   // This enum descripbes the possible resampling quality options.
@@ -1027,6 +1029,13 @@ extern "C" {
   // frequency is larger than half of the samplerate, major distortion will
   // occur, so tread carefully.
   MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pass, size_t cutoff, size_t samplerate, struct mixed_segment *segment);
+
+  // A speed change segment.
+  //
+  // Speed should be a factor, with 1.0 being 'same speed'. Higher factors will
+  // speed it up, lower factors will slow it down. This is achieved by
+  // resampling the audio data.
+  MIXED_EXPORT int mixed_make_segment_speed_change(double speed, struct mixed_segment *segment);
 
   // A queue segment for inner segments.
   //

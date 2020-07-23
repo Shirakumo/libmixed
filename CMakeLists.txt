@@ -53,6 +53,7 @@ add_library(mixed SHARED
   "src/segments/queue.c"
   #"src/segments/repeat.c"
   "src/segments/space_mixer.c"
+  "src/segments/speed_change.c"
   "src/segments/volume_control.c"
   $<TARGET_OBJECTS:samplerate>
   $<TARGET_OBJECTS:spiralfft>)
