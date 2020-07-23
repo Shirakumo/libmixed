@@ -63,14 +63,16 @@ int speed_segment_mix(struct mixed_segment *segment){
   src_data.output_frames = LONG_MAX;
   mixed_buffer_request_read(&src_data.data_in, &src_data.input_frames, data->in);
   mixed_buffer_request_write(&src_data.data_out, &src_data.output_frames, data->out);
-  int e = src_process(data->resample_state, &src_data);
-  if(e){
-    printf("%s\n", src_strerror(e));
-    mixed_error(MIXED_RESAMPLE_FAILED);
+  if(src_data.input_frames && src_data.output_frames){
+    int e = src_process(data->resample_state, &src_data);
+    if(e){
+      printf("%s\n", src_strerror(e));
+      mixed_error(MIXED_RESAMPLE_FAILED);
     return 0;
+    }
+    mixed_buffer_finish_read(src_data.input_frames_used, data->in);
+    mixed_buffer_finish_write(src_data.output_frames_gen, data->out);
   }
-  mixed_buffer_finish_read(src_data.input_frames_used, data->in);
-  mixed_buffer_finish_write(src_data.output_frames_gen, data->out);
   return 1;
 }
 
