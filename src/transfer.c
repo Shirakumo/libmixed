@@ -116,11 +116,15 @@ MIXED_EXPORT mixed_transfer_function_from mixed_translator_from(enum mixed_encod
   return transfer_array_functions_from[encoding-1];
 }
 
-MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, float volume){
+MIXED_EXPORT int mixed_buffer_from_pack(struct mixed_pack *in, struct mixed_buffer **outs, float volume){
   uint8_t channels = in->channels;
-  size_t frames = in->frames;
-  char *ind = in->data;
+  size_t frames_to_bytes = channels * mixed_samplesize(in->encoding);
+  size_t frames = SIZE_MAX;
+  char *ind;
   float *outd[channels];
+
+  mixed_pack_request_read(&ind, &frames, in);
+  frames = frames / frames_to_bytes;
   for(size_t i=0; i<channels; ++i)
     mixed_buffer_request_write(&outd[i], &frames, outs[i]);
   
@@ -131,6 +135,7 @@ MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, s
     ind += size;
   }
 
+  mixed_pack_finish_read(frames * frames_to_bytes, in);
   for(size_t i=0; i<channels; ++i)
     mixed_buffer_finish_write(frames, outs[i]);
 
@@ -156,11 +161,15 @@ MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding 
   return transfer_array_functions_to[encoding-1];
 }
 
-MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, float volume){
+MIXED_EXPORT int mixed_buffer_to_pack(struct mixed_buffer **ins, struct mixed_pack *out, float volume){
   uint8_t channels = out->channels;
-  size_t frames = out->frames;
-  char *outd = out->data;
+  size_t frames_to_bytes = channels * mixed_samplesize(out->encoding);
+  size_t frames = SIZE_MAX;
+  char *outd;
   float *ind[channels];
+
+  mixed_pack_request_write(&outd, &frames, out);
+  frames = frames / frames_to_bytes;
   for(size_t i=0; i<channels; ++i)
     mixed_buffer_request_read(&ind[i], &frames, ins[i]);
   
@@ -171,6 +180,7 @@ MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct 
     outd += size;
   }
 
+  mixed_pack_finish_write(frames * frames_to_bytes, out);
   for(size_t i=0; i<channels; ++i)
     mixed_buffer_finish_read(frames, ins[i]);
 

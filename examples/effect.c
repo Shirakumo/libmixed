@@ -24,13 +24,9 @@ int main(int argc, char **argv){
     goto cleanup;
   }
   
-  if(!mixed_make_segment_frequency_pass(MIXED_PASS_HIGH, 440, 44100, &sfx_segment)){
+  //if(!mixed_make_segment_frequency_pass(MIXED_PASS_HIGH, 440, 44100, &sfx_segment)){
+  if(!mixed_make_segment_speed_change(2.0, &sfx_segment)){
     fprintf(stderr, "Failed to create segment: %s\n", mixed_error_string(-1));
-    goto cleanup;
-  }
-  
-  if(!mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &sfx_segment)){
-    fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
@@ -40,7 +36,8 @@ int main(int argc, char **argv){
   }
   
   // Attach to combining segments
-  if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &mp3->left, &sfx_segment)){
+  if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &mp3->left, &sfx_segment)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &sfx_segment)){
     fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -71,12 +68,12 @@ int main(int argc, char **argv){
       fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
       goto cleanup;
     }
+    mp3->pack.frames = read / (mp3->pack.channels*mixed_samplesize(mp3->pack.encoding));
     // Make sure we play until everything's done.
     if(read_total < read) read_total = read;
-    // Make sure to zero out empty regions.
-    memset(((uint8_t *)mp3->pack.data)+read, 0, mp3->pack.size-read);
-
+    
     mixed_segment_sequence_mix(&sequence);
+    mixed_buffer_clear(&mp3->right);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;

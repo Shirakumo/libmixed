@@ -381,7 +381,7 @@ extern "C" {
     MIXED_POINTER,
     MIXED_SEGMENT_POINTER,
     MIXED_BUFFER_POINTER,
-    MIXED_PACKED_AUDIO_POINTER,
+    MIXED_PACK_POINTER,
     MIXED_SEGMENT_SEQUENCE_POINTER,
     MIXED_LOCATION_ENUM,
     MIXED_FREQUENCY_PASS_ENUM,
@@ -423,13 +423,7 @@ extern "C" {
   //
   // Using this struct you can then create a converter
   // segment to include the external audio into the mix.
-  MIXED_EXPORT struct mixed_packed_audio{
-    // Pointer to the encoded sample data that this channel
-    // consumes or provides. Samples must be interleaved,
-    // meaning, eg for stereo: C1 C2 C1 C2 C1 C2 ...
-    void *data;
-    // The length of the data array in bytes.
-    size_t size;
+  MIXED_EXPORT struct mixed_pack{
     // The number of frames actually filled in the data array.
     // A frame is channels number of samples.
     size_t frames;
@@ -439,6 +433,15 @@ extern "C" {
     uint8_t channels;
     // The sample rate at which data is encoded in Hz.
     size_t samplerate;
+    // Bip buffer internals
+    void *_data;
+    size_t size;
+    size_t r1_start;
+    size_t r1_size;
+    size_t r2_start;
+    size_t r2_size;
+    size_t reserved_start;
+    size_t reserved_size;
   };
 
   // Metadata struct for a segment's field.
@@ -541,6 +544,16 @@ extern "C" {
     size_t size;
   };
 
+  MIXED_EXPORT int mixed_make_pack(size_t size, struct mixed_pack *pack);
+  MIXED_EXPORT void mixed_free_pack(struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_clear(struct mixed_pack *buffer);
+  MIXED_EXPORT size_t mixed_pack_available_write(struct mixed_pack *buffer);
+  MIXED_EXPORT size_t mixed_pack_available_read(struct mixed_pack *buffer);
+  MIXED_EXPORT int mixed_pack_request_write(void **area, size_t *size, struct mixed_pack *buffer);
+  MIXED_EXPORT int mixed_pack_finish_write(size_t size, struct mixed_pack *buffer);
+  MIXED_EXPORT int mixed_pack_request_read(void **area, size_t *size, struct mixed_pack *buffer);
+  MIXED_EXPORT int mixed_pack_finish_read(size_t size, struct mixed_pack *buffer); 
+
   // Note that while this API deals with sound and you will probably
   // want to use threads to handle the playback, it is in itself not
   // thread safe and does not do any kind of locking or mutual
@@ -582,7 +595,7 @@ extern "C" {
   // pack, and will be set to the number of frames that have actually
   // been read from the packed buffer. This may be less if the
   // output buffers do not have enough space.
-  MIXED_EXPORT int mixed_buffer_from_packed_audio(struct mixed_packed_audio *in, struct mixed_buffer **outs, float volume);
+  MIXED_EXPORT int mixed_buffer_from_pack(struct mixed_pack *in, struct mixed_buffer **outs, float volume);
 
   // Convert buffer data to the packed data.
   //
@@ -595,7 +608,7 @@ extern "C" {
   // pack, and will be set to the number of frames that have actually
   // been written to the pack. This may be less if the input buffers
   // do not have enough data available.
-  MIXED_EXPORT int mixed_buffer_to_packed_audio(struct mixed_buffer **ins, struct mixed_packed_audio *out, float volume);
+  MIXED_EXPORT int mixed_buffer_to_pack(struct mixed_buffer **ins, struct mixed_pack *out, float volume);
 
   // Transfers data from one buffer to the other.
   //
@@ -833,7 +846,7 @@ extern "C" {
   // The sample rate given denotes the target sample rate of the
   // buffers connected to the outputs of this segment. The source
   // sample rate is the sample rate stored in the channel.
-  MIXED_EXPORT int mixed_make_segment_unpacker(struct mixed_packed_audio *packed, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_unpacker(struct mixed_pack *packed, size_t samplerate, struct mixed_segment *segment);
 
   // An audio packer.
   //
@@ -845,7 +858,7 @@ extern "C" {
   // The sample rate given denotes the source sample rate of the
   // buffers connected to the inputs of this segment. The target
   // sample rate is the sample rate stored in the channel.
-  MIXED_EXPORT int mixed_make_segment_packer(struct mixed_packed_audio *packed, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_packer(struct mixed_pack *packed, size_t samplerate, struct mixed_segment *segment);
 
   // A basic, additive mixer
   //

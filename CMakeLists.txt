@@ -35,6 +35,7 @@ add_library(mixed SHARED
   "src/internal.h"
   "src/ladspa.h"
   "src/mixed.h"
+  "src/pack.c"
   "src/pitch.c"
   "src/segment.c"
   "src/segment_sequence.c"
