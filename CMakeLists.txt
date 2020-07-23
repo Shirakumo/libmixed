@@ -10,8 +10,6 @@ if (GIT_SCM AND GITDIR)
   exec_program(
     "git" ${CMAKE_CURRENT_SOURCE_DIR} ARGS "describe" "--tags" "--long"
     OUTPUT_VARIABLE VERSION )
-  file(WRITE "VERSION" ${VERSION})
-  message(STATUS "Rebuilt VERSION")
 else()
   file(READ "VERSION" VERSION)
 endif()
