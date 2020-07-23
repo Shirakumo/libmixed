@@ -51,22 +51,28 @@ int pack_segment_set_buffer(size_t field, size_t location, void *buffer, struct 
 
 int source_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
+  struct mixed_pack *pack = data->pack;
 
-  if(data->pack->samplerate == data->samplerate){
+  if(pack->samplerate == data->samplerate){
     mixed_buffer_from_pack(data->pack, data->buffers, data->volume);
   }else{
     SRC_DATA *src_data = data->resample_data;
     size_t frames = data->max_frames;
-    uint8_t channels = data->pack->channels;
+    uint8_t channels = pack->channels;
+    size_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
     // Step 1: determine available space
     // FIXME: resampling changes frame count
     for(uint8_t c=0; c<channels; ++c)
       frames = MIN(frames, mixed_buffer_available_write(data->buffers[c]));
     // Step 2: unpack to contiguous floats
-    mixed_transfer_function_from decoder = mixed_translator_from(data->pack->encoding);
-    decoder(data->pack->data, src_data->data_in, 1, data->pack->frames*channels, data->volume); 
+    mixed_transfer_function_from decoder = mixed_translator_from(pack->encoding);
+    size_t bytes = SIZE_MAX;
+    void *pack_data;
+    mixed_pack_request_read(&pack_data, &bytes, pack);
+    frames = MIN(frames, bytes / frames_to_bytes);
+    decoder(pack_data, src_data->data_in, 1, frames*channels, data->volume); 
     // Step 3: resample
-    src_data->input_frames = data->pack->frames;
+    src_data->input_frames = frames;
     int e = src_process(data->resample_state, src_data);
     if(e){
       mixed_err(MIXED_RESAMPLE_FAILED);
@@ -86,21 +92,26 @@ int source_segment_mix(struct mixed_segment *segment){
       mixed_buffer_finish_write(count, data->buffers[c]);
     }
     // Step 5: update consumed samples
-    data->pack->frames = src_data->input_frames_used;
+    mixed_pack_finish_read(src_data->input_frames_used * frames_to_bytes, pack);
   }
   return 1;
 }
 
 int drain_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
+  struct mixed_pack *pack = data->pack;
 
-  if(data->pack->samplerate == data->samplerate){
-    data->pack->frames = data->pack->size / (data->pack->channels * mixed_samplesize(data->pack->encoding));
-    mixed_buffer_to_pack(data->buffers, data->pack, data->volume);
+  if(pack->samplerate == data->samplerate){
+    mixed_buffer_to_pack(data->buffers, pack, data->volume);
   }else{
     SRC_DATA *src_data = data->resample_data;
     size_t frames = data->max_frames;
-    size_t channels = data->pack->channels;
+    size_t channels = pack->channels;
+    size_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
+    size_t bytes = SIZE_MAX;
+    void *pack_data;
+    mixed_pack_request_write(&pack_data, &bytes, pack);
+    frames = MIN(frames, bytes / frames_to_bytes);
     // Step 1: pack to contigous, alternating float array
     for(size_t c=0; c<channels; ++c){
       float *source;
@@ -119,14 +130,12 @@ int drain_segment_mix(struct mixed_segment *segment){
     }
     // Step 3: re-encode
     size_t out_frames = src_data->output_frames_gen;
-    mixed_transfer_function_to encoder = mixed_translator_to(data->pack->encoding);
-    for(size_t c=0; c<channels; ++c)
-      encoder(src_data->data_out, data->pack->data, channels, out_frames, data->volume);
+    mixed_transfer_function_to encoder = mixed_translator_to(pack->encoding);
+    encoder(src_data->data_out, pack_data, 1, out_frames*channels, data->volume);
     // Step 4: update consumed buffers
-    data->pack->frames = out_frames;
-    frames = src_data->input_frames_used;
+    mixed_pack_finish_write(out_frames, pack);
     for(size_t c=0; c<channels; ++c)
-      mixed_buffer_finish_read(frames, data->buffers[c]);
+      mixed_buffer_finish_read(src_data->input_frames_used, data->buffers[c]);
   }
   return 1;
 }
@@ -172,7 +181,6 @@ int drain_segment_set(size_t field, void *value, struct mixed_segment *segment){
   switch(field){
   case MIXED_BYPASS:
     if(*(bool *)value){
-      memset(data->pack->data, 0, data->pack->size);
       segment->mix = mix_noop;
     }else{
       segment->mix = drain_segment_mix;

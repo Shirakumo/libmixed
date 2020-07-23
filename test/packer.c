@@ -2,21 +2,26 @@
 #include "tester.h"
 #include <math.h>
 
-static int make_pack(enum mixed_encoding encoding, int channels, struct mixed_packed_audio *pack){
+static int make_pack(enum mixed_encoding encoding, int channels, struct mixed_pack *pack){
   int samples = channels*500;
-  pack->data = calloc(samples, mixed_samplesize(encoding));
-  if(pack->data == 0) return 0;
   pack->size = samples*mixed_samplesize(encoding);
-  pack->frames = samples / channels;
   pack->encoding = encoding;
   pack->channels = channels;
-  pack->samplerate = 100;
+  pack->samplerate = 1;
+  if(!mixed_make_pack(16*mixed_samplesize(encoding), pack))
+    return 0;
+  char *buffer;
+  size_t size = SIZE_MAX;
+  mixed_pack_request_write(&buffer, &size, pack);
+  for(int i=0; i<size; ++i)
+    buffer[i] = rand()%128;
+  mixed_pack_finish_write(size, pack);
   return 1;
 }
 
 define_test(single_channel_no_resample, {
-    struct mixed_packed_audio pack_i = {0};
-    struct mixed_packed_audio pack_o = {0};
+    struct mixed_pack pack_i = {0};
+    struct mixed_pack pack_o = {0};
     struct mixed_buffer buffer = {0};
     struct mixed_segment packer = {0};
     struct mixed_segment unpacker = {0};
@@ -46,13 +51,13 @@ define_test(single_channel_no_resample, {
     mixed_free_segment(&packer);
     mixed_free_segment(&unpacker);
     mixed_free_buffer(&buffer);
-    if(pack_i.data) free(pack_i.data);
-    if(pack_o.data) free(pack_o.data);
+    mixed_free_pack(&pack_i);
+    mixed_free_pack(&pack_o);
   })
 
 define_test(single_channel_downsample_out, {
-    struct mixed_packed_audio pack_i = {0};
-    struct mixed_packed_audio pack_o = {0};
+    struct mixed_pack pack_i = {0};
+    struct mixed_pack pack_o = {0};
     struct mixed_buffer buffer = {0};
     struct mixed_segment unpacker = {0};
     struct mixed_segment packer = {0};
@@ -85,13 +90,13 @@ define_test(single_channel_downsample_out, {
     mixed_free_segment(&packer);
     mixed_free_segment(&unpacker);
     mixed_free_buffer(&buffer);
-    if(pack_i.data) free(pack_i.data);
-    if(pack_o.data) free(pack_o.data);
+    mixed_free_pack(&pack_i);
+    mixed_free_pack(&pack_o);
   })
 
 define_test(single_channel_resample_in_out, {
-    struct mixed_packed_audio pack_i = {0};
-    struct mixed_packed_audio pack_o = {0};
+    struct mixed_pack pack_i = {0};
+    struct mixed_pack pack_o = {0};
     struct mixed_buffer buffer = {0};
     struct mixed_segment unpacker = {0};
     struct mixed_segment packer = {0};
@@ -124,8 +129,8 @@ define_test(single_channel_resample_in_out, {
     mixed_free_segment(&packer);
     mixed_free_segment(&unpacker);
     mixed_free_buffer(&buffer);
-    if(pack_i.data) free(pack_i.data);
-    if(pack_o.data) free(pack_o.data);
+    mixed_free_pack(&pack_i);
+    mixed_free_pack(&pack_o);
   })
   
 #undef __TEST_SUITE

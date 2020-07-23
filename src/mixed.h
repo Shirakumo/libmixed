@@ -424,9 +424,6 @@ extern "C" {
   // Using this struct you can then create a converter
   // segment to include the external audio into the mix.
   MIXED_EXPORT struct mixed_pack{
-    // The number of frames actually filled in the data array.
-    // A frame is channels number of samples.
-    size_t frames;
     // The sample encoding in the byte array.
     enum mixed_encoding encoding;
     // The number of channels that are packed into the array.

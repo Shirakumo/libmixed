@@ -138,8 +138,6 @@ MIXED_EXPORT int mixed_buffer_from_pack(struct mixed_pack *in, struct mixed_buff
   mixed_pack_finish_read(frames * frames_to_bytes, in);
   for(size_t i=0; i<channels; ++i)
     mixed_buffer_finish_write(frames, outs[i]);
-
-  in->frames = frames;
   
   return 1;
 }
@@ -183,8 +181,6 @@ MIXED_EXPORT int mixed_buffer_to_pack(struct mixed_buffer **ins, struct mixed_pa
   mixed_pack_finish_write(frames * frames_to_bytes, out);
   for(size_t i=0; i<channels; ++i)
     mixed_buffer_finish_read(frames, ins[i]);
-
-  out->frames = frames;
   
   return 1;
 }
