@@ -135,7 +135,7 @@ int source_segment_set(size_t field, void *value, struct mixed_segment *segment)
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   
   switch(field){
-  case MIXED_PACKED_AUDIO_RESAMPLE_TYPE: {
+  case MIXED_RESAMPLE_TYPE: {
     int error;
     SRC_STATE *new = src_new(*(enum mixed_resample_type *)value, data->pack->channels, &error);
     if(!new) {
@@ -217,7 +217,7 @@ int source_segment_info(struct mixed_segment_info *info, struct mixed_segment *s
                  MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The volume scaling factor.");
 
-  set_info_field(field++, MIXED_PACKED_AUDIO_RESAMPLE_TYPE,
+  set_info_field(field++, MIXED_RESAMPLE_TYPE,
                  MIXED_RESAMPLE_TYPE_ENUM, 1, MIXED_SEGMENT | MIXED_SET,
                  "The type of resampling algorithm used.");
 

@@ -113,10 +113,10 @@ extern "C" {
     // to values higher than one will result in distortion.
     // The type of this field should be a float.
     MIXED_VOLUME,
-    // Access to the resampling quality of the audio pack.
+    // Access to the resampling quality.
     // The value must be from the mixed_resample_type enum.
     // The default is MIXED_SINC_FASTEST
-    MIXED_PACKED_AUDIO_RESAMPLE_TYPE,
+    MIXED_RESAMPLE_TYPE,
     // Access the panning of the general segment as a float.
     // The pan should be in the range of [-1.0, +1.0] where
     // -1 is all the way on the left and +1 is on the right.

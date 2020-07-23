@@ -65,8 +65,8 @@ define_test(single_channel_downsample_out, {
     pass(mixed_make_segment_packer(&pack_o, pack_i.samplerate, &packer));
     // Set quality so we get predictable sample counts
     enum mixed_resample_type quality = MIXED_LINEAR_INTERPOLATION;
-    pass(mixed_segment_set(MIXED_PACKED_AUDIO_RESAMPLE_TYPE, &quality, &unpacker));
-    pass(mixed_segment_set(MIXED_PACKED_AUDIO_RESAMPLE_TYPE, &quality, &packer));
+    pass(mixed_segment_set(MIXED_RESAMPLE_TYPE, &quality, &unpacker));
+    pass(mixed_segment_set(MIXED_RESAMPLE_TYPE, &quality, &packer));
     // Connect the buffers
     pass(mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &buffer, &unpacker));
     pass(mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &buffer, &packer));
@@ -103,8 +103,8 @@ define_test(single_channel_resample_in_out, {
     pass(mixed_make_segment_packer(&pack_o, 80, &packer));
     // Set quality so we get predictable results
     enum mixed_resample_type quality = MIXED_SINC_BEST_QUALITY;
-    pass(mixed_segment_set(MIXED_PACKED_AUDIO_RESAMPLE_TYPE, &quality, &unpacker));
-    pass(mixed_segment_set(MIXED_PACKED_AUDIO_RESAMPLE_TYPE, &quality, &packer));
+    pass(mixed_segment_set(MIXED_RESAMPLE_TYPE, &quality, &unpacker));
+    pass(mixed_segment_set(MIXED_RESAMPLE_TYPE, &quality, &packer));
     // Connect the buffers
     pass(mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &buffer, &unpacker));
     pass(mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &buffer, &packer));
