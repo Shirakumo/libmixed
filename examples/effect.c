@@ -61,16 +61,16 @@ int main(int argc, char **argv){
   // Perform the mixing
   mixed_segment_sequence_start(&sequence);
 
-  size_t read = 0, read_total = 0, played = 0;
+  size_t read = 0, played = 0;
   do{
-    read_total = 0;
-    if(mpg123_read(mp3->handle, mp3->pack.data, mp3->pack.size, &read) != MPG123_OK){
+    void *buffer;
+    read = SIZE_MAX;
+    mixed_pack_request_write(&buffer, &read, &mp3->pack);
+    if(mpg123_read(mp3->handle, buffer, read, &read) != MPG123_OK){
       fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
       goto cleanup;
     }
-    mp3->pack.frames = read / (mp3->pack.channels*mixed_samplesize(mp3->pack.encoding));
-    // Make sure we play until everything's done.
-    if(read_total < read) read_total = read;
+    mixed_pack_finish_write(read, &mp3->pack);
     
     mixed_segment_sequence_mix(&sequence);
     mixed_buffer_clear(&mp3->right);
@@ -79,12 +79,14 @@ int main(int argc, char **argv){
       goto cleanup;
     }
     
-    size_t bytes = out->pack.frames * out->pack.channels * mixed_samplesize(out->pack.encoding);
-    played = out123_play(out->handle, out->pack.data, bytes);
+    size_t bytes = SIZE_MAX;
+    mixed_pack_request_read(&buffer, &bytes, &out->pack);
+    played = out123_play(out->handle, buffer, bytes);
     if(played < bytes){
       fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
     }
-  }while(read_total && !interrupted);
+    mixed_pack_finish_read(played, &out->pack);
+  }while(read && !interrupted);
 
   mixed_segment_sequence_end(&sequence);
 

@@ -70,11 +70,14 @@ int main(int argc, char **argv){
 
     mixed_buffer_copy(&out->left, &out->right);
 
-    size_t bytes = out->pack.frames * out->pack.channels * mixed_samplesize(out->pack.encoding);
-    played = out123_play(out->handle, out->pack.data, bytes);
+    void *buffer;
+    size_t bytes = SIZE_MAX;
+    mixed_pack_request_read(&buffer, &bytes, &out->pack);
+    played = out123_play(out->handle, buffer, bytes);
     if(played < bytes){
       fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
     }
+    mixed_pack_finish_read(played, &out->pack);
   }while(!interrupted);
   
   mixed_segment_sequence_end(&sequence);

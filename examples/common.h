@@ -33,7 +33,7 @@ int fmt123_to_mixed(int fmt){
 
 struct out{
   out123_handle *handle;
-  struct mixed_packed_audio pack;
+  struct mixed_pack pack;
   struct mixed_segment segment;
   struct mixed_buffer left;
   struct mixed_buffer right;
@@ -45,9 +45,7 @@ void free_out(struct out *out){
     out123_close(out->handle);
     out123_del(out->handle);
   }
-  if(out->pack.data){
-    free(out->pack.data);
-  }
+  mixed_free_pack(&out->pack);
   mixed_free_segment(&out->segment);
   mixed_free_buffer(&out->left);
   mixed_free_buffer(&out->right);
@@ -151,11 +149,9 @@ int load_out_segment(size_t samples, struct out **_out){
   out->pack.channels = out_channels;
   out->pack.samplerate = out_samplerate;
   out_samplesize = mixed_samplesize(out->pack.encoding);
-  out->pack.size = samples*out_samplesize*out_channels;
-  out->pack.data = calloc(out->pack.size, sizeof(uint8_t));
 
-  if(!out->pack.data){
-    fprintf(stderr, "Couldn't allocate output buffer.\n");
+  if(!mixed_make_pack(samples*out_samplesize*out_channels, &out->pack)){
+    fprintf(stderr, "Couldn't allocate output pack.\n");
     goto cleanup;
   }
   
@@ -186,7 +182,7 @@ int load_out_segment(size_t samples, struct out **_out){
 
 struct mp3{
   mpg123_handle *handle;
-  struct mixed_packed_audio pack;
+  struct mixed_pack pack;
   struct mixed_segment segment;
   struct mixed_buffer left;
   struct mixed_buffer right;
@@ -198,9 +194,7 @@ void free_mp3(struct mp3 *mp3){
     mpg123_close(mp3->handle);
     mpg123_delete(mp3->handle);
   }
-  if(mp3->pack.data){
-    free(mp3->pack.data);
-  }
+  mixed_free_pack(&mp3->pack);
   mixed_free_segment(&mp3->segment);
   mixed_free_buffer(&mp3->left);
   mixed_free_buffer(&mp3->right);
@@ -254,8 +248,11 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
   mp3->pack.channels = mp3_channels;
   mp3->pack.samplerate = mp3_samplerate;
   mp3_samplesize = mixed_samplesize(mp3->pack.encoding);
-  mp3->pack.size = samples*mp3_samplesize*mp3_channels;
-  mp3->pack.data = calloc(mp3->pack.size, sizeof(uint8_t));
+
+  if(!mixed_make_pack(samples*mp3_samplesize*mp3_channels, &mp3->pack)){
+    fprintf(stderr, "Failed to allocate input pack: %s\n", mixed_error_string(-1));
+    goto cleanup;
+  }
 
   if(!mixed_make_segment_unpacker(&mp3->pack, 44100, &mp3->segment)){
     fprintf(stderr, "Failed to create segment for %s: %s\n", file, mixed_error_string(-1));
