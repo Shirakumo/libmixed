@@ -133,7 +133,7 @@ int drain_segment_mix(struct mixed_segment *segment){
     mixed_transfer_function_to encoder = mixed_translator_to(pack->encoding);
     encoder(src_data->data_out, pack_data, 1, out_frames*channels, data->volume);
     // Step 4: update consumed buffers
-    mixed_pack_finish_write(out_frames, pack);
+    mixed_pack_finish_write(out_frames * frames_to_bytes, pack);
     for(size_t c=0; c<channels; ++c)
       mixed_buffer_finish_read(src_data->input_frames_used, data->buffers[c]);
   }
