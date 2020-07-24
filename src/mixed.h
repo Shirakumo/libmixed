@@ -1072,6 +1072,12 @@ extern "C" {
   MIXED_EXPORT int mixed_queue_remove_at(size_t pos, struct mixed_segment *queue);
   MIXED_EXPORT int mixed_queue_clear(struct mixed_segment *queue);
 
+  // A segment that throws away all of its input.
+  MIXED_EXPORT int mixed_make_segment_void(struct mixed_segment *segment);
+
+  // A segment that simply produces silence.
+  MIXED_EXPORT int mixed_make_segment_zero(struct mixed_segment *segment);
+
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);
 

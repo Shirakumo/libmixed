@@ -50,6 +50,7 @@ add_library(mixed SHARED
   "src/segments/generator.c"
   "src/segments/ladspa.c"
   "src/segments/noise.c"
+  "src/segments/null.c"
   "src/segments/packer.c"
   "src/segments/pitch.c"
   "src/segments/queue.c"
