@@ -4,7 +4,7 @@ int main(int argc, char **argv){
   int exit = 1;
   size_t samples = 100;
   struct mixed_segment_sequence sequence = {0};
-  struct mixed_segment sfx_segment = {0};
+  struct mixed_segment sfx_l = {0}, sfx_r = {0};
   struct mp3 *mp3;
   struct out *out = 0;
 
@@ -25,7 +25,8 @@ int main(int argc, char **argv){
   }
   
   //if(!mixed_make_segment_frequency_pass(MIXED_PASS_HIGH, 440, 44100, &sfx_segment)){
-  if(!mixed_make_segment_speed_change(2.0, &sfx_segment)){
+  if(!mixed_make_segment_speed_change(0.5, &sfx_l)
+     || !mixed_make_segment_speed_change(0.5, &sfx_r)){
     fprintf(stderr, "Failed to create segment: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -36,8 +37,10 @@ int main(int argc, char **argv){
   }
   
   // Attach to combining segments
-  if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &mp3->left, &sfx_segment)
-     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &sfx_segment)){
+  if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &mp3->left, &sfx_l)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &sfx_l)
+     || !mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &mp3->right, &sfx_r)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->right, &sfx_r)){
     fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -52,7 +55,8 @@ int main(int argc, char **argv){
   // will not figure out on its own in which order the segments should
   // be called. We specify this here.
   if(!mixed_segment_sequence_add(&mp3->segment, &sequence) ||
-     !mixed_segment_sequence_add(&sfx_segment, &sequence) ||
+     !mixed_segment_sequence_add(&sfx_l, &sequence) ||
+     !mixed_segment_sequence_add(&sfx_r, &sequence) ||
      !mixed_segment_sequence_add(&out->segment, &sequence)){
     fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
     goto cleanup;
@@ -73,7 +77,6 @@ int main(int argc, char **argv){
     mixed_pack_finish_write(read, &mp3->pack);
     
     mixed_segment_sequence_mix(&sequence);
-    mixed_buffer_clear(&mp3->right);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
@@ -86,7 +89,7 @@ int main(int argc, char **argv){
       fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
     }
     mixed_pack_finish_read(played, &out->pack);
-  }while(read && !interrupted);
+  }while(played && !interrupted);
 
   mixed_segment_sequence_end(&sequence);
 
@@ -96,7 +99,8 @@ int main(int argc, char **argv){
  cleanup:
   fprintf(stderr, "\nCleaning up.\n");
   
-  mixed_free_segment(&sfx_segment);
+  mixed_free_segment(&sfx_l);
+  mixed_free_segment(&sfx_r);
   mixed_free_segment_sequence(&sequence);
   free_mp3(mp3);
   free_out(out);
