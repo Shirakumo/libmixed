@@ -83,6 +83,9 @@ extern "C" {
     MIXED_BUFFER_OVERCOMMIT,
     // The change in the sample rates is too big.
     MIXED_BAD_RESAMPLE_FACTOR,
+    // An unsupported channel conversion configuration was
+    // requested.
+    MIXED_BAD_CHANNEL_CONFIGURATION,
   };
 
   // This enum describes the possible sample encodings.
@@ -1077,6 +1080,12 @@ extern "C" {
 
   // A segment that simply produces silence.
   MIXED_EXPORT int mixed_make_segment_zero(struct mixed_segment *segment);
+
+  // A segment for channel conversion
+  //
+  // This segment allows changing between different channel representations.
+  // If a requested configuration is not supported, an error is created.
+  MIXED_EXPORT int mixed_make_segment_channel_convert(uint8_t in, uint8_t out, struct mixed_segment *segment);
 
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);

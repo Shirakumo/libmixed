@@ -74,6 +74,8 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "More data was attempted to be committed to the buffer than was requested.";
   case MIXED_BAD_RESAMPLE_FACTOR:
     return "The requested change in the sample rates is too big.";
+  case MIXED_BAD_CHANNEL_CONFIGURATION:
+    return "An unsupported channel conversion configuration was requested.";
   default:
     return "Unknown error code.";
   }
