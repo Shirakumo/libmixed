@@ -10,7 +10,9 @@ void main(){
 #error \"No support\"
 #endif
 }")
-    try_compile(${var} "${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp" ${test_file})
+    
+    try_compile(${var} "${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp" ${test_file}
+      COMPILE_DEFINITIONS "-march=native")
     if(${var})
       message(STATUS "Checking for ${macroname} - found")
     endif()
@@ -24,6 +26,7 @@ set(CPU_EXTENSION_FLAGS "-march=native")
 check_flag(HAS_SSE "__SSE__" "-msse")
 check_flag(HAS_SSE2 "__SSE2__" "-msse2")
 check_flag(HAS_SSE3 "__SSE3__" "-msse3")
-check_flag(HAS_SSE4 "__SSE4__" "-msse4")
+check_flag(HAS_SSE4_1 "__SSE4_1__" "-msse4.1")
+check_flag(HAS_SSE4_2 "__SSE4_2__" "-msse4.2")
 check_flag(HAS_AVX "__AVX__" "-mavx")
 check_flag(HAS_AVX2 "__AVX2__" "-mavx2")
