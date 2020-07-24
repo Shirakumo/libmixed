@@ -2,7 +2,6 @@
 #include "tester.h"
 
 static int make_pack(enum mixed_encoding encoding, int channels, struct mixed_pack *pack){
-  pack->size = 16*mixed_samplesize(encoding);
   pack->encoding = encoding;
   pack->channels = channels;
   pack->samplerate = 1;
@@ -100,7 +99,7 @@ define_test(dual_channel_uneven, {
       is(data[i], mixed_to_int8(buffers[i%2]._data[i/2]));
     is(mixed_buffer_available_read(&buffers[0]), 0);
     is(mixed_buffer_available_read(&buffers[1]), 0);
-    is(mixed_pack_available_read(&pack), pack.size);
+    is(mixed_pack_available_read(&pack), pack.size/2);
 
   cleanup:
     mixed_free_buffer(&buffers[0]);
