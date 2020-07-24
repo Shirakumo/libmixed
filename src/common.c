@@ -72,6 +72,8 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "A write was requested on a buffer with no available space.";
   case MIXED_BUFFER_OVERCOMMIT:
     return "More data was attempted to be committed to the buffer than was requested.";
+  case MIXED_BAD_RESAMPLE_FACTOR:
+    return "The requested change in the sample rates is too big.";
   default:
     return "Unknown error code.";
   }

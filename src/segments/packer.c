@@ -261,6 +261,10 @@ int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_dat
   src_data->src_ratio = (is_source)
     ? ((double)data->samplerate)/((double)pack->samplerate)
     : ((double)pack->samplerate)/((double)data->samplerate);
+  if(src_data->src_ratio <= 0.003 || 256.0 < src_data->src_ratio){
+    mixed_err(MIXED_BAD_RESAMPLE_FACTOR);
+    goto cleanup;
+  }
   
   int input_samples, output_samples;
   if(is_source){

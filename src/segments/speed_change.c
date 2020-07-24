@@ -160,6 +160,11 @@ int speed_segment_set(size_t field, void *value, struct mixed_segment *segment){
 }
 
 MIXED_EXPORT int mixed_make_segment_speed_change(double speed, struct mixed_segment *segment){
+  if(speed <= 0.003 || 256.0 < speed){
+    mixed_err(MIXED_BAD_RESAMPLE_FACTOR);
+    return 0;
+  }
+
   struct speed_segment_data *data = calloc(1, sizeof(struct speed_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);

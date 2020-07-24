@@ -80,7 +80,9 @@ extern "C" {
     MIXED_BUFFER_FULL,
     // The amount of data that is attempted to be committed
     // to the buffer is more than was requested.
-    MIXED_BUFFER_OVERCOMMIT
+    MIXED_BUFFER_OVERCOMMIT,
+    // The change in the sample rates is too big.
+    MIXED_BAD_RESAMPLE_FACTOR,
   };
 
   // This enum describes the possible sample encodings.
