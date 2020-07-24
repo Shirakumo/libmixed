@@ -8,6 +8,7 @@
 struct test tests[MAX_TESTS] = {0};
 int test_count = 0;
 
+#ifdef SIGTRAP
 static int _debugger_present = -1;
 static void _sigtrap_handler(int signum){
   _debugger_present = 0;
@@ -21,6 +22,9 @@ void maybe_invoke_debugger(){
     raise(SIGTRAP);
   }
 }
+#else
+void maybe_invoke_debugger(){}
+#endif
 
 int register_test(char *suite, char *name, int (*fun)()){
   tests[test_count].suite = suite;
