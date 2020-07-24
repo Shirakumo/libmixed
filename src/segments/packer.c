@@ -338,11 +338,12 @@ int make_pack_internal(struct mixed_pack *pack, size_t samplerate, int quality, 
   data->volume = 1.0;
 
   segment->free = pack_segment_free;
-  segment->data = data;
   segment->get = packer_segment_get;
+  segment->data = data;
 
   if(samplerate != 0 && samplerate != pack->samplerate){
     if(!initialize_resample_buffers(pack, data, quality, (segment->info == source_segment_info))){
+      segment->data = 0;
       goto cleanup;
     }
   }
