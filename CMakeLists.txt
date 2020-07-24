@@ -27,7 +27,7 @@ add_library(spiralfft STATIC
 target_compile_options(spiralfft PRIVATE -O3 ${CPU_EXTENSION_FLAGS})
 
 ## Main Library
-include_directories("src/" "spiralfft/")
+include_directories("src/" "spiralfft/" "libsamplerate/")
 add_library(mixed SHARED
   "src/buffer.c"
   "src/common.c"
