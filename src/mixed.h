@@ -1134,6 +1134,7 @@ extern "C" {
   typedef void (*mixed_transfer_function_from)(void *in, float *out, uint8_t stride, size_t samples, float volume);
   typedef void (*mixed_transfer_function_to)(float *in, void *out, uint8_t stride, size_t samples, float volume);
 
+  // Retrieve a sample format converter function.
   MIXED_EXPORT mixed_transfer_function_from mixed_translator_from(enum mixed_encoding encoding);
   MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding encoding);
 

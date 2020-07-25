@@ -1,10 +1,10 @@
 ## About libmixed
-Libmixed is a small library providing a generic audio mixing API and environment. It also ships a few useful audio processing tools to allow you to build an audio system for games, music, etc.
+Libmixed is a library providing a generic audio mixing API and environment. It also ships a few useful audio processing tools to allow you to build an audio system for games, music, etc.
 
 ## How To
 Libmixed will not do any audio file reading or audio playback for you. To do that, see other kinds of libraries like [mpg123](https://www.mpg123.de/) and its associated out123. There's a whole heap of audio backend and format libraries out there though and you should pick whichever you find suitable. Libmixed is independent to your choice.
 
-There's a set of example applications in the [test](test/) directory that you can look at to see how a fully working application would be put together. For the purposes of this documentation, and for the sake of brevity, we're going to look at the process in a more disconnected manner.
+There's a set of example applications in the [example](example/) directory that you can look at to see how a fully working application would be put together. For the purposes of this documentation, and for the sake of brevity, we're going to look at the process in a more disconnected manner.
 
 The first step involves allocating space for a `struct mixed_segment_sequence` and for a `struct mixed_segment` for each of the segments in the pipeline that you would like. For each of those segments you might also need a set of `struct mixed_buffer` instances to hold the audio data.
 
@@ -94,3 +94,4 @@ On Windows you will usually want to build with MSYS2 and the following cmake com
 ## Included Sources
 * [ladspa.h](https://web.archive.org/web/20150627144551/http://www.ladspa.org:80/ladspa_sdk/ladspa.h.txt)
 * [libsamplerate](http://www.mega-nerd.com/SRC/index.html) Please note that the BSD 2-Clause license restrictions also apply to libmixed, as it includes libsamplerate internally.
+* [spiralfft](http://spiral.net/codegenerator.html) Please note that the BSD-style [Spiral License](http://www.spiral.net/doc/LICENSE) also applies to libmixed, as it includes spiralfft internally.
