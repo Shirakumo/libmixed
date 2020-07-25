@@ -266,25 +266,25 @@ int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_dat
     goto cleanup;
   }
   
-  int input_samples, output_samples;
+  int input_frames, output_frames;
   if(is_source){
-    input_samples = pack->size / mixed_samplesize(pack->encoding);
-    output_samples = 1+(int)(input_samples * src_data->src_ratio);
-    data->max_frames = output_samples;
+    input_frames = pack->size / mixed_samplesize(pack->encoding);
+    output_frames = 1+(int)(input_frames * src_data->src_ratio);
+    data->max_frames = output_frames;
   }else{
-    output_samples = pack->size / mixed_samplesize(pack->encoding);
-    input_samples = 1+(int)(output_samples / src_data->src_ratio);
-    data->max_frames = input_samples;
+    output_frames = pack->size / mixed_samplesize(pack->encoding);
+    input_frames = 1+(int)(output_frames / src_data->src_ratio);
+    data->max_frames = input_frames;
   }
   
-  src_data->data_in = calloc(input_samples, mixed_samplesize(MIXED_FLOAT));
-  src_data->data_out = calloc(output_samples, mixed_samplesize(MIXED_FLOAT));
+  src_data->data_in = calloc(input_frames, sizeof(float));
+  src_data->data_out = calloc(output_frames, sizeof(float));
   if(!src_data->data_in || !src_data->data_out){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
   
-  src_data->output_frames = output_samples / pack->channels;
+  src_data->output_frames = output_frames;
   
   int err = 0;
   src_state = src_new(quality, pack->channels, &err);

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "mixed.h"
+#include "../src/mixed.h"
 
 char volatile interrupted = 0;
 
@@ -81,7 +81,7 @@ int extract_encoding(int encodings){
 }
 
 int load_out_segment(size_t samples, struct out **_out){
-  long out_samplerate = 44100;
+  long out_samplerate = 48000;
   int out_channels = 2;
   int out_encoding = MPG123_ENC_SIGNED_16;
   char *out_encname = "signed 16 bit";
