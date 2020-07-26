@@ -65,11 +65,12 @@ int speed_segment_start(struct mixed_segment *segment){
 int speed_segment_mix(struct mixed_segment *segment){
   struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
   SRC_DATA src_data = {0};
+  size_t in = SIZE_MAX, out = SIZE_MAX;
+  mixed_buffer_request_read(&src_data.data_in, &in, data->in);
+  mixed_buffer_request_write(&src_data.data_out, &out, data->out);
   src_data.src_ratio = 1.0 / data->speed;
-  src_data.input_frames = LONG_MAX;
-  src_data.output_frames = LONG_MAX;
-  mixed_buffer_request_read(&src_data.data_in, &src_data.input_frames, data->in);
-  mixed_buffer_request_write(&src_data.data_out, &src_data.output_frames, data->out);
+  src_data.input_frames = in;
+  src_data.output_frames = out;
   if(src_data.input_frames && src_data.output_frames){
     int e = src_process(data->resample_state, &src_data);
     if(e){
@@ -79,6 +80,8 @@ int speed_segment_mix(struct mixed_segment *segment){
     }
     mixed_buffer_finish_read(src_data.input_frames_used, data->in);
     mixed_buffer_finish_write(src_data.output_frames_gen, data->out);
+  }else{
+    mixed_buffer_finish_write(0, data->out);
   }
   return 1;
 }
