@@ -25,36 +25,25 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
+  if(!load_mp3_segment(argv[1], samples, &mp3)){
+    goto cleanup;
+  }
+
   double speed = 1.0;
   if(!mixed_make_segment_speed_change(speed, &sfx_l)
      || !mixed_make_segment_speed_change(speed, &sfx_r)){
     fprintf(stderr, "Failed to create segment: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
-
-  // Initialize MP3 source
-  if(!load_mp3_segment(argv[1], samples, &mp3)){
-    goto cleanup;
-  }
   
-  // Attach to combining segments
-  if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &mp3->left, &sfx_l)
-     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &sfx_l)
-     || !mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &mp3->right, &sfx_r)
-     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->right, &sfx_r)){
+  if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &mp3->left, &sfx_l)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &sfx_l)
+     || !mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &mp3->right, &sfx_r)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->right, &sfx_r)){
     fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
   
-  // Register with sequence.
-  if(!mixed_segment_sequence_add(&mp3->segment, &sequence)){
-    fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
-    goto cleanup;
-  }
-
-  // The order in which segments are added does matter, as the system
-  // will not figure out on its own in which order the segments should
-  // be called. We specify this here.
   if(!mixed_segment_sequence_add(&mp3->segment, &sequence) ||
      !mixed_segment_sequence_add(&sfx_l, &sequence) ||
      !mixed_segment_sequence_add(&sfx_r, &sequence) ||
@@ -65,7 +54,7 @@ int main(int argc, char **argv){
 
   // Start up ncurses
   window = load_curses();
-  mvprintw(0, 0, "<←/→>: Change speed <SPC>: Reset");
+  if(window) mvprintw(0, 0, "<←/→>: Change speed <SPC>: Reset");
 
   // Perform the mixing
   mixed_segment_sequence_start(&sequence);
@@ -92,6 +81,7 @@ int main(int argc, char **argv){
     mixed_pack_finish_read(played, &out->pack);
 
     // IO
+    if(!window) continue;
     int c = getch();
     switch(c){
     case 'q': interrupted = 1; break;

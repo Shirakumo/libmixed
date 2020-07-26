@@ -1,4 +1,8 @@
+#ifdef __MINGW32__
+#include <ncurses/ncurses.h>
+#else
 #include <ncurses.h>
+#endif
 #include <locale.h>
 #include <math.h>
 #include <mpg123.h>
