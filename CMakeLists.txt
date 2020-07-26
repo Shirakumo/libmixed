@@ -107,7 +107,7 @@ if(OUT123_FOUND AND MPG123_FOUND)
     add_executable(${example_name} ${example_file})
     add_dependencies(${example_name} mixed)
     set_property(TARGET ${example_name} PROPERTY C_STANDARD 99)
-    target_link_libraries(${example_name} mixed ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
+    target_link_libraries(${example_name} mixed ncurses ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
   endforeach()
 endif()
 
