@@ -10,6 +10,7 @@
 #include "../src/mixed.h"
 
 char volatile interrupted = 0;
+const int internal_samplerate = 44100;
 
 void interrupt_handler(int shim){
   interrupted = 1;
@@ -155,7 +156,7 @@ int load_out_segment(size_t samples, struct out **_out){
     goto cleanup;
   }
   
-  if(!mixed_make_segment_packer(&out->pack, 44100, &out->segment)){
+  if(!mixed_make_segment_packer(&out->pack, internal_samplerate, &out->segment)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -235,11 +236,6 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
     fprintf(stderr, "File %s has %i channels instead of 2. I can't deal with this.\n", file, mp3_channels);
     goto cleanup;
   }
-  // libmixed limitation for now
-  if(mp3_samplerate != 44100){
-    fprintf(stderr, "File %s has a sample rate of %i Hz instead of 44100. I can't deal with this.\n", file, mp3_samplerate);
-    goto cleanup;
-  }
   
   mp3_encname = (char *)out123_enc_longname(mp3_encoding);
   fprintf(stderr, "MP3: %i channels @ %li Hz, %s\n", mp3_channels, mp3_samplerate, mp3_encname);
@@ -254,7 +250,7 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
     goto cleanup;
   }
 
-  if(!mixed_make_segment_unpacker(&mp3->pack, 44100, &mp3->segment)){
+  if(!mixed_make_segment_unpacker(&mp3->pack, internal_samplerate, &mp3->segment)){
     fprintf(stderr, "Failed to create segment for %s: %s\n", file, mixed_error_string(-1));
     goto cleanup;
   }

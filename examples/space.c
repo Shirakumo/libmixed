@@ -10,8 +10,7 @@ double mtime(){
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 100;
-  size_t samplerate = 44100;
+  size_t samples = 500;
   struct mixed_segment_sequence sequence = {0};
   struct mixed_segment space = {0};
   struct out *out = 0;
@@ -57,7 +56,7 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_make_segment_space_mixer(samplerate, &space)){
+  if(!mixed_make_segment_space_mixer(internal_samplerate, &space)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -78,7 +77,7 @@ int main(int argc, char **argv){
 
   mixed_segment_sequence_start(&sequence);
 
-  double dt = ((double)samples) / ((double)samplerate);
+  double dt = ((double)samples) / ((double)internal_samplerate);
   float phi = 0.0;
   float vel[3] = {0.0, 0.0, 0.0};
   float pos[3] = {r, 0.0, 0.0};
@@ -120,6 +119,8 @@ int main(int argc, char **argv){
       fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
     }
     mixed_pack_finish_read(played, &out->pack);
+
+    printf("\rRead: %3i Processed: %3i Played: %3i", read, bytes, played);
   }while(played && !interrupted);
   
   mixed_segment_sequence_end(&sequence);

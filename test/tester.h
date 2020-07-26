@@ -68,48 +68,48 @@ struct test *find_test(int id);
   }else ++__formid;
 
 #define is(A, B){                                                       \
-    ssize_t __a = (ssize_t) A;                                          \
-    ssize_t __b = (ssize_t) B;                                          \
+    ssize_t __a = (ssize_t)(A);                                         \
+    ssize_t __b = (ssize_t)(B);                                         \
     if(__a != __b)                                                      \
       fail_test("Value was %li but should have been %li", __a, __b)     \
       else ++__formid;                                                  \
   }
 
 #define isnt(A, B){                                                     \
-    ssize_t __a = (ssize_t) A;                                          \
-    ssize_t __b = (ssize_t) B;                                          \
+    ssize_t __a = (ssize_t)(A);                                         \
+    ssize_t __b = (ssize_t)(B);                                         \
     if(__a == __b)                                                      \
       fail_test("Value was %li but should not have been.", __a)         \
     else ++__formid;                                                    \
   }
 
 #define is_ui(A, B){                                                    \
-    size_t __a = (size_t) A;                                            \
-    size_t __b = (size_t) B;                                            \
+    size_t __a = (size_t)(A);                                           \
+    size_t __b = (size_t)(B);                                           \
     if(__a != __b)                                                      \
       fail_test("Value was %u but should have been %u", __a, __b)       \
     else ++__formid;                                                    \
   }
 
 #define is_f(A, B){                                                     \
-    float __a = (float) A;                                              \
-    float __b = (float) B;                                              \
+    float __a = (float)(A);                                             \
+    float __b = (float)(B);                                             \
     if(__a != __b)                                                      \
       fail_test("Value was %f but should have been %f", __a, __b)       \
     else ++__formid;                                                    \
   }
 
 #define is_p(A, B){                                                     \
-    void *__a = (void *)A;                                              \
-    void *__b = (void *)B;                                              \
+    void *__a = (void *)(A);                                            \
+    void *__b = (void *)(B);                                            \
     if(__a != __b)                                                      \
       fail_test("Value was %p but should have been %p", __a, __b)       \
     else ++__formid;                                                    \
   }
 
 #define isnt_p(A, B){                                                   \
-    void *__a = (void *)A;                                              \
-    void *__b = (void *)B;                                              \
+    void *__a = (void *)(A);                                            \
+    void *__b = (void *)(B);                                            \
     if(__a == __b)                                                      \
       fail_test("Value was %p but should not have been", __a)           \
     else ++__formid;                                                    \

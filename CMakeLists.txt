@@ -18,13 +18,13 @@ endif()
 ## Libsamplerate
 file(GLOB samplerate_src "libsamplerate/*.c")
 add_library(samplerate OBJECT ${samplerate_src})
-target_compile_options(samplerate PRIVATE -O3 ${CPU_EXTENSION_FLAGS})
+target_compile_options(samplerate PRIVATE -g -O3 ${CPU_EXTENSION_FLAGS})
 
 ## Spiralfft
 file(GLOB spiralfft_src "spiralfft/*.c")
 add_library(spiralfft STATIC
   ${spiralfft_src})
-target_compile_options(spiralfft PRIVATE -O3 ${CPU_EXTENSION_FLAGS})
+target_compile_options(spiralfft PRIVATE -g -O3 ${CPU_EXTENSION_FLAGS})
 
 ## Main Library
 include_directories("src/" "spiralfft/" "libsamplerate/")
@@ -71,7 +71,7 @@ set_property(TARGET mixed PROPERTY SOVERSION ${MIXED_VERSION_MAJOR})
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(mixed PRIVATE MIXED_BUILD=1 MIXED_VERSION="${MIXED_VERSION_STRING}")
-target_compile_options(mixed PRIVATE -mrdrnd -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes ${CPU_EXTENSION_FLAGS})
+target_compile_options(mixed PRIVATE -mrdrnd -g -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes ${CPU_EXTENSION_FLAGS})
 target_link_options(mixed PRIVATE)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang"
