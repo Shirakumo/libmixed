@@ -11,7 +11,7 @@ double mtime(){
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 500;
+  size_t samples = 100;
   WINDOW *window = 0;
   struct mixed_segment_sequence sequence = {0};
   struct mixed_segment space = {0}, downmix = {0};
@@ -88,20 +88,21 @@ int main(int argc, char **argv){
   }
 
   // Start up ncurses
-  /* if((window = initscr()) == NULL){ */
-  /*   fprintf(stderr, "Error initializing ncurses.\n"); */
-  /*   goto cleanup; */
-  /* } */
-  /* noecho(); */
-  /* nodelay(window, TRUE); */
-  /* keypad(window, TRUE); */
-  /* mvprintw(0, 0, "<L/R>: Change speed <U/D>: Change radius"); */
+  if((window = initscr()) == NULL){
+    fprintf(stderr, "Error initializing ncurses.\n");
+    goto cleanup;
+  }
+  noecho();
+  nodelay(window, TRUE);
+  keypad(window, TRUE);
+  mvprintw(0, 0, "<L/R>: Change speed <U/D>: Change radius <SPC>: Toggle doppler effect");
 
   double dt = ((double)samples) / ((double)internal_samplerate);
   float phi = 0.0;
   float vel[3] = {0.0, 0.0, 0.0};
   float pos[3] = {r, 0.0, 0.0};
   float rad;
+  float doppler = 1.0;
   
   // Perform the mixing
   mixed_segment_sequence_start(&sequence);
@@ -110,8 +111,7 @@ int main(int argc, char **argv){
     void *buffer;
     read = SIZE_MAX;
     mixed_pack_request_write(&buffer, &read, &mp3->pack);
-    printf("RA: %i", read);
-    if(mpg123_read(mp3->handle, buffer, read, &read) != MPG123_OK){
+    if(mpg123_read(mp3->handle, buffer, read/2, &read) != MPG123_OK){
       fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
       goto cleanup;
     }
@@ -135,6 +135,7 @@ int main(int argc, char **argv){
     case KEY_RIGHT: dphi *= 1.1; break;
     case KEY_UP: r += 1; break;
     case KEY_DOWN: r -= 1; break;
+    case ' ': doppler = (doppler==1.0)?0.0:1.0; break;
     }
     
     phi += dphi * dt;
@@ -145,12 +146,9 @@ int main(int argc, char **argv){
     pos[2] = pos[2] + vel[2];
     mixed_segment_set_in(MIXED_SPACE_LOCATION, 0, pos, &space);
     mixed_segment_set_in(MIXED_SPACE_VELOCITY, 0, vel, &space);
+    mixed_segment_set(MIXED_SPACE_DOPPLER_FACTOR, &doppler, &space);
 
-    printf("Read: %4u Processed: %4u Played: %4u Speed: %f Radius: %f\n", read, bytes, played, dphi, r);
-    /* printf("I %i ML %i MR %i M %i OL %i OR %i O %i\n", */
-    /*        mixed_pack_available_read(&mp3->pack), mixed_buffer_available_read(&mp3->left), mixed_buffer_available_read(&mp3->right), */
-    /*        mixed_buffer_available_read(&mono), mixed_buffer_available_read(&out->left), mixed_buffer_available_read(&out->right), */
-    /*        mixed_pack_available_read(&out->pack)); */
+    mvprintw(1, 0, "Read: %4u Processed: %4u Played: %4u Speed: %f Radius: %f\n", read, bytes, played, dphi, r);
     refresh();
   }while(played && !interrupted);
   mixed_segment_sequence_end(&sequence);
