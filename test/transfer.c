@@ -5,7 +5,7 @@ static int make_pack(enum mixed_encoding encoding, int channels, struct mixed_pa
   pack->encoding = encoding;
   pack->channels = channels;
   pack->samplerate = 1;
-  if(!mixed_make_pack(16*mixed_samplesize(encoding), pack))
+  if(!mixed_make_pack(16, pack))
     return 0;
   char *buffer;
   size_t size = SIZE_MAX;

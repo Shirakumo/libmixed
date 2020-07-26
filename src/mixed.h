@@ -546,7 +546,13 @@ extern "C" {
     size_t size;
   };
 
-  MIXED_EXPORT int mixed_make_pack(size_t size, struct mixed_pack *pack);
+  // Allocate a new pack.
+  //
+  // You /must/ set the pack fields encoding and channels before this.
+  // The frames designates the number of frames that can be stored in
+  // the pack's data array. Meaning a total number of bytes of:
+  //   frames*channels*mixed_samplesize(encoding)
+  MIXED_EXPORT int mixed_make_pack(size_t frames, struct mixed_pack *pack);
   MIXED_EXPORT void mixed_free_pack(struct mixed_pack *pack);
   MIXED_EXPORT int mixed_pack_clear(struct mixed_pack *buffer);
   MIXED_EXPORT size_t mixed_pack_available_write(struct mixed_pack *buffer);

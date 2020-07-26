@@ -11,6 +11,7 @@
 
 char volatile interrupted = 0;
 const int internal_samplerate = 44100;
+int output_samplerate = 48000;
 
 void interrupt_handler(int shim){
   interrupted = 1;
@@ -82,7 +83,7 @@ int extract_encoding(int encodings){
 }
 
 int load_out_segment(size_t samples, struct out **_out){
-  long out_samplerate = 48000;
+  long out_samplerate = output_samplerate;
   int out_channels = 2;
   int out_encoding = MPG123_ENC_SIGNED_16;
   char *out_encname = "signed 16 bit";
@@ -151,7 +152,7 @@ int load_out_segment(size_t samples, struct out **_out){
   out->pack.samplerate = out_samplerate;
   out_samplesize = mixed_samplesize(out->pack.encoding);
 
-  if(!mixed_make_pack(samples*out_samplesize*out_channels, &out->pack)){
+  if(!mixed_make_pack(samples, &out->pack)){
     fprintf(stderr, "Couldn't allocate output pack.\n");
     goto cleanup;
   }
@@ -245,7 +246,7 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
   mp3->pack.samplerate = mp3_samplerate;
   mp3_samplesize = mixed_samplesize(mp3->pack.encoding);
 
-  if(!mixed_make_pack(samples*mp3_samplesize*mp3_channels, &mp3->pack)){
+  if(!mixed_make_pack(samples, &mp3->pack)){
     fprintf(stderr, "Failed to allocate input pack: %s\n", mixed_error_string(-1));
     goto cleanup;
   }

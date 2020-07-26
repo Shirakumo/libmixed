@@ -94,6 +94,9 @@ int main(int argc, char **argv){
       fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
     }
     mixed_pack_finish_read(played, &out->pack);
+    
+    printf("\rRead: %4i Processed: %4i Played: %4i", read, bytes, played);
+    fflush(stdout);
   }while(played && !interrupted);
 
   mixed_segment_sequence_end(&sequence);

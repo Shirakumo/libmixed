@@ -1,3 +1,4 @@
+#include <curses.h>
 #include "common.h"
 
 double mtime(){
@@ -11,8 +12,10 @@ double mtime(){
 int main(int argc, char **argv){
   int exit = 1;
   size_t samples = 500;
+  WINDOW *window = 0;
   struct mixed_segment_sequence sequence = {0};
-  struct mixed_segment space = {0};
+  struct mixed_segment space = {0}, downmix = {0};
+  struct mixed_buffer mono = {0};
   struct out *out = 0;
   struct mp3 *mp3 = 0;
   float dphi = 1.0; // Measured deg/s
@@ -56,26 +59,43 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_make_segment_space_mixer(internal_samplerate, &space)){
+  if(!mixed_make_buffer(samples, &mono)){
+    goto cleanup;
+  }
+
+  if(!mixed_make_segment_space_mixer(internal_samplerate, &space)
+     || !mixed_make_segment_channel_convert(2, 1, &downmix)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
-  if(!mixed_segment_set_in(MIXED_BUFFER, 0, &mp3->left, &space) ||
-     !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &space) ||
-     !mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &out->right, &space)){
+  if(!mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &mono, &downmix)
+     || !mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &mp3->left, &downmix)
+     || !mixed_segment_set_in(MIXED_BUFFER, MIXED_RIGHT, &mp3->right, &downmix)
+     || !mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &mono, &space)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &space)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &out->right, &space)){
     fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
-  if(!mixed_segment_sequence_add(&mp3->segment, &sequence) ||
-     !mixed_segment_sequence_add(&space, &sequence) ||
-     !mixed_segment_sequence_add(&out->segment, &sequence)){
+  if(!mixed_segment_sequence_add(&mp3->segment, &sequence)
+     || !mixed_segment_sequence_add(&downmix, &sequence)
+     || !mixed_segment_sequence_add(&space, &sequence)
+     || !mixed_segment_sequence_add(&out->segment, &sequence)){
     fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
-  mixed_segment_sequence_start(&sequence);
+  // Start up ncurses
+  /* if((window = initscr()) == NULL){ */
+  /*   fprintf(stderr, "Error initializing ncurses.\n"); */
+  /*   goto cleanup; */
+  /* } */
+  /* noecho(); */
+  /* nodelay(window, TRUE); */
+  /* keypad(window, TRUE); */
+  /* mvprintw(0, 0, "<L/R>: Change speed <U/D>: Change radius"); */
 
   double dt = ((double)samples) / ((double)internal_samplerate);
   float phi = 0.0;
@@ -83,30 +103,21 @@ int main(int argc, char **argv){
   float pos[3] = {r, 0.0, 0.0};
   float rad;
   
-  size_t read, played;
+  // Perform the mixing
+  mixed_segment_sequence_start(&sequence);
+  size_t read = 0, played = 0;
   do{
     void *buffer;
     read = SIZE_MAX;
     mixed_pack_request_write(&buffer, &read, &mp3->pack);
+    printf("RA: %i", read);
     if(mpg123_read(mp3->handle, buffer, read, &read) != MPG123_OK){
       fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
       goto cleanup;
     }
     mixed_pack_finish_write(read, &mp3->pack);
-    
-    // Calculate new position
-    phi += dphi * dt;
-    rad = phi * M_PI / 180.0;
-    vel[0] = r*2.0*cos(rad) - pos[0];
-    vel[2] = r*sin(rad) - pos[2];
-    pos[0] = pos[0] + vel[0];
-    pos[2] = pos[2] + vel[2];
-
-    mixed_segment_set_in(MIXED_SPACE_LOCATION, 0, pos, &space);
-    mixed_segment_set_in(MIXED_SPACE_VELOCITY, 0, vel, &space);
 
     mixed_segment_sequence_mix(&sequence);
-    mixed_buffer_clear(&mp3->right);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
@@ -115,21 +126,48 @@ int main(int argc, char **argv){
     size_t bytes = SIZE_MAX;
     mixed_pack_request_read(&buffer, &bytes, &out->pack);
     played = out123_play(out->handle, buffer, bytes);
-    if(played < bytes){
-      fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
-    }
     mixed_pack_finish_read(played, &out->pack);
+    
+    // IO
+    int c = getch();
+    switch(c){
+    case KEY_LEFT: dphi *= 0.9; break;
+    case KEY_RIGHT: dphi *= 1.1; break;
+    case KEY_UP: r += 1; break;
+    case KEY_DOWN: r -= 1; break;
+    }
+    
+    phi += dphi * dt;
+    rad = phi * M_PI / 180.0;
+    vel[0] = r*2.0*cos(rad) - pos[0];
+    vel[2] = r*sin(rad) - pos[2];
+    pos[0] = pos[0] + vel[0];
+    pos[2] = pos[2] + vel[2];
+    mixed_segment_set_in(MIXED_SPACE_LOCATION, 0, pos, &space);
+    mixed_segment_set_in(MIXED_SPACE_VELOCITY, 0, vel, &space);
 
-    printf("\rRead: %3i Processed: %3i Played: %3i", read, bytes, played);
+    printf("Read: %4u Processed: %4u Played: %4u Speed: %f Radius: %f\n", read, bytes, played, dphi, r);
+    /* printf("I %i ML %i MR %i M %i OL %i OR %i O %i\n", */
+    /*        mixed_pack_available_read(&mp3->pack), mixed_buffer_available_read(&mp3->left), mixed_buffer_available_read(&mp3->right), */
+    /*        mixed_buffer_available_read(&mono), mixed_buffer_available_read(&out->left), mixed_buffer_available_read(&out->right), */
+    /*        mixed_pack_available_read(&out->pack)); */
+    refresh();
   }while(played && !interrupted);
-  
   mixed_segment_sequence_end(&sequence);
 
   exit = 0;
 
  cleanup:
+  fprintf(stderr, "\nCleaning up.\n");
+  if(window){
+    delwin(window);
+    endwin();
+  }
+  
   mixed_free_segment_sequence(&sequence);
+  mixed_free_segment(&downmix);
   mixed_free_segment(&space);
+  mixed_free_buffer(&mono);
   
   free_out(out);
   free_mp3(mp3);

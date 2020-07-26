@@ -1,13 +1,13 @@
 #include "internal.h"
 
-MIXED_EXPORT int mixed_make_pack(size_t size, struct mixed_pack *pack){
+MIXED_EXPORT int mixed_make_pack(size_t frames, struct mixed_pack *pack){
   mixed_err(MIXED_NO_ERROR);
-  pack->_data = calloc(size, sizeof(uint8_t));
+  pack->_data = calloc(frames*pack->channels, mixed_samplesize(pack->encoding));
   if(!pack->_data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
-  pack->size = size;
+  pack->size = frames*pack->channels*mixed_samplesize(pack->encoding);
   return 1;
 }
 

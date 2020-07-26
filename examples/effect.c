@@ -1,8 +1,10 @@
+#include <curses.h>
 #include "common.h"
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 100;
+  size_t samples = 500;
+  WINDOW *window = 0;
   struct mixed_segment_sequence sequence = {0};
   struct mixed_segment sfx_l = {0}, sfx_r = {0};
   struct mp3 *mp3;
@@ -23,10 +25,10 @@ int main(int argc, char **argv){
   if(!load_out_segment(samples, &out)){
     goto cleanup;
   }
-  
-  //if(!mixed_make_segment_frequency_pass(MIXED_PASS_HIGH, 440, 44100, &sfx_segment)){
-  if(!mixed_make_segment_speed_change(0.5, &sfx_l)
-     || !mixed_make_segment_speed_change(0.5, &sfx_r)){
+
+  double speed = 1.0;
+  if(!mixed_make_segment_speed_change(speed, &sfx_l)
+     || !mixed_make_segment_speed_change(speed, &sfx_r)){
     fprintf(stderr, "Failed to create segment: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -62,9 +64,18 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
+  // Start up ncurses
+  if((window = initscr()) == NULL){
+    fprintf(stderr, "Error initializing ncurses.\n");
+    goto cleanup;
+  }
+  noecho();
+  nodelay(window, TRUE);
+  keypad(window, TRUE);
+  mvprintw(0, 0, "<L/R>: Change speed");
+
   // Perform the mixing
   mixed_segment_sequence_start(&sequence);
-
   size_t read = 0, played = 0;
   do{
     void *buffer;
@@ -85,19 +96,30 @@ int main(int argc, char **argv){
     size_t bytes = SIZE_MAX;
     mixed_pack_request_read(&buffer, &bytes, &out->pack);
     played = out123_play(out->handle, buffer, bytes);
-    if(played < bytes){
-      fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
-    }
     mixed_pack_finish_read(played, &out->pack);
-  }while(played && !interrupted);
 
+    // IO
+    int c = getch();
+    switch(c){
+    case KEY_LEFT: speed *= 0.9; break;
+    case KEY_RIGHT: speed *= 1.1; break;
+    }
+    mixed_segment_set(MIXED_SPEED_FACTOR, &speed, &sfx_l);
+    mixed_segment_set(MIXED_SPEED_FACTOR, &speed, &sfx_r);
+
+    mvprintw(0, 0, "Read: %4i Processed: %4i Played: %4i Speed: %f", read, bytes, played, speed);
+    refresh();
+  }while(played && !interrupted);
   mixed_segment_sequence_end(&sequence);
 
-  // Clean the shop
   exit = 0;
   
  cleanup:
   fprintf(stderr, "\nCleaning up.\n");
+  if(window){
+    delwin(window);
+    endwin();
+  }
   
   mixed_free_segment(&sfx_l);
   mixed_free_segment(&sfx_r);

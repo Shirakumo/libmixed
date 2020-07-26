@@ -3,11 +3,11 @@
 #include <math.h>
 
 static int make_pack(enum mixed_encoding encoding, int channels, struct mixed_pack *pack){
-  int samples = channels*500;
+  int frames = 500;
   pack->encoding = encoding;
   pack->channels = channels;
   pack->samplerate = 48000;
-  if(!mixed_make_pack(samples*mixed_samplesize(encoding), pack))
+  if(!mixed_make_pack(frames, pack))
     return 0;
   char *buffer;
   size_t size = SIZE_MAX;
