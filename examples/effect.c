@@ -65,7 +65,7 @@ int main(int argc, char **argv){
 
   // Start up ncurses
   window = load_curses();
-  mvprintw(0, 0, "<←/→>: Change speed");
+  mvprintw(0, 0, "<←/→>: Change speed <SPC>: Reset");
 
   // Perform the mixing
   mixed_segment_sequence_start(&sequence);
@@ -95,8 +95,9 @@ int main(int argc, char **argv){
     int c = getch();
     switch(c){
     case 'q': interrupted = 1; break;
-    case KEY_LEFT: speed *= 0.9; break;
-    case KEY_RIGHT: speed *= 1.1; break;
+    case KEY_LEFT: speed /= 1.0625; break;
+    case KEY_RIGHT: speed *= 1.0625; break;
+    case ' ': speed = 1.0; break;
     }
     mixed_segment_set(MIXED_SPEED_FACTOR, &speed, &sfx_l);
     mixed_segment_set(MIXED_SPEED_FACTOR, &speed, &sfx_r);
