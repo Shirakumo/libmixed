@@ -55,6 +55,13 @@ int speed_segment_set_out(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
+int speed_segment_start(struct mixed_segment *segment){
+  struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
+  if(data->resample_state)
+    src_reset(data->resample_state);
+  return 1;
+}
+
 int speed_segment_mix(struct mixed_segment *segment){
   struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
   SRC_DATA src_data = {0};
@@ -139,7 +146,7 @@ int speed_segment_set(size_t field, void *value, struct mixed_segment *segment){
   }
     return 1;
   case MIXED_SPEED_FACTOR:
-    if(*(float *)value <= 0.0){
+    if(*(double *)value <= 0.0){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
@@ -176,6 +183,7 @@ MIXED_EXPORT int mixed_make_segment_speed_change(double speed, struct mixed_segm
   data->speed = speed;
   
   segment->free = speed_segment_free;
+  segment->start = speed_segment_start;
   segment->mix = speed_segment_mix;
   segment->set_in = speed_segment_set_in;
   segment->set_out = speed_segment_set_out;
