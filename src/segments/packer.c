@@ -7,7 +7,7 @@ struct pack_segment_data{
   SRC_DATA *resample_data;
   SRC_STATE *resample_state;
   size_t samplerate;
-  size_t max_frames;
+  size_t buffer_frames;
   float volume;
 };
 
@@ -45,6 +45,13 @@ int pack_segment_set_buffer(size_t field, size_t location, void *buffer, struct 
   }
 }
 
+int pack_segment_start(struct mixed_segment *segment){
+  struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
+  if(data->resample_state)
+    src_reset(data->resample_state);
+  return 1;
+}
+
 // FIXME: by using separate states per channel we could alias the
 //        SRC_DATA arrays with the input buffer arrays and avoid
 //        extra allocation and copying on at least one side.
@@ -57,7 +64,7 @@ int source_segment_mix(struct mixed_segment *segment){
     mixed_buffer_from_pack(data->pack, data->buffers, data->volume);
   }else{
     SRC_DATA *src_data = data->resample_data;
-    size_t frames = data->max_frames;
+    size_t frames = data->buffer_frames;
     uint8_t channels = pack->channels;
     size_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
     // Step 1: determine available space
@@ -105,17 +112,17 @@ int drain_segment_mix(struct mixed_segment *segment){
     mixed_buffer_to_pack(data->buffers, pack, data->volume);
   }else{
     SRC_DATA *src_data = data->resample_data;
-    size_t frames = data->max_frames;
+    size_t frames = data->buffer_frames;
     size_t channels = pack->channels;
     size_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
     size_t bytes = SIZE_MAX;
     void *pack_data;
     mixed_pack_request_write(&pack_data, &bytes, pack);
-    frames = MIN(frames, bytes / frames_to_bytes);
+    frames = MIN(frames, (bytes / src_data->src_ratio) / frames_to_bytes);
     // Step 1: pack to contigous, alternating float array
+    float *target = src_data->data_in;
     for(size_t c=0; c<channels; ++c){
       float *source;
-      float *target = src_data->data_in;
       mixed_buffer_request_read(&source, &frames, data->buffers[c]);
       for(size_t i=0; i<frames; ++i)
         target[c+i*channels] = source[i];
@@ -265,25 +272,25 @@ int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_dat
     mixed_err(MIXED_BAD_RESAMPLE_FACTOR);
     goto cleanup;
   }
-  
+
+  size_t pack_frames = pack->size / mixed_samplesize(pack->encoding) / pack->channels;
   int input_frames, output_frames;
   if(is_source){
-    input_frames = pack->size / mixed_samplesize(pack->encoding);
-    output_frames = 1+(int)(input_frames * src_data->src_ratio);
-    data->max_frames = output_frames;
+    input_frames = pack_frames;
+    output_frames = 1+(int)(pack_frames * src_data->src_ratio);
   }else{
-    output_frames = pack->size / mixed_samplesize(pack->encoding);
-    input_frames = 1+(int)(output_frames / src_data->src_ratio);
-    data->max_frames = input_frames;
+    input_frames = 1+(int)(pack_frames / src_data->src_ratio);
+    output_frames = pack_frames;
   }
   
-  src_data->data_in = calloc(input_frames, sizeof(float));
-  src_data->data_out = calloc(output_frames, sizeof(float));
+  src_data->data_in = calloc(input_frames*pack->channels, sizeof(float));
+  src_data->data_out = calloc(output_frames*pack->channels, sizeof(float));
   if(!src_data->data_in || !src_data->data_out){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
   
+  data->buffer_frames = MIN(output_frames, input_frames);
   src_data->output_frames = output_frames;
   
   int err = 0;
@@ -338,6 +345,7 @@ int make_pack_internal(struct mixed_pack *pack, size_t samplerate, int quality, 
   data->volume = 1.0;
 
   segment->free = pack_segment_free;
+  segment->start = pack_segment_start;
   segment->get = packer_segment_get;
   segment->data = data;
 
