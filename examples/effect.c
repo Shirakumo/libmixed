@@ -65,14 +65,8 @@ int main(int argc, char **argv){
   }
 
   // Start up ncurses
-  if((window = initscr()) == NULL){
-    fprintf(stderr, "Error initializing ncurses.\n");
-    goto cleanup;
-  }
-  noecho();
-  nodelay(window, TRUE);
-  keypad(window, TRUE);
-  mvprintw(0, 0, "<L/R>: Change speed");
+  window = load_curses();
+  mvprintw(0, 0, "<←/→>: Change speed");
 
   // Perform the mixing
   mixed_segment_sequence_start(&sequence);
@@ -101,13 +95,14 @@ int main(int argc, char **argv){
     // IO
     int c = getch();
     switch(c){
+    case 'q': interrupted = 1; break;
     case KEY_LEFT: speed *= 0.9; break;
     case KEY_RIGHT: speed *= 1.1; break;
     }
     mixed_segment_set(MIXED_SPEED_FACTOR, &speed, &sfx_l);
     mixed_segment_set(MIXED_SPEED_FACTOR, &speed, &sfx_r);
 
-    mvprintw(0, 0, "Read: %4i Processed: %4i Played: %4i Speed: %f", read, bytes, played, speed);
+    mvprintw(1, 0, "Read: %4i Processed: %4i Played: %4i Speed: %f", read, bytes, played, speed);
     refresh();
   }while(played && !interrupted);
   mixed_segment_sequence_end(&sequence);
@@ -115,17 +110,13 @@ int main(int argc, char **argv){
   exit = 0;
   
  cleanup:
-  fprintf(stderr, "\nCleaning up.\n");
-  if(window){
-    delwin(window);
-    endwin();
-  }
-  
   mixed_free_segment(&sfx_l);
   mixed_free_segment(&sfx_r);
   mixed_free_segment_sequence(&sequence);
+
   free_mp3(mp3);
   free_out(out);
+  free_curses(window);
   
   mpg123_exit();
   return exit;

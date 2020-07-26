@@ -2,15 +2,16 @@
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 1024;
-  size_t samplerate = 44100;
+  size_t samples = 100;
+  WINDOW *window = 0;
   struct mixed_segment_sequence sequence = {0};
-  struct mixed_segment generator = {0};
+  struct mixed_segment generator = {0}, upmix = {0};
   struct mixed_segment fade = {0};
+  struct mixed_buffer buffer = {0};
   struct out *out = 0;
 
   enum mixed_generator_type wave_type = MIXED_SINE;
-  size_t frequency = 440;
+  float frequency = 440;
 
   if(argc < 3){
     fprintf(stderr, "Usage: ./test_tone wave-type frequency \n");
@@ -25,10 +26,11 @@ int main(int argc, char **argv){
     fprintf(stderr, "Invalid wave type. Must be one of sine, square, triangle, sawtooth.\n");
     goto cleanup;
   }
-  
-  frequency = strtol(argv[2], 0, 10);
-  if(frequency <= 0){
-    fprintf(stderr, "Invalid frequency. Must be an integer above 0.\n");
+
+  char *end;
+  frequency = strtod(argv[2], &end);
+  if(*end != '\0'){
+    fprintf(stderr, "Cannot use '%s' as a frequency.\n", argv[2]);
     goto cleanup;
   }
   
@@ -38,28 +40,40 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_make_segment_generator(wave_type, frequency, samplerate, &generator) ||
-     !mixed_make_segment_fade(0.0, 1.0, 5.0, MIXED_CUBIC_IN_OUT, samplerate, &fade)){
+  if(!mixed_make_buffer(samples, &buffer)){
+    goto cleanup;
+  }
+
+  if(!mixed_make_segment_generator(wave_type, frequency, internal_samplerate, &generator)
+     || !mixed_make_segment_channel_convert(1, 2, &upmix)
+     || !mixed_make_segment_fade(0.0, 1.0, 5.0, MIXED_CUBIC_IN_OUT, internal_samplerate, &fade)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
-  if(!mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &generator) ||
-     !mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &out->left, &fade) ||
-     !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &fade)){
+  if(!mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &buffer, &generator)
+     || !mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &buffer, &fade)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &buffer, &fade)
+     || !mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &buffer, &upmix)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &upmix)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &out->right, &upmix)){
     fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   if(!mixed_segment_sequence_add(&generator, &sequence) ||
      !mixed_segment_sequence_add(&fade, &sequence) ||
+     !mixed_segment_sequence_add(&upmix, &sequence) ||
      !mixed_segment_sequence_add(&out->segment, &sequence)){
     fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
+  
+  // Start up ncurses
+  window = load_curses();
+  mvprintw(0, 0, "<←/→>: Change frequency <SPC>: Cycle wave-type");
 
   mixed_segment_sequence_start(&sequence);
-
   size_t played;
   do{
     mixed_segment_sequence_mix(&sequence);
@@ -68,16 +82,30 @@ int main(int argc, char **argv){
       goto cleanup;
     }
 
-    mixed_buffer_copy(&out->left, &out->right);
-
     void *buffer;
     size_t bytes = SIZE_MAX;
     mixed_pack_request_read(&buffer, &bytes, &out->pack);
     played = out123_play(out->handle, buffer, bytes);
-    if(played < bytes){
-      fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
-    }
     mixed_pack_finish_read(played, &out->pack);
+    
+    // IO
+    int c = getch();
+    switch(c){
+    case 'q': interrupted = 1; break;
+    case KEY_LEFT: frequency -= 10; break;
+    case KEY_RIGHT: frequency += 10; break;
+    case ' ': switch(wave_type){
+      case MIXED_SINE: wave_type = MIXED_SQUARE; break;
+      case MIXED_SQUARE: wave_type = MIXED_TRIANGLE; break;
+      case MIXED_TRIANGLE: wave_type = MIXED_SAWTOOTH; break;
+      case MIXED_SAWTOOTH: wave_type = MIXED_SINE; break;
+      }break;
+    }
+    mixed_segment_set(MIXED_GENERATOR_FREQUENCY, &frequency, &generator);
+    mixed_segment_set(MIXED_GENERATOR_TYPE, &wave_type, &generator);
+
+    mvprintw(1, 0, "Processed: %4i Played: %4i Frequency: %f Type: %i", bytes, played, frequency, wave_type);
+    refresh();
   }while(!interrupted);
   
   mixed_segment_sequence_end(&sequence);
@@ -85,11 +113,11 @@ int main(int argc, char **argv){
   exit = 0;
 
  cleanup:
-  
   mixed_free_segment_sequence(&sequence);
   mixed_free_segment(&generator);
   mixed_free_segment(&fade);
   free_out(out);
+  free_curses(window);
   
   return exit;
 }

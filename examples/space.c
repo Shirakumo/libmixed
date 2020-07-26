@@ -88,14 +88,8 @@ int main(int argc, char **argv){
   }
 
   // Start up ncurses
-  if((window = initscr()) == NULL){
-    fprintf(stderr, "Error initializing ncurses.\n");
-    goto cleanup;
-  }
-  noecho();
-  nodelay(window, TRUE);
-  keypad(window, TRUE);
-  mvprintw(0, 0, "<L/R>: Change speed <U/D>: Change radius <SPC>: Toggle doppler effect");
+  window = load_curses();
+  mvprintw(0, 0, "<←/→>: Change speed <↑/↓>: Change radius <SPC>: Toggle doppler effect");
 
   double dt = ((double)samples) / ((double)internal_samplerate);
   float phi = 0.0;
@@ -134,6 +128,7 @@ int main(int argc, char **argv){
     // IO
     int c = getch();
     switch(c){
+    case 'q': interrupted = 1; break;
     case KEY_LEFT: dphi *= 0.9; break;
     case KEY_RIGHT: dphi *= 1.1; break;
     case KEY_UP: r += 1; break;
@@ -159,12 +154,6 @@ int main(int argc, char **argv){
   exit = 0;
 
  cleanup:
-  fprintf(stderr, "\nCleaning up.\n");
-  if(window){
-    delwin(window);
-    endwin();
-  }
-  
   mixed_free_segment_sequence(&sequence);
   mixed_free_segment(&downmix);
   mixed_free_segment(&space);
@@ -172,6 +161,8 @@ int main(int argc, char **argv){
   
   free_out(out);
   free_mp3(mp3);
-  
+  free_curses(window);
+
+  mpg123_exit();
   return exit;
 }

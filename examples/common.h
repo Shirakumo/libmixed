@@ -1,3 +1,5 @@
+#include <ncurses.h>
+#include <locale.h>
 #include <math.h>
 #include <mpg123.h>
 #include <out123.h>
@@ -274,4 +276,25 @@ int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
  cleanup:
   free_mp3(mp3);
   return 0;
+}
+
+WINDOW *load_curses(){
+  WINDOW *window;
+  setlocale(LC_ALL, "");
+  if((window = initscr()) == NULL){
+    fprintf(stderr, "Error initializing ncurses.\n");
+    return 0;
+  }
+  noecho();
+  cbreak();
+  nodelay(window, TRUE);
+  keypad(window, TRUE);
+  return window;
+}
+
+void free_curses(WINDOW *window){
+  if(window){
+    delwin(window);
+    endwin();
+  }
 }

@@ -105,8 +105,6 @@ int main(int argc, char **argv){
   exit = 0;
   
  cleanup:
-  fprintf(stderr, "\nCleaning up.\n");
-  
   mixed_free_segment(&mix_segment);
   mixed_free_segment_sequence(&sequence);
 
