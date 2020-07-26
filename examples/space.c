@@ -128,8 +128,8 @@ int main(int argc, char **argv){
     int c = getch();
     switch(c){
     case 'q': interrupted = 1; break;
-    case KEY_LEFT: dphi *= 0.9; break;
-    case KEY_RIGHT: dphi *= 1.1; break;
+    case KEY_LEFT: dphi /= 1.0625; break;
+    case KEY_RIGHT: dphi *= 1.0625; break;
     case KEY_UP: r += 1; break;
     case KEY_DOWN: r -= 1; break;
     case ' ': doppler = (doppler==1.0)?0.0:1.0; break;
