@@ -1,4 +1,4 @@
-#include "internal.h"
+#include "../internal.h"
 
 struct frequency_pass_segment_data{
   struct mixed_buffer *in;

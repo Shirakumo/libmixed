@@ -1,4 +1,4 @@
-#include "internal.h"
+#include "../internal.h"
 
 struct basic_mixer_data{
   struct mixed_buffer **in;

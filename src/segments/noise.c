@@ -1,4 +1,4 @@
-#include "internal.h"
+#include "../internal.h"
 #define WHITE_NOISE_SAMPLES 4096
 
 struct noise_segment_data{

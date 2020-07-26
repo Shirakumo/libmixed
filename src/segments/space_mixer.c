@@ -1,4 +1,4 @@
-#include "internal.h"
+#include "../internal.h"
 
 struct space_source{
   struct mixed_buffer *buffer;

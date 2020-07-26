@@ -1,4 +1,4 @@
-#include "internal.h"
+#include "../internal.h"
 #include "samplerate.h"
 
 struct pack_segment_data{

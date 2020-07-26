@@ -1,4 +1,4 @@
-#include "internal.h"
+#include "../internal.h"
 
 struct queue_segment_data{
   struct mixed_segment **queue;

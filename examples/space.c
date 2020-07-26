@@ -1,4 +1,3 @@
-#include <curses.h>
 #include "common.h"
 
 double mtime(){

@@ -1,4 +1,4 @@
-#include "internal.h"
+#include "../internal.h"
 
 //FIXME: allow arbitrary buffers
 struct volume_control_segment_data{
