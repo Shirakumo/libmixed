@@ -51,8 +51,8 @@ define_test(dual_channel, {
     barray[1] = &buffers[1];
     // Create pack with random samples
     pass(make_pack(MIXED_INT8, 2, &pack));
-    pass(mixed_make_buffer(8, &buffers[0]));
-    pass(mixed_make_buffer(8, &buffers[1]));
+    pass(mixed_make_buffer(pack.size/2, &buffers[0]));
+    pass(mixed_make_buffer(pack.size/2, &buffers[1]));
     char *data = pack._data;
     // Convert from pack
     pass(mixed_buffer_from_pack(&pack, barray, 1.0));
@@ -83,8 +83,8 @@ define_test(dual_channel_uneven, {
     barray[1] = &buffers[1];
     // Create pack with random samples
     pass(make_pack(MIXED_INT8, 2, &pack));
-    pass(mixed_make_buffer(4, &buffers[0]));
-    pass(mixed_make_buffer(8, &buffers[1]));
+    pass(mixed_make_buffer(pack.size/4, &buffers[0]));
+    pass(mixed_make_buffer(pack.size/2, &buffers[1]));
     char *data = pack._data;
     // Convert to buffers
     pass(mixed_buffer_from_pack(&pack, barray, 1.0));
