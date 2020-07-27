@@ -76,6 +76,10 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "The requested change in the sample rates is too big.";
   case MIXED_BAD_CHANNEL_CONFIGURATION:
     return "An unsupported channel conversion configuration was requested.";
+  case MIXED_BUFFER_ALLOCATED:
+    return "An allocated buffer was passed when an unallocated one was expected.";
+  case MIXED_BUFFER_MISSING:
+    return "An input or output port is missing a buffer.";
   default:
     return "Unknown error code.";
   }

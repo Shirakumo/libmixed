@@ -2,20 +2,26 @@
 
 MIXED_EXPORT int mixed_make_buffer(size_t size, struct mixed_buffer *buffer){
   mixed_err(MIXED_NO_ERROR);
+  if(buffer->_data && !buffer->virtual){
+    mixed_err(MIXED_BUFFER_ALLOCATED);
+    return 0;
+  }
   buffer->_data = calloc(size, sizeof(float));
   if(!buffer->_data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
+  buffer->virtual = 0;
   buffer->size = size;
   return 1;
 }
 
 MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer){
-  if(buffer->_data)
+  if(buffer->_data && !buffer->virtual)
     free(buffer->_data);
   buffer->_data = 0;
   buffer->size = 0;
+  buffer->virtual = 0;
   mixed_buffer_clear(buffer);
 }
 

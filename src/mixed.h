@@ -86,6 +86,11 @@ extern "C" {
     // An unsupported channel conversion configuration was
     // requested.
     MIXED_BAD_CHANNEL_CONFIGURATION,
+    // An allocated buffer was passed when an unallocated
+    // one was expected.
+    MIXED_BUFFER_ALLOCATED,
+    // An input or output port is missing a buffer.
+    MIXED_BUFFER_MISSING
   };
 
   // This enum describes the possible sample encodings.
@@ -417,6 +422,7 @@ extern "C" {
     size_t r2_size;
     size_t reserved_start;
     size_t reserved_size;
+    char virtual;
   };
 
   // Information struct to encapsulate a "channel"
