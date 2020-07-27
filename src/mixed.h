@@ -1064,6 +1064,14 @@ extern "C" {
   // resampling the audio data.
   MIXED_EXPORT int mixed_make_segment_speed_change(double speed, struct mixed_segment *segment);
 
+  // A segment to distribute a buffer to multiple consumers.
+  //
+  // You should connect the buffer to duplicate as an input, and connect as many
+  // copies as you need as outputs. Note however that the output buffers must
+  // not be allocated, and should instead be empty structs. The segment will
+  // handle initialisation.
+  MIXED_EXPORT int mixed_make_segment_distribute(struct mixed_segment *segment);
+
   // A queue segment for inner segments.
   //
   // The queue will delegate mixing to the first segment in its list until that
