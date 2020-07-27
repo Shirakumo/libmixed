@@ -92,7 +92,8 @@ add_executable(tester
   "test/tester.c"
   "test/buffer.c"
   "test/transfer.c"
-  "test/packer.c")
+  "test/packer.c"
+  "test/distribute.c")
 add_dependencies(tester mixed)
 set_property(TARGET tester PROPERTY C_STANDARD 99)
 target_link_libraries(tester mixed)

@@ -22,10 +22,6 @@ int distribute_set_in(size_t field, size_t location, void *buffer, struct mixed_
       mixed_err(MIXED_INVALID_LOCATION);
       return 0;
     }
-    if(((struct mixed_buffer *)buffer)->_data){
-      mixed_err(MIXED_BUFFER_ALLOCATED);
-      return 0;
-    }
     data->in = (struct mixed_buffer *)buffer;
     return 1;
   default:
@@ -40,6 +36,10 @@ int distribute_set_out(size_t field, size_t location, void *buffer, struct mixed
   switch(field){
   case MIXED_BUFFER:
     if(buffer){ // Add or set an element
+      if(((struct mixed_buffer *)buffer)->_data){
+        mixed_err(MIXED_BUFFER_ALLOCATED);
+        return 0;
+      }
       ((struct mixed_buffer *)buffer)->virtual = 1;
       if(location < data->count){
         data->out[location] = (struct mixed_buffer *)buffer;
@@ -100,7 +100,8 @@ int distribute_mix(struct mixed_segment *segment){
 }
 
 int distribute_info(struct mixed_segment_info *info, struct mixed_segment *segment){
-  struct distribute_data *data = (struct distribute_data *)segment->data;
+  IGNORE(segment);
+  
   info->name = "distribute";
   info->description = "Multiplexes a buffer to multiple outputs to consume it from.";
   info->min_inputs = 1;
@@ -123,6 +124,7 @@ MIXED_EXPORT int mixed_make_segment_distribute(struct mixed_segment *segment){
   }
   
   segment->free = distribute_free;
+  segment->start = distribute_start;
   segment->mix = distribute_mix;
   segment->set_in = distribute_set_in;
   segment->set_out = distribute_set_out;
