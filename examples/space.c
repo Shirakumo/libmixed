@@ -104,10 +104,7 @@ int main(int argc, char **argv){
     void *buffer;
     read = SIZE_MAX;
     mixed_pack_request_write(&buffer, &read, &mp3->pack);
-    // Important: we make sure to not read the full buffer to leave some breathing room.
-    //            Without this, the pipeline starts to zipzag between very short sample
-    //            runs, which causes distortion on the pitch shifting.
-    if(mpg123_read(mp3->handle, buffer, read/2, &read) != MPG123_OK){
+    if(mpg123_read(mp3->handle, buffer, read, &read) != MPG123_OK){
       fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
       goto cleanup;
     }

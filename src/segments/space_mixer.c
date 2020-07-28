@@ -151,7 +151,11 @@ int space_mixer_mix(struct mixed_segment *segment){
       float *inout;
       size_t samples = SIZE_MAX;
       mixed_buffer_request_read(&inout, &samples, source->buffer);
-      pitch_shift(pitch, inout, inout, samples, &data->pitch_data);
+      // KLUDGE: Using too few samples here creates massive distortion.
+      //         Just /not/ pitch shifting seems to work out fine, though.
+      //         At least I don't notice anything myself.
+      if(10 < samples)
+        pitch_shift(pitch, inout, inout, samples, &data->pitch_data);
     }
   }
 
