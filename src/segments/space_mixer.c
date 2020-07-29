@@ -104,7 +104,7 @@ static inline float calculate_phase(float S[3], float L[3], float D[3]){
   return dot(norm(D), norm(t2));
 }
 
-static inline void calculate_volumes(float *lvolume, float *rvolume, struct space_source *source, struct space_mixer_data *data){
+VECTORIZE static inline void calculate_volumes(float *lvolume, float *rvolume, struct space_source *source, struct space_mixer_data *data){
   float min = data->min_distance;
   float max = data->max_distance;
   float roll = data->rolloff;
@@ -121,7 +121,7 @@ static inline void calculate_volumes(float *lvolume, float *rvolume, struct spac
   }
 }
 
-float calculate_pitch_shift(struct space_mixer_data *listener, struct space_source *source){
+VECTORIZE float calculate_pitch_shift(struct space_mixer_data *listener, struct space_source *source){
   if(listener->doppler_factor <= 0.0) return 1.0;
   // See OpenAL1.1 specification §3.5.2
   float SL[3] = {listener->location[0] - source->location[0],
@@ -140,7 +140,7 @@ float calculate_pitch_shift(struct space_mixer_data *listener, struct space_sour
   return (SS - DF*vls) / (SS - DF*vss);
 }
 
-int space_mixer_mix(struct mixed_segment *segment){
+VECTORIZE int space_mixer_mix(struct mixed_segment *segment){
   struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
 
   // Shift frequencies

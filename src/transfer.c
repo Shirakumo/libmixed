@@ -64,14 +64,14 @@ extern inline void mixed_transfer_sample_to_uint24(float *in, size_t is, void *o
 
 //// Array transfer functions
 #define DEF_MIXED_TRANSFER_ARRAY_FROM_ALTERNATING(datatype)             \
-  void mixed_transfer_array_from_alternating_##datatype(void *in, float *out, uint8_t stride, size_t samples, float volume) { \
+  VECTORIZE void mixed_transfer_array_from_alternating_##datatype(void *in, float *out, uint8_t stride, size_t samples, float volume) { \
     for(size_t sample=0; sample<samples; ++sample){                     \
       mixed_transfer_sample_from_##datatype(in, sample*stride, out, sample, volume); \
     }                                                                   \
   }
 
 #define DEF_MIXED_TRANSFER_ARRAY_TO_ALTERNATING(datatype)               \
-  static inline void mixed_transfer_array_to_alternating_##datatype(float *in, void *out, uint8_t stride, size_t samples, float volume){ \
+  VECTORIZE static inline void mixed_transfer_array_to_alternating_##datatype(float *in, void *out, uint8_t stride, size_t samples, float volume){ \
     for(size_t sample=0; sample<samples; ++sample){                     \
       mixed_transfer_sample_to_##datatype(in, sample, out, sample*stride, volume); \
     }                                                                   \
@@ -116,7 +116,7 @@ MIXED_EXPORT mixed_transfer_function_from mixed_translator_from(enum mixed_encod
   return transfer_array_functions_from[encoding-1];
 }
 
-MIXED_EXPORT int mixed_buffer_from_pack(struct mixed_pack *in, struct mixed_buffer **outs, float volume){
+VECTORIZE MIXED_EXPORT int mixed_buffer_from_pack(struct mixed_pack *in, struct mixed_buffer **outs, float volume){
   uint8_t channels = in->channels;
   size_t frames_to_bytes = channels * mixed_samplesize(in->encoding);
   size_t frames = SIZE_MAX;
@@ -159,7 +159,7 @@ MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding 
   return transfer_array_functions_to[encoding-1];
 }
 
-MIXED_EXPORT int mixed_buffer_to_pack(struct mixed_buffer **ins, struct mixed_pack *out, float volume){
+VECTORIZE MIXED_EXPORT int mixed_buffer_to_pack(struct mixed_buffer **ins, struct mixed_pack *out, float volume){
   uint8_t channels = out->channels;
   size_t frames_to_bytes = channels * mixed_samplesize(out->encoding);
   size_t frames = SIZE_MAX;

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project(mixed)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
-include(Findcpucaps)
 
 ## Generate git header
 find_program(GIT_SCM git DOC "Git version control")
@@ -10,10 +9,13 @@ find_file(GITDIR NAMES .git PATHS ${CMAKE_CURRENT_SOURCE_DIR} NO_DEFAULT_PATH)
 if (GIT_SCM AND GITDIR)
   exec_program(
     "git" ${CMAKE_CURRENT_SOURCE_DIR} ARGS "describe" "--tags" "--long"
-    OUTPUT_VARIABLE VERSION )
+    OUTPUT_VARIABLE VERSION)
 else()
   file(READ "VERSION" VERSION)
 endif()
+
+## Minimum supported platform is SSE4.2
+set(CPU_EXTENSION_FLAGS "-msse4.2")
 
 ## Libsamplerate
 add_library(samplerate OBJECT
@@ -75,7 +77,7 @@ set_property(TARGET mixed PROPERTY SOVERSION ${MIXED_VERSION_MAJOR})
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(mixed PRIVATE MIXED_BUILD=1 MIXED_VERSION="${MIXED_VERSION_STRING}")
-target_compile_options(mixed PRIVATE -mrdrnd -g -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes ${CPU_EXTENSION_FLAGS})
+target_compile_options(mixed PRIVATE -mrdrnd -g -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes -Wno-enum-conversion ${CPU_EXTENSION_FLAGS})
 target_link_options(mixed PRIVATE)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang"

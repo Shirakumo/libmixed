@@ -56,7 +56,7 @@ int basic_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed
   }
 }
 
-int basic_mixer_mix(struct mixed_segment *segment){
+VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   size_t channels = data->channels;
   size_t buffers = data->count / channels;

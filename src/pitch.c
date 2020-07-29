@@ -97,7 +97,7 @@ int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, st
   return 1;
 }
 
-void pitch_shift(float pitch, float *in, float *out, size_t samples, struct pitch_data *data){
+VECTORIZE void pitch_shift(float pitch, float *in, float *out, size_t samples, struct pitch_data *data){
   size_t framesize = data->framesize;
   size_t oversampling = data->oversampling;
   float *in_fifo = data->in_fifo;

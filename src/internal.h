@@ -28,6 +28,14 @@
 #define IGNORE(...) __ignore(0, __VA_ARGS__)
 static inline void __ignore(char _, ...){(void)_;}
 
+#ifdef __clang__
+#define VECTORIZE
+#elif __GNUC__
+#define VECTORIZE __attribute__((target_clones("avx2","avx","default")))
+#else
+#define VECTORIZE
+#endif
+
 struct vector{
   void **data;
   size_t count;
