@@ -14,8 +14,14 @@ else()
   file(READ "VERSION" VERSION)
 endif()
 
-## Minimum supported platform is SSE4.2
-set(CPU_EXTENSION_FLAGS "-msse4.2")
+## Optimize for target architecture
+include(TargetArch.cmake)
+target_architecture(ARCH)
+if(ARCH MATCHES "x86_64")
+  ## Minimum supported platform is SSE4.2
+  message(STATUS "Enabling SSE4.2")
+  set(CPU_EXTENSION_FLAGS "-msse4.2")
+endif()
 
 ## Libsamplerate
 add_library(samplerate OBJECT
@@ -26,13 +32,19 @@ add_library(samplerate OBJECT
 target_compile_options(samplerate PRIVATE -g -O3 ${CPU_EXTENSION_FLAGS})
 
 ## Spiralfft
-add_library(spiralfft OBJECT
-  "spiralfft/spiral_fft_float.c"
-  "spiralfft/spiral_private.c")
+if(ARCH MATCHES "x86_64")
+  add_library(spiralfft OBJECT
+    "spiralfft/sse/spiral_fft_float.c"
+    "spiralfft/sse/spiral_private.c")
+else()
+  add_library(spiralfft OBJECT
+    "spiralfft/scalar/spiral_fft_float.c"
+    "spiralfft/scalar/spiral_private.c")
+endif()
 target_compile_options(spiralfft PRIVATE -g -O3 ${CPU_EXTENSION_FLAGS})
+target_include_directories(spiralfft PRIVATE "spiralfft/")
 
 ## Main Library
-include_directories("src/" "spiralfft/" "libsamplerate/")
 add_library(mixed SHARED
   "src/buffer.c"
   "src/common.c"
@@ -67,6 +79,7 @@ add_library(mixed SHARED
   "src/segments/volume_control.c"
   $<TARGET_OBJECTS:samplerate>
   $<TARGET_OBJECTS:spiralfft>)
+target_include_directories(mixed PRIVATE "src/" "libsamplerate/" "spiralfft/")
 string(REGEX MATCH "([0-9]+)\\.([0-9]+)-[0-9]+-(.+)" TMP ${VERSION})
 set(MIXED_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(MIXED_VERSION_MINOR ${CMAKE_MATCH_2})
