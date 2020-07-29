@@ -16,14 +16,17 @@ else()
 endif()
 
 ## Libsamplerate
-file(GLOB samplerate_src "libsamplerate/*.c")
-add_library(samplerate OBJECT ${samplerate_src})
+add_library(samplerate OBJECT
+  "libsamplerate/samplerate.c"
+  "libsamplerate/src_linear.c"
+  "libsamplerate/src_sinc.c"
+  "libsamplerate/src_zoh.c")
 target_compile_options(samplerate PRIVATE -g -O3 ${CPU_EXTENSION_FLAGS})
 
 ## Spiralfft
-file(GLOB spiralfft_src "spiralfft/*.c")
-add_library(spiralfft STATIC
-  ${spiralfft_src})
+add_library(spiralfft OBJECT
+  "spiralfft/spiral_fft_float.c"
+  "spiralfft/spiral_private.c")
 target_compile_options(spiralfft PRIVATE -g -O3 ${CPU_EXTENSION_FLAGS})
 
 ## Main Library
