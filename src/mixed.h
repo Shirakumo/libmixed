@@ -400,7 +400,6 @@ extern "C" {
     MIXED_GENERATOR_TYPE_ENUM,
     MIXED_FADE_TYPE_ENUM,
     MIXED_ATTENUATION_ENUM,
-    MIXED_LAYOUT_ENUM,
     MIXED_ENCODING_ENUM,
     MIXED_ERROR_ENUM,
     MIXED_RESAMPLE_TYPE_ENUM,
@@ -560,13 +559,13 @@ extern "C" {
   //   frames*channels*mixed_samplesize(encoding)
   MIXED_EXPORT int mixed_make_pack(size_t frames, struct mixed_pack *pack);
   MIXED_EXPORT void mixed_free_pack(struct mixed_pack *pack);
-  MIXED_EXPORT int mixed_pack_clear(struct mixed_pack *buffer);
-  MIXED_EXPORT size_t mixed_pack_available_write(struct mixed_pack *buffer);
-  MIXED_EXPORT size_t mixed_pack_available_read(struct mixed_pack *buffer);
-  MIXED_EXPORT int mixed_pack_request_write(void **area, size_t *size, struct mixed_pack *buffer);
-  MIXED_EXPORT int mixed_pack_finish_write(size_t size, struct mixed_pack *buffer);
-  MIXED_EXPORT int mixed_pack_request_read(void **area, size_t *size, struct mixed_pack *buffer);
-  MIXED_EXPORT int mixed_pack_finish_read(size_t size, struct mixed_pack *buffer); 
+  MIXED_EXPORT int mixed_pack_clear(struct mixed_pack *pack);
+  MIXED_EXPORT size_t mixed_pack_available_write(struct mixed_pack *pack);
+  MIXED_EXPORT size_t mixed_pack_available_read(struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_request_write(void **area, size_t *size, struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_finish_write(size_t size, struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_request_read(void **area, size_t *size, struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_finish_read(size_t size, struct mixed_pack *pack); 
 
   // Note that while this API deals with sound and you will probably
   // want to use threads to handle the playback, it is in itself not
