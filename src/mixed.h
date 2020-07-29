@@ -441,7 +441,7 @@ extern "C" {
     // The sample rate at which data is encoded in Hz.
     size_t samplerate;
     // Bip buffer internals
-    void *_data;
+    unsigned char *_data;
     size_t size;
     size_t r1_start;
     size_t r1_size;
