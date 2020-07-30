@@ -110,12 +110,16 @@ MIXED_EXPORT int mixed_register_segment(char *name, size_t argc, struct mixed_se
       goto cleanup;
     }
   }
-
+  
   entry->name = strdup(name);
   entry->argc = argc;
   memcpy(entry->args, args, argc*sizeof(struct mixed_segment_field_info));
   entry->function = function;
-  return vector_add(entry, (struct vector *)&plugins);
+  if(!vector_add(entry, (struct vector *)&segments)){
+    goto cleanup;
+  }
+
+  return 1;
   
  cleanup:
   if(entry){
