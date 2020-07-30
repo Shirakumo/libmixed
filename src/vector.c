@@ -7,26 +7,26 @@ void free_vector(struct vector *vector){
 }
 
 int vector_add(void *element, struct vector *vector){
+  void **data = vector->data;
   // Not yet initialised
-  if(!vector->data){
+  if(!data){
     if(vector->size == 0) vector->size = BASE_VECTOR_SIZE;
-    vector->data = calloc(vector->size, sizeof(void *));
+    data = calloc(vector->size, sizeof(void *));
     vector->count = 0;
   }
   // Too small
   if(vector->count == vector->size){
-    vector->data = crealloc(vector->data, vector->size, vector->size*2, sizeof(void *));
-    vector->size *= 2;
+    data = crealloc(vector->data, vector->size, vector->size*2, sizeof(void *));
+    if(data) vector->size *= 2;
   }
   // Check completeness
-  if(!vector->data){
+  if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
-    vector->count = 0;
-    vector->size = 0;
     return 0;
   }
   // All good
-  vector->data[vector->count] = element;
+  data[vector->count] = element;
+  vector->data = data;
   ++vector->count;
   return 1;
 }
@@ -44,15 +44,13 @@ int vector_remove_pos(size_t i, struct vector *vector){
   vector->data[vector->count] = 0;
   // We have sufficiently deallocated. Shrink.
   if(vector->count < vector->size/4 && BASE_VECTOR_SIZE < vector->size){
-    vector->data = crealloc(vector->data, vector->size, vector->size/2,
-                            sizeof(struct mixed_buffer *));
-    vector->size /= 2;
-    if(!vector->data){
+    void **data = crealloc(vector->data, vector->size, vector->size/2, sizeof(void *));
+    if(!data){
       mixed_err(MIXED_OUT_OF_MEMORY);
-      vector->count = 0;
-      vector->size = 0;
       return 0;
     }
+    vector->size /= 2;
+    vector->data = data;
   }
   return 1;
 }
@@ -75,14 +73,13 @@ int vector_clear(struct vector *vector){
   vector->count = 0;
   // We have sufficiently deallocated. Shrink.
   if(BASE_VECTOR_SIZE < vector->size){
-    vector->data = crealloc(vector->data, vector->size, BASE_VECTOR_SIZE,
-                            sizeof(struct mixed_buffer *));
-    vector->size = BASE_VECTOR_SIZE;
-    if(!vector->data){
+    void **data = crealloc(vector->data, vector->size, BASE_VECTOR_SIZE, sizeof(void *));
+    if(!data){
       mixed_err(MIXED_OUT_OF_MEMORY);
-      vector->size = 0;
       return 0;
     }
+    vector->size = BASE_VECTOR_SIZE;
+    vector->data = data;
   }
   return 1;
 }
