@@ -72,6 +72,14 @@ Libmixed offers a standardised architecture for audio processing units, called '
 
 Information about a segment can be obtained through `mixed_segment_info`, which will provide you with an array of `struct mixed_segment_info`, containing information about the segment itself (`name`, `description`), its restrictions (`flags`), the number of its inputs and outputs (`min_inputs`, `max_inputs`, `outputs`), and the supported fields that can be set or retrieved (`fields`).
 
+A list of all known segments can be obtained via `mixed_list_segments`. For each registered segment, information about its constructor arguments can then be obtained via `mixed_make_segment_info`, and ultimately used to dynamically initialise a segment with `mixed_make_segment`.
+
+This allows adding and removing known segments at runtime, and provides an API that, again, allows automatically constructing user interfaces that could initialise arbitrary segments.
+
+libmixed also includes an API to provide segment plugin libraries. Such plugin libraries can be loaded (`mixed_load_plugin`) and unloaded (`mixed_close_plugin`) dynamically. In order to create such a plugin library, the user must simply dynamically link against libmixed and provide two exported functions, `mixed_make_plugin`, and `mixed_free_plugin`, which will automatically be called when the plugin is loaded or unloaded.
+
+The segment de/registration function is provided as an argument to allow third-party systems to provide integration into higher-level registration mechanisms without having to query libmixed after the fact.
+
 ## Compilation
 In order to compile the library, you will need:
 
@@ -93,6 +101,8 @@ The procedure is as per usual for CMake-based builds:
 On Windows you will usually want to build with MSYS2 and the following cmake command:
 
 * `cmake .. -G "MSYS Makefiles"`
+
+By default it will compile for SSE4.2 on x86 systems, with dispatchers for higher vectorisation APIs like AVX and AVX2. This allows libmixed to stay compatible with older systems while still being able to utilise the capabilities of more modern ones.
 
 ## Included Sources
 * [ladspa.h](https://web.archive.org/web/20150627144551/http://www.ladspa.org:80/ladspa_sdk/ladspa.h.txt)

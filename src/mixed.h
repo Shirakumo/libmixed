@@ -1159,7 +1159,17 @@ extern "C" {
   typedef int (*mixed_make_segment_function)(void *args, struct mixed_segment *segment);
   typedef int (*mixed_register_segment_function)(char *name, size_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
   typedef int (*mixed_deregister_segment_function)(char *name);
+
+  // If you write a segment plugin library, you must define an
+  // exported function of this signature named mixed_make_plugin.
+  // The function should call the given function for every
+  // segment that the library should provide.
   typedef int (*mixed_make_plugin_function)(mixed_register_segment_function registrar);
+
+  // If you write a segment plugin library, you must define an
+  // exported function of this signature named mixed_make_plugin.
+  // The function should call the given function for every
+  // segment that it initially registered.
   typedef int (*mixed_free_plugin_function)(mixed_deregister_segment_function registrar);
 
   // Load a new plugin library.
@@ -1167,6 +1177,8 @@ extern "C" {
   // The function may fail if the library was previously loaded already,
   // cannot be opened, does not contain the required mixed_make_plugin
   // function, or that function fails for some reason.
+  // The file name is copied and may be deallocated again after this
+  // function has been called.
   MIXED_EXPORT int mixed_load_plugin(char *file);
 
   // Close an existing plugin library.
@@ -1176,10 +1188,18 @@ extern "C" {
   // function fails for some reason.
   MIXED_EXPORT int mixed_close_plugin(char *file);
 
-  // 
+  // Register a segment constructor globally.
+  //
+  // If successful, the segment constructor information is later retrievable
+  // through miked_make_segment_info, and the segment can be constructed
+  // via mixed_make_segment.
+  // The name and args are copied and may be deallocated again after this
+  // function has been called.
   MIXED_EXPORT int mixed_register_segment(char *name, size_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
 
-  // 
+  // Remove a globally registered segment constructor.
+  //
+  // If successful, the given name can be registered again afterwards.
   MIXED_EXPORT int mixed_deregister_segment(char *name);
 
   // List available segments.

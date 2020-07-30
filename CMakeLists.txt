@@ -22,7 +22,7 @@ set(MIXED_VERSION_STRING ${MIXED_VERSION_MAJOR}.${MIXED_VERSION_MINOR}-${MIXED_V
 ## Optimize for target architecture
 include(TargetArch.cmake)
 target_architecture(ARCH)
-if(ARCH MATCHES "x86_64")
+if(ARCH MATCHES "x86_64" OR ARG MATCHES "i386")
   ## Minimum supported platform is SSE4.2
   message(STATUS "Enabling SSE4.2")
   set(CPU_EXTENSION_FLAGS "-msse4.2" "-mrdrnd")
