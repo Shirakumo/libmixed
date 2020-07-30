@@ -58,12 +58,12 @@ extern "C" {
     // You tried to end a segment again before it had
     // been started.
     MIXED_SEGMENT_ALREADY_ENDED,
-    // The LADSPA library failed to be opened. It is
+    // The dynamic library failed to be opened. It is
     // likely the file does not exist or is not readable.
-    MIXED_LADSPA_OPEN_FAILED,
-    // The LADSPA library did not seem to contain a valid
+    MIXED_DYNAMIC_OPEN_FAILED,
+    // The dynamic library did not seem to contain a valid
     // plugin.
-    MIXED_LADSPA_BAD_LIBRARY,
+    MIXED_BAD_DYNAMIC_LIBRARY,
     // The index into the library you gave did not resolve
     // to a valid LADSPA plugin descriptor.
     MIXED_LADSPA_NO_PLUGIN_AT_INDEX,
@@ -90,7 +90,12 @@ extern "C" {
     // one was expected.
     MIXED_BUFFER_ALLOCATED,
     // An input or output port is missing a buffer.
-    MIXED_BUFFER_MISSING
+    MIXED_BUFFER_MISSING,
+    // A segment with the requested name had already been
+    // registered.
+    MIXED_DUPLICATE_SEGMENT,
+    // A segment with the requested name is not registered.
+    MIXED_BAD_SEGMENT
   };
 
   // This enum describes the possible sample encodings.
@@ -340,8 +345,8 @@ extern "C" {
     // in place.
     MIXED_INPLACE = 0x1,
     // This means that the segment will modify the samples in
-    // its input buffers, making them potentially unusable for
-    // an input buffer for other segments.
+    // its input buffers, making them unusable for virtual
+    // buffers.
     MIXED_MODIFIES_INPUT = 0x2,
     // The field is available for inputs.
     MIXED_IN = 0x1,
@@ -499,7 +504,11 @@ extern "C" {
     // The number of outputs that this segment provides.
     size_t outputs;
     // A null-terminated array of possible fields that this
-    // segment supports.
+    // segment supports. Note that while the struct definition here
+    // sets the number of fields to 32, an allocated segment info
+    // structure could potentially be larger and carry many more
+    // than 32. The only proper way to test for the last field
+    // is by testing for a null.
     struct mixed_segment_field_info fields[32];
   };
 
@@ -1146,6 +1155,52 @@ extern "C" {
   // Once you have called end, you must call mixed_segment_sequence_start
   // again before you are allowed to mix.
   MIXED_EXPORT int mixed_segment_sequence_end(struct mixed_segment_sequence *mixer);
+
+  typedef int (*mixed_make_segment_function)(void *args, struct mixed_segment *segment);
+  typedef int (*mixed_register_segment_function)(char *name, size_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
+  typedef int (*mixed_deregister_segment_function)(char *name);
+  typedef int (*mixed_make_plugin_function)(mixed_register_segment_function registrar);
+  typedef int (*mixed_free_plugin_function)(mixed_deregister_segment_function registrar);
+
+  // Load a new plugin library.
+  //
+  // The function may fail if the library was previously loaded already,
+  // cannot be opened, does not contain the required mixed_make_plugin
+  // function, or that function fails for some reason.
+  MIXED_EXPORT int mixed_load_plugin(char *file);
+
+  // Close an existing plugin library.
+  //
+  // This function may fail if the requested library was not loaded before,
+  // it does not contain the required mixed_free_plugin function, or that
+  // function fails for some reason.
+  MIXED_EXPORT int mixed_close_plugin(char *file);
+
+  // 
+  MIXED_EXPORT int mixed_register_segment(char *name, size_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
+
+  // 
+  MIXED_EXPORT int mixed_deregister_segment(char *name);
+
+  // List available segments.
+  //
+  // If names is NULL, only count is updated. This allows you to allocate
+  // the correct size of array for the names.
+  MIXED_EXPORT int mixed_list_segments(size_t *count, char **names);
+
+  // Retrieve information about the segment's contsructor function.
+  //
+  // argc will be set to the number of required arguments, and
+  // args will be set to an array of segment_field_info structures of
+  // that size describing the required arguments.
+  MIXED_EXPORT int mixed_make_segment_info(char *name, size_t *argc, const struct mixed_segment_field_info **args);
+
+  // Create a segment by name.
+  //
+  // args must be an array of pointers, where each pointer in the array
+  // points to a value of the type as described in the respective
+  // segment_field_info structure for the constructor.
+  MIXED_EXPORT int mixed_make_segment(char *name, void *args, struct mixed_segment *segment);
 
   // Return the size of a sample in the given encoding in bytes.
   MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding);

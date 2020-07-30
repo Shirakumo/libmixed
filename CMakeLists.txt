@@ -62,6 +62,7 @@ add_library(mixed OBJECT
   "src/mixed.h"
   "src/pack.c"
   "src/pitch.c"
+  "src/plugin.c"
   "src/segment.c"
   "src/segment_sequence.c"
   "src/transfer.c"

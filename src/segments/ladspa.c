@@ -1,8 +1,3 @@
-#ifndef _WIN32
-#  include <dlfcn.h>
-#else
-#  include <windows.h>
-#endif
 #include "../ladspa.h"
 #include "../internal.h"
 
@@ -216,55 +211,25 @@ int ladspa_segment_set(size_t field, void *value, struct mixed_segment *segment)
 int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descriptor){
   LADSPA_Descriptor_Function descriptor_function;
   const LADSPA_Descriptor *descriptor;
-  
-#ifdef _WIN32
-  HINSTANCE lib = LoadLibrary(file);
-  if(!lib){
-    mixed_err(MIXED_LADSPA_OPEN_FAILED);
-    return 0;
-  }
 
-  descriptor_function = (LADSPA_Descriptor_Function)GetProcAddress(lib, "descriptor_function");
-  if(!descriptor_function){
-    mixed_err(MIXED_LADSPA_BAD_LIBRARY);
-    FreeLibrary(lib);
-    return 0;
-  }
+  void *handle = open_library(file);
+  if(!handle) goto cleanup;
 
-  descriptor = descriptor_function(index);
-  if(!descriptor){
-    mixed_err(MIXED_LADSPA_NO_PLUGIN_AT_INDEX);
-    return 0;
-  }
-  
-#else
-
-  void *lib = dlopen(file, RTLD_NOW);
-  if(!lib){
-    fprintf(stderr, "MIXED: DYLD error: %s\n", dlerror());
-    mixed_err(MIXED_LADSPA_OPEN_FAILED);
-    return 0;
-  }
-
-  dlerror();
-  descriptor_function = dlsym(lib, "descriptor_function");
-  char *error = dlerror();
-  if(error != 0){
-    fprintf(stderr, "MIXED: DYLD error: %s\n", error);
-    dlclose(lib);
-    mixed_err(MIXED_LADSPA_BAD_LIBRARY);
-    return 0;
-  }
+  *(void **)(&descriptor_function) = load_symbol(handle, "descriptor_function");
+  if(!descriptor_function) goto cleanup;
   
   descriptor = descriptor_function(index);
   if(!descriptor){
     mixed_err(MIXED_LADSPA_NO_PLUGIN_AT_INDEX);
-    return 0;
+    goto cleanup;
   }
-#endif
 
   *_descriptor = (LADSPA_Descriptor *)descriptor;
   return 1;
+
+ cleanup:
+  close_library(handle);
+  return 0;
 }
 
 MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment){

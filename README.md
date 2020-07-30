@@ -1,5 +1,5 @@
 ## About libmixed
-Libmixed is a library providing a generic audio mixing API and environment. It also ships a few useful audio processing tools to allow you to build an audio system for games, music, etc.
+Libmixed is a library for real-time audio processing pipelines for use in audio/video/games. It can serve as a base architecture for complex DSP systems.
 
 ## How To
 Libmixed will not do any audio file reading or audio playback for you. To do that, see other kinds of libraries like [mpg123](https://www.mpg123.de/) and its associated out123. There's a whole heap of audio backend and format libraries out there though and you should pick whichever you find suitable. Libmixed is independent to your choice.
@@ -67,7 +67,10 @@ mixed_free_buffer(&right);
 // Clean up source and drain
 ```
 
-If your pipeline gets large enough you'll probably want to use a graph library to compute the topological sorting and the buffer allocation for you, rather than having to do it manually. Doing so is outside of the scope of libmixed though.
+## Segment Plugin Architecture
+Libmixed offers a standardised architecture for audio processing units, called 'segments'. Each segment consists of a structure with pointers to functions that should execute the segment's respective actions. These structures can be constructed arbitrarily, allowing integration from non-C languages. Each segment also supports full reflection of its inputs, outputs, and properties, allowing the construction of generic user interfaces that can manage segments without needing special casing for each individual one.
+
+Information about a segment can be obtained through `mixed_segment_info`, which will provide you with an array of `struct mixed_segment_info`, containing information about the segment itself (`name`, `description`), its restrictions (`flags`), the number of its inputs and outputs (`min_inputs`, `max_inputs`, `outputs`), and the supported fields that can be set or retrieved (`fields`).
 
 ## Compilation
 In order to compile the library, you will need:

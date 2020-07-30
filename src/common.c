@@ -1,3 +1,8 @@
+#ifndef _WIN32
+#  include <dlfcn.h>
+#else
+#  include <windows.h>
+#endif
 #include "internal.h"
 
 MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
@@ -56,10 +61,10 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "Cannot start the segment as it is already started.";
   case MIXED_SEGMENT_ALREADY_ENDED:
     return "Cannot end the segment as it is already ended.";
-  case MIXED_LADSPA_OPEN_FAILED:
-    return "Failed to open the LADSPA plugin library. Most likely the file could not be read.";
-  case MIXED_LADSPA_BAD_LIBRARY:
-    return "The LADSPA plugin library was found but does not seem to be a valid LADSPA 1.1 library.";
+  case MIXED_DYNAMIC_OPEN_FAILED:
+    return "Failed to open the plugin library. Most likely the file could not be read.";
+  case MIXED_BAD_DYNAMIC_LIBRARY:
+    return "The plugin library was found but does not seem to be a valid library as it is missing its initialisation function.";
   case MIXED_LADSPA_NO_PLUGIN_AT_INDEX:
     return "The LADSPA plugin library does not have a plugin at the requested index.";
   case MIXED_LADSPA_INSTANTIATION_FAILED:
@@ -80,6 +85,10 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "An allocated buffer was passed when an unallocated one was expected.";
   case MIXED_BUFFER_MISSING:
     return "An input or output port is missing a buffer.";
+  case MIXED_DUPLICATE_SEGMENT:
+    return "A segment with the requested name had already been registered.";
+  case MIXED_BAD_SEGMENT:
+    return "A segment with the requested name is not registered.";
   default:
     return "Unknown error code.";
   }
@@ -115,8 +124,53 @@ void clear_info_field(struct mixed_segment_field_info *info){
   info->type_count = 0;
 }
 
-size_t smin(size_t a, size_t b){
-  return (a<b)?a:b;
+void *open_library(char *file){
+#ifdef _WIN32
+  void *lib = LoadLibrary(file);
+  if(!lib){
+    mixed_err(MIXED_DYNAMIC_OPEN_FAILED);
+    return 0;
+  }
+  return lib;
+#else
+  void *lib = dlopen(file, RTLD_NOW);
+  if(!lib){
+    fprintf(stderr, "MIXED: DYLD error: %s\n", dlerror());
+    mixed_err(MIXED_DYNAMIC_OPEN_FAILED);
+    return 0;
+  }
+  dlerror();
+  return lib;
+#endif
+}
+
+void close_library(void *handle){
+  if(handle)
+#ifdef _WIN32
+    FreeLibrar(handle);
+#else
+    dlclose(handle);
+#endif
+}
+
+void *load_symbol(void *handle, char *name){
+#ifdef _WIN32
+  void *function = GetProcAddress(lib, "mixed_make_plugin");
+  if(!function){
+    mixed_err(MIXED_BAD_DYNAMIC_LIBRARY);
+    return 0;
+  }
+  return function;
+#else
+  void *function = dlsym(handle, name);
+  char *error = dlerror();
+  if(error != 0){
+    fprintf(stderr, "MIXED: DYLD error: %s\n", error);
+    mixed_err(MIXED_BAD_DYNAMIC_LIBRARY);
+    return 0;
+  }
+  return function;
+#endif
 }
 
 float mixed_random_m(){

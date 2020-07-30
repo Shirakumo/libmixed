@@ -221,11 +221,11 @@ MIXED_EXPORT int mixed_queue_add(struct mixed_segment *new, struct mixed_segment
     return 0;
   
   mixed_segment_info(&info, new);
-  size_t ins = smin(data->in_count, info.max_inputs);
+  size_t ins = MIN(data->in_count, info.max_inputs);
   for(size_t i=0; i<ins; ++i){
     mixed_segment_set_in(MIXED_BUFFER, i, data->in[i], new);
   }
-  size_t outs = smin(data->out_count, info.outputs);
+  size_t outs = MIN(data->out_count, info.outputs);
   for(size_t i=0; i<outs; ++i){
     mixed_segment_set_out(MIXED_BUFFER, i, data->out[i], new);
   }
