@@ -1224,6 +1224,9 @@ extern "C" {
   // error code returned by mixed_error(); is returned instead.
   MIXED_EXPORT char *mixed_error_string(int error_code);
 
+  // Return a textual description of the given type identifier.
+  MIXED_EXPORT char *mixed_type_string(int code);
+
   // Returns the version string of the library.
   MIXED_EXPORT char *mixed_version();
 

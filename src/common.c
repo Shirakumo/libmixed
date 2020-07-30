@@ -94,6 +94,73 @@ MIXED_EXPORT char *mixed_error_string(int code){
   }
 }
 
+MIXED_EXPORT char *mixed_type_string(int code){
+  switch(code){
+  case MIXED_UNKNOWN:
+    return "unknown";
+  case MIXED_INT8:
+    return "int8";
+  case MIXED_UINT8:
+    return "uint8";
+  case MIXED_INT16:
+    return "int16";
+  case MIXED_UINT16:
+    return "uint16";
+  case MIXED_INT24:
+    return "int24";
+  case MIXED_UINT24:
+    return "uint24";
+  case MIXED_INT32:
+    return "int32";
+  case MIXED_UINT32:
+    return "uint32";
+  case MIXED_FLOAT:
+    return "float";
+  case MIXED_DOUBLE:
+    return "double";
+  case MIXED_BOOL:
+    return "bool";
+  case MIXED_SIZE_T:
+    return "size_t";
+  case MIXED_STRING:
+    return "string";
+  case MIXED_FUNCTION:
+    return "function";
+  case MIXED_POINTER:
+    return "pointer";
+  case MIXED_SEGMENT_POINTER:
+    return "segment pointer";
+  case MIXED_BUFFER_POINTER:
+    return "buffer pointer";
+  case MIXED_PACK_POINTER:
+    return "pack pointer";
+  case MIXED_SEGMENT_SEQUENCE_POINTER:
+    return "segment sequence pointer";
+  case MIXED_LOCATION_ENUM:
+    return "location";
+  case MIXED_FREQUENCY_PASS_ENUM:
+    return "frequency pass";
+  case MIXED_REPEAT_MODE_ENUM:
+    return "repeat mode";
+  case MIXED_NOISE_TYPE_ENUM:
+    return "noise type";
+  case MIXED_GENERATOR_TYPE_ENUM:
+    return "generator type";
+  case MIXED_FADE_TYPE_ENUM:
+    return "fade type";
+  case MIXED_ATTENUATION_ENUM:
+    return "attenuation";
+  case MIXED_ENCODING_ENUM:
+    return "encoding";
+  case MIXED_ERROR_ENUM:
+    return "error";
+  case MIXED_RESAMPLE_TYPE_ENUM:
+    return "resample type";
+  default:
+    return "unknown";
+  }
+}
+
 MIXED_EXPORT char *mixed_version(){
   return MIXED_VERSION;
 }
