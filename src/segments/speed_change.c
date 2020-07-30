@@ -196,3 +196,10 @@ MIXED_EXPORT int mixed_make_segment_speed_change(double speed, struct mixed_segm
   segment->data = data;
   return 1;
 }
+
+int __make_speed_change(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_speed_change(ARG(double, 0), segment);
+}
+
+REGISTER_SEGMENT(speed_change, __make_speed_change, 1, {
+    {.description = "speed", .type = MIXED_DOUBLE}})

@@ -550,3 +550,10 @@ MIXED_EXPORT int mixed_make_segment_space_mixer(size_t samplerate, struct mixed_
   segment->data = data;
   return 1;
 }
+
+int __make_space_mixer(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_space_mixer(ARG(size_t, 0), segment);
+}
+
+REGISTER_SEGMENT(space_mixer, __make_space_mixer, 1, {
+      {.description = "samplerate", .type = MIXED_SIZE_T}})

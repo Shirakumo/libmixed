@@ -274,3 +274,10 @@ MIXED_EXPORT int mixed_queue_clear(struct mixed_segment *segment){
   }
   return vector_clear((struct vector *)data);
 }
+
+int __make_queue(void *args, struct mixed_segment *segment){
+  IGNORE(args);
+  return mixed_make_segment_queue(segment);
+}
+
+REGISTER_SEGMENT(queue, __make_queue, 0, {0})

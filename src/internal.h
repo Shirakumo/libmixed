@@ -81,3 +81,11 @@ void set_info_field(struct mixed_segment_field_info *info, size_t field, enum mi
 void clear_info_field(struct mixed_segment_field_info *info);
 
 extern float (*mixed_random)();
+
+#define ARG(type, id) *(((type**)args)[id])
+#define REGISTER_SEGMENT(name, function, count, ...)                    \
+  static void __register_ ## name () __attribute__((constructor));      \
+  void __register_ ## name(){                                           \
+    struct mixed_segment_field_info __args[count+1] = __VA_ARGS__;      \
+    mixed_register_segment(#name, count, __args, function);             \
+  }

@@ -183,3 +183,11 @@ MIXED_EXPORT int mixed_make_segment_delay(float time, size_t samplerate, struct 
   segment->data = data;
   return 1;
 }
+
+int __make_delay(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_delay(ARG(float, 0), ARG(size_t, 1), segment);
+}
+
+REGISTER_SEGMENT(delay, __make_delay, 2, {
+    {.description = "time", .type = MIXED_FLOAT},
+    {.description = "samplerate", .type = MIXED_SIZE_T}});

@@ -375,6 +375,14 @@ MIXED_EXPORT int mixed_make_segment_unpacker(struct mixed_pack *pack, size_t sam
   return make_pack_internal(pack, samplerate, MIXED_SINC_FASTEST, segment);
 }
 
+int __make_unpacker(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_unpacker(ARG(struct mixed_pack*, 0), ARG(size_t, 1), segment);
+}
+
+REGISTER_SEGMENT(unpacker, __make_unpacker, 2, {
+    {.description = "pack", .type = MIXED_PACK_POINTER},
+    {.description = "samplerate", .type = MIXED_SIZE_T}})
+
 MIXED_EXPORT int mixed_make_segment_packer(struct mixed_pack *pack, size_t samplerate, struct mixed_segment *segment){
   segment->mix = drain_segment_mix;
   segment->info = drain_segment_info;
@@ -382,3 +390,11 @@ MIXED_EXPORT int mixed_make_segment_packer(struct mixed_pack *pack, size_t sampl
   segment->set_in = pack_segment_set_buffer;
   return make_pack_internal(pack, samplerate, MIXED_SINC_FASTEST, segment);
 }
+
+int __make_packer(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_packer(ARG(struct mixed_pack*, 0), ARG(size_t, 1), segment);
+}
+
+REGISTER_SEGMENT(packer, __make_packer, 2, {
+    {.description = "pack", .type = MIXED_PACK_POINTER},
+    {.description = "samplerate", .type = MIXED_SIZE_T}})

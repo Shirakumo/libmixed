@@ -133,3 +133,9 @@ MIXED_EXPORT int mixed_make_segment_distribute(struct mixed_segment *segment){
   return 1;
 }
 
+int __make_distribute(void *args, struct mixed_segment *segment){
+  IGNORE(args);
+  return mixed_make_segment_distribute(segment);
+}
+
+REGISTER_SEGMENT(distribute, __make_distribute, 0, {0});

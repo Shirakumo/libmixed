@@ -241,3 +241,14 @@ MIXED_EXPORT int mixed_make_segment_fade(float from, float to, float time, enum 
   segment->data = data;
   return 1;
 }
+
+int __make_fade(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_fade(ARG(float, 0), ARG(float, 1), ARG(float, 2), ARG(enum mixed_fade_type, 3), ARG(size_t, 4), segment);
+}
+
+REGISTER_SEGMENT(fade, __make_fade, 5, {
+    {.description = "from", .type = MIXED_FLOAT},
+    {.description = "to", .type = MIXED_FLOAT},
+    {.description = "time", .type = MIXED_FLOAT},
+    {.description = "type", .type = MIXED_FADE_TYPE_ENUM},
+    {.description = "samplerate", .type = MIXED_SIZE_T}});

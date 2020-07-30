@@ -291,3 +291,10 @@ MIXED_EXPORT int mixed_make_segment_gate(size_t samplerate, struct mixed_segment
   segment->data = data;
   return 1;
 }
+
+int __make_gate(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_gate(ARG(size_t, 0), segment);
+}
+
+REGISTER_SEGMENT(gate, __make_gate, 1, {
+    {.description = "samplerate", .type = MIXED_SIZE_T}})

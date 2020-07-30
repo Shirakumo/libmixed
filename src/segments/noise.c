@@ -184,3 +184,10 @@ MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type type, struct mix
   segment->set = noise_segment_set;
   return 1;
 }
+
+int __make_noise(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_noise(ARG(enum mixed_noise_type, 0), segment);
+}
+
+REGISTER_SEGMENT(noise, __make_noise, 1, {
+    {.description = "type", .type = MIXED_NOISE_TYPE_ENUM}})

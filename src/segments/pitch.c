@@ -178,3 +178,11 @@ MIXED_EXPORT int mixed_make_segment_pitch(float pitch, size_t samplerate, struct
   segment->data = data;
   return 1;
 }
+
+int __make_pitch(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_pitch(ARG(float, 0), ARG(size_t, 1), segment);
+}
+
+REGISTER_SEGMENT(pitch, __make_pitch, 2, {
+    {.description = "pitch", .type = MIXED_FLOAT},
+    {.description = "samplerate", .type = MIXED_SIZE_T}})

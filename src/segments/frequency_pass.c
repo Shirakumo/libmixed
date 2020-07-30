@@ -252,3 +252,12 @@ MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pas
   segment->data = data;
   return 1;
 }
+
+int __make_frequency_pass(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_frequency_pass(ARG(enum mixed_frequency_pass, 0), ARG(size_t, 1), ARG(size_t, 2), segment);
+}
+
+REGISTER_SEGMENT(frequency_pass, __make_frequency_pass, 3, {
+    {.description = "pass", .type = MIXED_FREQUENCY_PASS_ENUM},
+    {.description = "cutoff", .type = MIXED_SIZE_T},
+    {.description = "samplerate", .type = MIXED_SIZE_T}})

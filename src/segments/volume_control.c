@@ -173,3 +173,11 @@ MIXED_EXPORT int mixed_make_segment_volume_control(float volume, float pan, stru
   segment->data = data;
   return 1;
 }
+
+int __make_volume_control(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_volume_control(ARG(float, 0), ARG(float, 1), segment);
+}
+
+REGISTER_SEGMENT(volume_control, __make_volume_control, 2, {
+    {.description = "volume", .type = MIXED_FLOAT},
+    {.description = "pan", .type = MIXED_FLOAT}})

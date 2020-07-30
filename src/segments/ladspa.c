@@ -283,3 +283,12 @@ MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samp
   
   return 0;
 }
+
+int __make_ladspa(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_ladspa(ARG(char *, 0), ARG(size_t, 1), ARG(size_t, 2), segment);
+}
+
+REGISTER_SEGMENT(ladspa, __make_ladspa, 3, {
+    {.description = "file", .type = MIXED_STRING},
+    {.description = "index", .type = MIXED_SIZE_T},
+    {.description = "samplerate", .type = MIXED_SIZE_T}})

@@ -177,3 +177,9 @@ MIXED_EXPORT int mixed_make_segment_basic_mixer(size_t channels, struct mixed_se
   segment->data = data;
   return 1;
 }
+
+int __make_basic_mixer(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_basic_mixer(ARG(size_t, 0), segment);
+}
+
+REGISTER_SEGMENT(basic_mixer, __make_basic_mixer, 1, {{.description = "channels", .type = MIXED_SIZE_T}})

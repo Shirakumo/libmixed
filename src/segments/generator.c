@@ -176,3 +176,13 @@ MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, si
   segment->data = data;
   return 1;
 }
+
+
+int __make_generator(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_generator(ARG(enum mixed_generator_type, 0), ARG(size_t, 1), ARG(size_t, 2), segment);
+}
+
+REGISTER_SEGMENT(generator, __make_generator, 3, {
+    {.description = "type", .type = MIXED_GENERATOR_TYPE_ENUM},
+    {.description = "frequency", .type = MIXED_SIZE_T},
+    {.description = "samplerate", .type = MIXED_SIZE_T}})

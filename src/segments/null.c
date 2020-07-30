@@ -80,6 +80,13 @@ MIXED_EXPORT int mixed_make_segment_void(struct mixed_segment *segment){
   return 1;
 }
 
+int __make_zero(void *args, struct mixed_segment *segment){
+  IGNORE(args);
+  return mixed_make_segment_zero(segment);
+}
+
+REGISTER_SEGMENT(zero, __make_zero, 0, {0});
+
 MIXED_EXPORT int mixed_make_segment_zero(struct mixed_segment *segment){
   segment->free = null_segment_free;
   segment->set_in = null_segment_set;
@@ -88,3 +95,10 @@ MIXED_EXPORT int mixed_make_segment_zero(struct mixed_segment *segment){
   segment->info = zero_segment_info;
   return 1;
 }
+
+int __make_void(void *args, struct mixed_segment *segment){
+  IGNORE(args);
+  return mixed_make_segment_void(segment);
+}
+
+REGISTER_SEGMENT(void, __make_void, 0, {0});

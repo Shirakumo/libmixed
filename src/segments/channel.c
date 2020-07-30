@@ -129,3 +129,11 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(uint8_t in, uint8_t out, str
   segment->data = data;
   return 1;
 }
+
+int __make_channel_convert(void *args, struct mixed_segment *segment){
+  return mixed_make_segment_channel_convert(ARG(size_t, 0), ARG(size_t, 1), segment);
+}
+
+REGISTER_SEGMENT(channel_convert, __make_channel_convert, 2, {
+    {.description = "in", .type = MIXED_SIZE_T},
+    {.description = "out", .type = MIXED_SIZE_T}})
