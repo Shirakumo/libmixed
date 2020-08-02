@@ -265,6 +265,8 @@ extern "C" {
     MIXED_CURRENT_SEGMENT,
     // ACcess the speed factor
     MIXED_SPEED_FACTOR,
+    // The number of quantization steps
+    MIXED_QUANTIZE_STEPS,
   };
 
   // This enum descripbes the possible resampling quality options.

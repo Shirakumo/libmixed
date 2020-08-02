@@ -80,6 +80,7 @@ add_library(mixed OBJECT
   "src/segments/null.c"
   "src/segments/packer.c"
   "src/segments/pitch.c"
+  "src/segments/quantize.c"
   "src/segments/queue.c"
   #"src/segments/repeat.c"
   "src/segments/space_mixer.c"
