@@ -92,8 +92,6 @@ MIXED_EXPORT int mixed_buffer_finish_write(size_t size, struct mixed_buffer *buf
     return 0;
   }
   if(size == 0){
-    buffer->reserved_size = 0;
-    buffer->reserved_start = 0;
   }else if(buffer->r1_size == 0 && buffer->r2_size == 0){
     buffer->r1_start = buffer->reserved_start;
     buffer->r1_size = size;
