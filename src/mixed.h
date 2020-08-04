@@ -428,6 +428,7 @@ extern "C" {
     size_t r2_size;
     size_t reserved_start;
     size_t reserved_size;
+    // Whether the buffer owns the data array.
     char virtual;
   };
 
@@ -441,12 +442,6 @@ extern "C" {
   // Using this struct you can then create a converter
   // segment to include the external audio into the mix.
   MIXED_EXPORT struct mixed_pack{
-    // The sample encoding in the byte array.
-    enum mixed_encoding encoding;
-    // The number of channels that are packed into the array.
-    uint8_t channels;
-    // The sample rate at which data is encoded in Hz.
-    size_t samplerate;
     // Bip buffer internals
     unsigned char *_data;
     size_t size;
@@ -456,6 +451,12 @@ extern "C" {
     size_t r2_size;
     size_t reserved_start;
     size_t reserved_size;
+    // The sample encoding in the byte array.
+    enum mixed_encoding encoding;
+    // The number of channels that are packed into the array.
+    uint8_t channels;
+    // The sample rate at which data is encoded in Hz.
+    size_t samplerate;
   };
 
   // Metadata struct for a segment's field.
