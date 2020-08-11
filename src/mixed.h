@@ -1118,6 +1118,11 @@ extern "C" {
   // If a requested configuration is not supported, an error is created.
   MIXED_EXPORT int mixed_make_segment_channel_convert(uint8_t in, uint8_t out, struct mixed_segment *segment);
 
+  // A segment to quantize the amplitude
+  //
+  // The signal will be quantized into STEPS number of discrete amplitudes.
+  MIXED_EXPORT int mixed_make_segment_quantize(size_t steps, struct mixed_segment *segment);
+
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);
 
