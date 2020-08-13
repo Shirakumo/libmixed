@@ -46,7 +46,7 @@ int main(int argc, char **argv){
 
   if(!mixed_make_segment_generator(wave_type, frequency, internal_samplerate, &generator)
      || !mixed_make_segment_channel_convert(1, 2, &upmix)
-     || !mixed_make_segment_fade(0.0, 1.0, 5.0, MIXED_CUBIC_IN_OUT, internal_samplerate, &fade)){
+     || !mixed_make_segment_fade(0.0, 0.8, 5.0, MIXED_CUBIC_IN_OUT, internal_samplerate, &fade)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -83,7 +83,7 @@ int main(int argc, char **argv){
     }
 
     void *buffer;
-    size_t bytes = SIZE_MAX;
+    size_t bytes = UINT32_MAX;
     mixed_pack_request_read(&buffer, &bytes, &out->pack);
     played = out123_play(out->handle, buffer, bytes);
     mixed_pack_finish_read(played, &out->pack);
