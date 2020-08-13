@@ -8,8 +8,8 @@ struct frequency_pass_segment_data{
   float a[2];
   float b[2];
   float k;
-  size_t cutoff;
-  size_t samplerate;
+  uint32_t cutoff;
+  uint32_t samplerate;
   enum mixed_frequency_pass pass;
 };
 
@@ -50,7 +50,7 @@ int frequency_pass_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int frequency_pass_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int frequency_pass_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
 
   switch(field){
@@ -67,7 +67,7 @@ int frequency_pass_segment_set_in(size_t field, size_t location, void *buffer, s
   }
 }
 
-int frequency_pass_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int frequency_pass_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
 
   switch(field){
@@ -147,7 +147,7 @@ int frequency_pass_segment_info(struct mixed_segment_info *info, struct mixed_se
                  "The buffer for audio data attached to the location.");
 
   set_info_field(field++, MIXED_FREQUENCY_CUTOFF,
-                 MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The maximum/minimum frequency that will pass through the segment.");
 
   set_info_field(field++, MIXED_FREQUENCY_PASS,
@@ -155,7 +155,7 @@ int frequency_pass_segment_info(struct mixed_segment_info *info, struct mixed_se
                  "Whether to pass high or low frequencies.");
 
   set_info_field(field++, MIXED_SAMPLERATE,
-                 MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The samplerate at which the segment operates.");
 
   set_info_field(field++, MIXED_BYPASS,
@@ -166,11 +166,11 @@ int frequency_pass_segment_info(struct mixed_segment_info *info, struct mixed_se
   return 1;
 }
 
-int frequency_pass_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int frequency_pass_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
   switch(field){
-  case MIXED_SAMPLERATE: *((size_t *)value) = data->samplerate; break;
-  case MIXED_FREQUENCY_CUTOFF: *((size_t *)value) = data->cutoff; break;
+  case MIXED_SAMPLERATE: *((uint32_t *)value) = data->samplerate; break;
+  case MIXED_FREQUENCY_CUTOFF: *((uint32_t *)value) = data->cutoff; break;
   case MIXED_FREQUENCY_PASS: *((enum mixed_frequency_pass *)value) = data->pass; break;
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == frequency_pass_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
@@ -178,23 +178,23 @@ int frequency_pass_segment_get(size_t field, void *value, struct mixed_segment *
   return 1;
 }
 
-int frequency_pass_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int frequency_pass_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
   switch(field){
   case MIXED_SAMPLERATE:
-    if(*(size_t *)value <= 0){
+    if(*(uint32_t *)value <= 0){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    data->samplerate = *(size_t *)value;
+    data->samplerate = *(uint32_t *)value;
     compute_coefficients(data);
     break;
   case MIXED_FREQUENCY_CUTOFF:
-    if(*(size_t *)value <= 0 || data->samplerate <= *(size_t *)value){
+    if(*(uint32_t *)value <= 0 || data->samplerate <= *(uint32_t *)value){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    data->cutoff = *(size_t *)value;
+    data->cutoff = *(uint32_t *)value;
     compute_coefficients(data);
     break;
   case MIXED_FREQUENCY_PASS:
@@ -226,7 +226,7 @@ int frequency_pass_segment_set(size_t field, void *value, struct mixed_segment *
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pass, size_t cutoff, size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pass, uint32_t cutoff, uint32_t samplerate, struct mixed_segment *segment){
   if(samplerate <= cutoff){
     mixed_err(MIXED_INVALID_VALUE);
     return 0;
@@ -257,10 +257,10 @@ MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pas
 }
 
 int __make_frequency_pass(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_frequency_pass(ARG(enum mixed_frequency_pass, 0), ARG(size_t, 1), ARG(size_t, 2), segment);
+  return mixed_make_segment_frequency_pass(ARG(enum mixed_frequency_pass, 0), ARG(uint32_t, 1), ARG(uint32_t, 2), segment);
 }
 
 REGISTER_SEGMENT(frequency_pass, __make_frequency_pass, 3, {
     {.description = "pass", .type = MIXED_FREQUENCY_PASS_ENUM},
-    {.description = "cutoff", .type = MIXED_SIZE_T},
-    {.description = "samplerate", .type = MIXED_SIZE_T}})
+    {.description = "cutoff", .type = MIXED_UINT32},
+    {.description = "samplerate", .type = MIXED_UINT32}})

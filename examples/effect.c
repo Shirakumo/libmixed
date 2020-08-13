@@ -2,11 +2,11 @@
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 500;
+  uint32_t samples = 500;
   WINDOW *window = 0;
   struct mixed_segment_sequence sequence = {0};
   struct mixed_segment sfx_l = {0}, sfx_r = {0};
-  struct mp3 *mp3;
+  struct mp3 *mp3 = 0;
   struct out *out = 0;
 
   signal(SIGINT, interrupt_handler);

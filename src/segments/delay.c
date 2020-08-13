@@ -5,7 +5,7 @@ struct delay_segment_data{
   struct mixed_buffer *out;
   struct mixed_buffer buffer;
   float time;
-  size_t samplerate;
+  uint32_t samplerate;
 };
 
 int delay_segment_free(struct mixed_segment *segment){
@@ -25,17 +25,17 @@ int delay_segment_start(struct mixed_segment *segment){
   }
   // Fill the entire buffer with nothing to initiate the delay.
   mixed_buffer_clear(&data->buffer);
-  size_t samples = SIZE_MAX;
+  uint32_t samples = UINT32_MAX;
   float *out;
   mixed_buffer_request_write(&out, &samples, &data->buffer);
-  for(size_t i=0; i<samples; ++i){
+  for(uint32_t i=0; i<samples; ++i){
     out[i] = 0.0f;
   }
   mixed_buffer_finish_write(samples, &data->buffer);
   return 1;
 }
 
-int delay_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int delay_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
 
   switch(field){
@@ -52,7 +52,7 @@ int delay_segment_set_in(size_t field, size_t location, void *buffer, struct mix
   }
 }
 
-int delay_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int delay_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
 
   switch(field){
@@ -104,7 +104,7 @@ int delay_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
                  "The time, in seconds, by which the output is delayed.");
 
   set_info_field(field++, MIXED_SAMPLERATE,
-                 MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The samplerate at which the segment operates.");
 
   set_info_field(field++, MIXED_BYPASS,
@@ -115,26 +115,26 @@ int delay_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
   return 1;
 }
 
-int delay_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int delay_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
   switch(field){
   case MIXED_DELAY_TIME: *((float *)value) = data->time; break;
-  case MIXED_SAMPLERATE: *((size_t *)value) = data->samplerate; break;
+  case MIXED_SAMPLERATE: *((uint32_t *)value) = data->samplerate; break;
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == delay_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
 }
 
-int delay_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int delay_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
   switch(field){
   case MIXED_SAMPLERATE:
-    if(*(size_t *)value <= 0){
+    if(*(uint32_t *)value <= 0){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    data->samplerate = *(size_t *)value;
+    data->samplerate = *(uint32_t *)value;
     mixed_buffer_resize(ceil(data->samplerate * data->time), &data->buffer);
     break;
   case MIXED_DELAY_TIME:
@@ -159,7 +159,7 @@ int delay_segment_set(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_delay(float time, size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_delay(float time, uint32_t samplerate, struct mixed_segment *segment){
   struct delay_segment_data *data = calloc(1, sizeof(struct delay_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -187,9 +187,9 @@ MIXED_EXPORT int mixed_make_segment_delay(float time, size_t samplerate, struct 
 }
 
 int __make_delay(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_delay(ARG(float, 0), ARG(size_t, 1), segment);
+  return mixed_make_segment_delay(ARG(float, 0), ARG(uint32_t, 1), segment);
 }
 
 REGISTER_SEGMENT(delay, __make_delay, 2, {
     {.description = "time", .type = MIXED_FLOAT},
-    {.description = "samplerate", .type = MIXED_SIZE_T}});
+    {.description = "samplerate", .type = MIXED_UINT32}});

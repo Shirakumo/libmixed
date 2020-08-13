@@ -21,7 +21,7 @@ int speed_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-int speed_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int speed_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
 
   switch(field){
@@ -38,7 +38,7 @@ int speed_segment_set_in(size_t field, size_t location, void *buffer, struct mix
   }
 }
 
-int speed_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int speed_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
 
   switch(field){
@@ -69,8 +69,8 @@ int speed_segment_start(struct mixed_segment *segment){
 int speed_segment_mix(struct mixed_segment *segment){
   struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
   SRC_DATA src_data = {0};
-  size_t in = SIZE_MAX, out = SIZE_MAX;
-  mixed_buffer_request_read(&src_data.data_in, &in, data->in);
+  uint32_t in = UINT32_MAX, out = UINT32_MAX;
+  mixed_buffer_request_read((float **)&src_data.data_in, &in, data->in);
   mixed_buffer_request_write(&src_data.data_out, &out, data->out);
   src_data.src_ratio = 1.0 / data->speed;
   src_data.input_frames = in;
@@ -127,7 +127,7 @@ int speed_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
   return 1;
 }
 
-int speed_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int speed_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
   switch(field){
   case MIXED_SPEED_FACTOR: *((double *)value) = data->speed; break;
@@ -137,7 +137,7 @@ int speed_segment_get(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-int speed_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int speed_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
   switch(field){
   case MIXED_RESAMPLE_TYPE: {

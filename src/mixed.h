@@ -149,7 +149,7 @@ extern "C" {
     // See mixed_fade_type
     MIXED_FADE_TYPE,
     // Access the frequency (in Hz) of the wave produced.
-    // The type of this field must be a size_t.
+    // The type of this field must be a uint32_t.
     MIXED_GENERATOR_FREQUENCY,
     // Access the type of wave the generator produces.
     // The type of this field must match the enum.
@@ -247,17 +247,17 @@ extern "C" {
     // Access the current mode the repeater segment is in.
     MIXED_REPEAT_MODE,
     // Access the frequency cutoff of the low/high-pass filter.
-    // This value is a size_t in Hertz.
+    // This value is a uint32_t in Hertz.
     MIXED_FREQUENCY_CUTOFF,
     // Access whether to pass frequencies above or below the cutoff.
     // This value is an enum mixed_frequency_pass.
     MIXED_FREQUENCY_PASS,
     // Access the number of input buffers the segment can hold.
-    // The value is a size_t.
+    // The value is a uint32_t.
     // The default is 2.
     MIXED_IN_COUNT,
     // Access the number of output buffers the segment can hold.
-    // The value is a size_t.
+    // The value is a uint32_t.
     // The default is 2.
     MIXED_OUT_COUNT,
     // Returns the current segment in the queue.
@@ -412,6 +412,8 @@ extern "C" {
     MIXED_RESAMPLE_TYPE_ENUM,
   };
 
+  typedef uint8_t channel_t;
+
   // An internal audio data buffer.
   //
   // The sample array is always stored in floats.
@@ -421,13 +423,13 @@ extern "C" {
   // operations.
   MIXED_EXPORT struct mixed_buffer{
     float *_data;
-    size_t size;
-    size_t r1_start;
-    size_t r1_size;
-    size_t r2_start;
-    size_t r2_size;
-    size_t reserved_start;
-    size_t reserved_size;
+    uint32_t size;
+    uint32_t r1_start;
+    uint32_t r1_size;
+    uint32_t r2_start;
+    uint32_t r2_size;
+    uint32_t reserved_start;
+    uint32_t reserved_size;
     // Whether the buffer owns the data array.
     char virtual;
   };
@@ -444,19 +446,19 @@ extern "C" {
   MIXED_EXPORT struct mixed_pack{
     // Bip buffer internals
     unsigned char *_data;
-    size_t size;
-    size_t r1_start;
-    size_t r1_size;
-    size_t r2_start;
-    size_t r2_size;
-    size_t reserved_start;
-    size_t reserved_size;
+    uint32_t size;
+    uint32_t r1_start;
+    uint32_t r1_size;
+    uint32_t r2_start;
+    uint32_t r2_size;
+    uint32_t reserved_start;
+    uint32_t reserved_size;
     // The sample encoding in the byte array.
     enum mixed_encoding encoding;
     // The number of channels that are packed into the array.
-    uint8_t channels;
+    channel_t channels;
     // The sample rate at which data is encoded in Hz.
-    size_t samplerate;
+    uint32_t samplerate;
   };
 
   // Metadata struct for a segment's field.
@@ -466,7 +468,7 @@ extern "C" {
   // do with it.
   MIXED_EXPORT struct mixed_segment_field_info{
     // The actual field index.
-    size_t field;
+    uint32_t field;
     // A human-readable description of the data accessed.
     char *description;
     // An OR-combination of flags that describe the field's
@@ -482,7 +484,7 @@ extern "C" {
     enum mixed_segment_field_type type;
     // In case the field stores an array of values, this
     // defines the number of values that can be dererefenced.
-    size_t type_count;
+    uint32_t type_count;
   };
 
   // Metadata struct for a segment.
@@ -501,11 +503,11 @@ extern "C" {
     // An OR combination of segment info flags.
     enum mixed_segment_info_flags flags;
     // The minimal number of inputs that this segment requires.
-    size_t min_inputs;
+    uint32_t min_inputs;
     // The maximal number of inputs that this segment can support.
-    size_t max_inputs;
+    uint32_t max_inputs;
     // The number of outputs that this segment provides.
-    size_t outputs;
+    uint32_t outputs;
     // A null-terminated array of possible fields that this
     // segment supports. Note that while the struct definition here
     // sets the number of fields to 32, an allocated segment info
@@ -540,12 +542,12 @@ extern "C" {
     int (*start)(struct mixed_segment *segment);
     int (*mix)(struct mixed_segment *segment);
     int (*end)(struct mixed_segment *segment);
-    int (*set_in)(size_t field, size_t location, void *value, struct mixed_segment *segment);
-    int (*set_out)(size_t field, size_t location, void *value, struct mixed_segment *segment);
-    int (*get_in)(size_t field, size_t location, void *value, struct mixed_segment *segment);
-    int (*get_out)(size_t field, size_t location, void *value, struct mixed_segment *segment);
-    int (*set)(size_t field, void *value, struct mixed_segment *segment);
-    int (*get)(size_t field, void *value, struct mixed_segment *segment);
+    int (*set_in)(uint32_t field, uint32_t location, void *value, struct mixed_segment *segment);
+    int (*set_out)(uint32_t field, uint32_t location, void *value, struct mixed_segment *segment);
+    int (*get_in)(uint32_t field, uint32_t location, void *value, struct mixed_segment *segment);
+    int (*get_out)(uint32_t field, uint32_t location, void *value, struct mixed_segment *segment);
+    int (*set)(uint32_t field, void *value, struct mixed_segment *segment);
+    int (*get)(uint32_t field, void *value, struct mixed_segment *segment);
     // An opaque pointer to internal data for the segment.
     void *data;
   };
@@ -559,8 +561,8 @@ extern "C" {
   // You should not modify any of its fields directly.
   MIXED_EXPORT struct mixed_segment_sequence{
     struct mixed_segment **segments;
-    size_t count;
-    size_t size;
+    uint32_t count;
+    uint32_t size;
   };
 
   // Allocate a new pack.
@@ -569,15 +571,15 @@ extern "C" {
   // The frames designates the number of frames that can be stored in
   // the pack's data array. Meaning a total number of bytes of:
   //   frames*channels*mixed_samplesize(encoding)
-  MIXED_EXPORT int mixed_make_pack(size_t frames, struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_make_pack(uint32_t frames, struct mixed_pack *pack);
   MIXED_EXPORT void mixed_free_pack(struct mixed_pack *pack);
   MIXED_EXPORT int mixed_pack_clear(struct mixed_pack *pack);
-  MIXED_EXPORT size_t mixed_pack_available_write(struct mixed_pack *pack);
-  MIXED_EXPORT size_t mixed_pack_available_read(struct mixed_pack *pack);
-  MIXED_EXPORT int mixed_pack_request_write(void **area, size_t *size, struct mixed_pack *pack);
-  MIXED_EXPORT int mixed_pack_finish_write(size_t size, struct mixed_pack *pack);
-  MIXED_EXPORT int mixed_pack_request_read(void **area, size_t *size, struct mixed_pack *pack);
-  MIXED_EXPORT int mixed_pack_finish_read(size_t size, struct mixed_pack *pack); 
+  MIXED_EXPORT uint32_t mixed_pack_available_write(struct mixed_pack *pack);
+  MIXED_EXPORT uint32_t mixed_pack_available_read(struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_request_write(void **area, uint32_t *size, struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_finish_write(uint32_t size, struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_request_read(void **area, uint32_t *size, struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_finish_read(uint32_t size, struct mixed_pack *pack); 
 
   // Note that while this API deals with sound and you will probably
   // want to use threads to handle the playback, it is in itself not
@@ -604,7 +606,7 @@ extern "C" {
   // function again.
 
   // Allocate the buffer's internal storage array.
-  MIXED_EXPORT int mixed_make_buffer(size_t size, struct mixed_buffer *buffer);
+  MIXED_EXPORT int mixed_make_buffer(uint32_t size, struct mixed_buffer *buffer);
 
   // Free the buffer's internal storage array.
   MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer);
@@ -660,10 +662,10 @@ extern "C" {
   MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer);
 
   // Returns the number of floats available for writing in the buffer.
-  MIXED_EXPORT size_t mixed_buffer_available_write(struct mixed_buffer *buffer);
+  MIXED_EXPORT uint32_t mixed_buffer_available_write(struct mixed_buffer *buffer);
 
   // Returns the number of floats available for reading in the buffer.
-  MIXED_EXPORT size_t mixed_buffer_available_read(struct mixed_buffer *buffer);
+  MIXED_EXPORT uint32_t mixed_buffer_available_read(struct mixed_buffer *buffer);
 
   // Reserve a block of memory for a write operation.
   //
@@ -677,7 +679,7 @@ extern "C" {
   // if a previously reserved block has not yet been committed.
   // In the case of a failure, size will be set to zero and area
   // will be left untouched.
-  MIXED_EXPORT int mixed_buffer_request_write(float **area, size_t *size, struct mixed_buffer *buffer);
+  MIXED_EXPORT int mixed_buffer_request_write(float **area, uint32_t *size, struct mixed_buffer *buffer);
 
   // Commit a reserved block after writing to it.
   //
@@ -686,19 +688,19 @@ extern "C" {
   // release the rest.
   // Using the previously obtained area pointer after finishing a
   // write is illegal.
-  MIXED_EXPORT int mixed_buffer_finish_write(size_t size, struct mixed_buffer *buffer);
+  MIXED_EXPORT int mixed_buffer_finish_write(uint32_t size, struct mixed_buffer *buffer);
 
   // Retrieve a memory block for reading.
   //
   // Stores the start of the block in area and the minimum between
   // the passed value of size and the available number of samples
   // to be read in size. If you would like to get the maximal
-  // available read size, set size to SIZE_MAX first.
+  // available read size, set size to UINT32_MAX first.
   // Reading beyond area+size is illegal.
   // If no block has been written to, this operation will fail.
   // In the case of a failure, size will be set to zero, and area
   // will be left untouched.
-  MIXED_EXPORT int mixed_buffer_request_read(float **area, size_t *size, struct mixed_buffer *buffer);
+  MIXED_EXPORT int mixed_buffer_request_read(float **area, uint32_t *size, struct mixed_buffer *buffer);
 
   // Free part of a block after reading from it.
   //
@@ -706,13 +708,13 @@ extern "C" {
   // if the amount of space to free is more than is committed.
   // Using the previously obtained area pointer after finishing a
   // read is illegal.
-  MIXED_EXPORT int mixed_buffer_finish_read(size_t size, struct mixed_buffer *buffer);
+  MIXED_EXPORT int mixed_buffer_finish_read(uint32_t size, struct mixed_buffer *buffer);
 
   // Resize the buffer to a new size.
   //
   // If the resizing operation fails due to a lack of memory, the
   // old data is preserved and the buffer is not changed.
-  MIXED_EXPORT int mixed_buffer_resize(size_t size, struct mixed_buffer *buffer);
+  MIXED_EXPORT int mixed_buffer_resize(uint32_t size, struct mixed_buffer *buffer);
 
   // Convenience macro for the common operation of transferring
   // from one buffer to another.
@@ -723,19 +725,19 @@ extern "C" {
   // body should be a statement that is executed for every
   // sample that should be transferred.
 #define with_mixed_buffer_transfer(i, samples, inv, in, outv, out, body){ \
-    size_t samples = SIZE_MAX;                                          \
+    uint32_t samples = UINT32_MAX;                                      \
     struct mixed_buffer *__in = in;                                     \
     struct mixed_buffer *__out = out;                                   \
     float *inv, *outv;                                                  \
     if(__in == __out){                                                  \
       mixed_buffer_request_read(&inv, &samples, __in);                  \
       outv = inv;                                                       \
-      for(size_t i=0; i<samples; ++i)                                   \
+      for(uint32_t i=0; i<samples; ++i)                                 \
         body;                                                           \
     }else{                                                              \
       mixed_buffer_request_read(&inv, &samples, __in);                  \
       mixed_buffer_request_write(&outv, &samples, __out);               \
-      for(size_t i=0; i<samples; ++i)                                   \
+      for(uint32_t i=0; i<samples; ++i)                                 \
         body;                                                           \
       mixed_buffer_finish_read(samples, __in);                          \
       mixed_buffer_finish_write(samples, __out);                        \
@@ -790,7 +792,7 @@ extern "C" {
   // MIXED_NOT_IMPLEMENTED.
   //
   // See mixed_segment_set
-  MIXED_EXPORT int mixed_segment_set_in(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_set_in(uint32_t field, uint32_t location, void *value, struct mixed_segment *segment);
 
   // Set the value of an output buffer field.
   //
@@ -802,7 +804,7 @@ extern "C" {
   // MIXED_NOT_IMPLEMENTED.
   //
   // See mixed_segment_set
-  MIXED_EXPORT int mixed_segment_set_out(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_set_out(uint32_t field, uint32_t location, void *value, struct mixed_segment *segment);
 
   // Get the value of an input buffer field.
   //
@@ -812,7 +814,7 @@ extern "C" {
   // MIXED_NOT_IMPLEMENTED.
   //
   // See mixed_segment_get
-  MIXED_EXPORT int mixed_segment_get_in(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_get_in(uint32_t field, uint32_t location, void *value, struct mixed_segment *segment);
 
   // Get the value of an output buffer field.
   //
@@ -822,7 +824,7 @@ extern "C" {
   // MIXED_NOT_IMPLEMENTED.
   //
   // See mixed_segment_get.
-  MIXED_EXPORT int mixed_segment_get_out(size_t field, size_t location, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_get_out(uint32_t field, uint32_t location, void *value, struct mixed_segment *segment);
 
   // Return a pointer to a struct containing general information about the segment.
   //
@@ -845,7 +847,7 @@ extern "C" {
   // MIXED_INVALID_FIELD.
   // If the method is not implemented, the error is set to
   // MIXED_NOT_IMPLEMENTED.
-  MIXED_EXPORT int mixed_segment_set(size_t field, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_set(uint32_t field, void *value, struct mixed_segment *segment);
 
   // Get the value of a field in the segment.
   //
@@ -859,7 +861,7 @@ extern "C" {
   // MIXED_INVALID_FIELD.
   // If the method is not implemented, the error is set to
   // MIXED_NOT_IMPLEMENTED.
-  MIXED_EXPORT int mixed_segment_get(size_t field, void *value, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_segment_get(uint32_t field, void *value, struct mixed_segment *segment);
 
   // An audio unpacker.
   //
@@ -871,7 +873,7 @@ extern "C" {
   // The sample rate given denotes the target sample rate of the
   // buffers connected to the outputs of this segment. The source
   // sample rate is the sample rate stored in the channel.
-  MIXED_EXPORT int mixed_make_segment_unpacker(struct mixed_pack *packed, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_unpacker(struct mixed_pack *packed, uint32_t samplerate, struct mixed_segment *segment);
 
   // An audio packer.
   //
@@ -883,7 +885,7 @@ extern "C" {
   // The sample rate given denotes the source sample rate of the
   // buffers connected to the inputs of this segment. The target
   // sample rate is the sample rate stored in the channel.
-  MIXED_EXPORT int mixed_make_segment_packer(struct mixed_pack *packed, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_packer(struct mixed_pack *packed, uint32_t samplerate, struct mixed_segment *segment);
 
   // A basic, additive mixer
   //
@@ -902,7 +904,7 @@ extern "C" {
   // adding more sources might involve allocations, which may not
   // be suitable for real-time behaviour. Aside from this caveat,
   // sources can be added or changed at any point in time.
-  MIXED_EXPORT int mixed_make_segment_basic_mixer(size_t channels, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_basic_mixer(channel_t channels, struct mixed_segment *segment);
 
   // A very basic volume control segment
   //
@@ -928,7 +930,7 @@ extern "C" {
   // there is thus little reason to ever do this, aside from perhaps
   // re-using the same segment to fade the input out again at the
   // appropriate moment.
-  MIXED_EXPORT int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, uint32_t samplerate, struct mixed_segment *segment);
 
   // A simple wave generator source
   //
@@ -936,7 +938,7 @@ extern "C" {
   // frequency and wave form type. You may change the frequency and
   // wave form type at any time. Potentially this could be used to
   // create a very primitive synthesizer.
-  MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, size_t frequency, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, uint32_t frequency, uint32_t samplerate, struct mixed_segment *segment);
 
   // A LADSPA plugin segment
   //
@@ -984,7 +986,7 @@ extern "C" {
   // requires you to stop mixing before being able to change any property
   // but some plugins may nevertheless work despite that. Thus, consult
   // your plugin's source or documentation.
-  MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_ladspa(char *file, uint32_t index, uint32_t samplerate, struct mixed_segment *segment);
 
   // A space (3D) processed mixer
   //
@@ -1015,7 +1017,7 @@ extern "C" {
   // See the MIXED_FIELDS enum for the documentation of each field.
   // This segment does allow you to change fields and buffers while the
   // mixing has already been started.
-  MIXED_EXPORT int mixed_make_segment_space_mixer(size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_space_mixer(uint32_t samplerate, struct mixed_segment *segment);
 
   // A delay segment
   //
@@ -1026,7 +1028,7 @@ extern "C" {
   //
   // This buffering means that delaying for a long time may take a lot of
   // memory, so watch out for that.
-  MIXED_EXPORT int mixed_make_segment_delay(float time, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_delay(float time, uint32_t samplerate, struct mixed_segment *segment);
 
   // A repeat segment
   //
@@ -1036,7 +1038,7 @@ extern "C" {
   //
   // Since the repeated audio data needs to be recorded, a long repeat time
   // may take a lot of memory.
-  MIXED_EXPORT int mixed_make_segment_repeat(float time, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_repeat(float time, uint32_t samplerate, struct mixed_segment *segment);
 
   // A pitch shift segment
   //
@@ -1044,7 +1046,7 @@ extern "C" {
   // amount. The pitch should be a float in the range ]0, infty[, where 1.0
   // means no change in pitch, 0.5 means half the pitch, 2.0 means double the
   // pitch and so on.
-  MIXED_EXPORT int mixed_make_segment_pitch(float pitch, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_pitch(float pitch, uint32_t samplerate, struct mixed_segment *segment);
 
   // A noise gate segment
   //
@@ -1054,7 +1056,7 @@ extern "C" {
   // If the volume then ever goes below the close threshold, the gate stays
   // open for the duration of the hold time, after which it goes through a
   // linear fade out for the duration of the release time.
-  MIXED_EXPORT int mixed_make_segment_gate(size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_gate(uint32_t samplerate, struct mixed_segment *segment);
 
   // A noise generator segment.
   //
@@ -1066,7 +1068,7 @@ extern "C" {
   // The cutoff cannot be larger than the samplerate. Generally, if the cutoff
   // frequency is larger than half of the samplerate, major distortion will
   // occur, so tread carefully.
-  MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pass, size_t cutoff, size_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pass, uint32_t cutoff, uint32_t samplerate, struct mixed_segment *segment);
 
   // A speed change segment.
   //
@@ -1103,7 +1105,7 @@ extern "C" {
   MIXED_EXPORT int mixed_make_segment_queue(struct mixed_segment *segment);
   MIXED_EXPORT int mixed_queue_add(struct mixed_segment *new, struct mixed_segment *queue);
   MIXED_EXPORT int mixed_queue_remove(struct mixed_segment *old, struct mixed_segment *queue);
-  MIXED_EXPORT int mixed_queue_remove_at(size_t pos, struct mixed_segment *queue);
+  MIXED_EXPORT int mixed_queue_remove_at(uint32_t pos, struct mixed_segment *queue);
   MIXED_EXPORT int mixed_queue_clear(struct mixed_segment *queue);
 
   // A segment that throws away all of its input.
@@ -1121,7 +1123,7 @@ extern "C" {
   // A segment to quantize the amplitude
   //
   // The signal will be quantized into STEPS number of discrete amplitudes.
-  MIXED_EXPORT int mixed_make_segment_quantize(size_t steps, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_quantize(uint32_t steps, struct mixed_segment *segment);
 
   // Free the associated sequence data.
   MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);
@@ -1165,7 +1167,7 @@ extern "C" {
   MIXED_EXPORT int mixed_segment_sequence_end(struct mixed_segment_sequence *mixer);
 
   typedef int (*mixed_make_segment_function)(void *args, struct mixed_segment *segment);
-  typedef int (*mixed_register_segment_function)(char *name, size_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
+  typedef int (*mixed_register_segment_function)(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
   typedef int (*mixed_deregister_segment_function)(char *name);
 
   // If you write a segment plugin library, you must define an
@@ -1203,7 +1205,7 @@ extern "C" {
   // via mixed_make_segment.
   // The name and args are copied and may be deallocated again after this
   // function has been called.
-  MIXED_EXPORT int mixed_register_segment(char *name, size_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
+  MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
 
   // Remove a globally registered segment constructor.
   //
@@ -1214,14 +1216,14 @@ extern "C" {
   //
   // If names is NULL, only count is updated. This allows you to allocate
   // the correct size of array for the names.
-  MIXED_EXPORT int mixed_list_segments(size_t *count, char **names);
+  MIXED_EXPORT int mixed_list_segments(uint32_t *count, char **names);
 
   // Retrieve information about the segment's contsructor function.
   //
   // argc will be set to the number of required arguments, and
   // args will be set to an array of segment_field_info structures of
   // that size describing the required arguments.
-  MIXED_EXPORT int mixed_make_segment_info(char *name, size_t *argc, const struct mixed_segment_field_info **args);
+  MIXED_EXPORT int mixed_make_segment_info(char *name, uint32_t *argc, const struct mixed_segment_field_info **args);
 
   // Create a segment by name.
   //
@@ -1233,8 +1235,8 @@ extern "C" {
   // Return the size of a sample in the given encoding in bytes.
   MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding);
   
-  typedef void (*mixed_transfer_function_from)(void *in, float *out, uint8_t stride, size_t samples, float volume);
-  typedef void (*mixed_transfer_function_to)(float *in, void *out, uint8_t stride, size_t samples, float volume);
+  typedef void (*mixed_transfer_function_from)(void *in, float *out, uint8_t stride, uint32_t samples, float volume);
+  typedef void (*mixed_transfer_function_to)(float *in, void *out, uint8_t stride, uint32_t samples, float volume);
 
   // Retrieve a sample format converter function.
   MIXED_EXPORT mixed_transfer_function_from mixed_translator_from(enum mixed_encoding encoding);

@@ -2,10 +2,10 @@
 
 struct basic_mixer_data{
   struct mixed_buffer **in;
-  size_t count;
-  size_t size;
+  uint32_t count;
+  uint32_t size;
   struct mixed_buffer **out;
-  size_t channels;
+  channel_t channels;
   float volume;
 };
 
@@ -20,7 +20,7 @@ int basic_mixer_start(struct mixed_segment *segment){
     mixed_err(MIXED_BUFFER_MISSING);
     return 0;
   }
-  for(int i=0; i<data->channels; ++i){
+  for(channel_t i=0; i<data->channels; ++i){
     if(data->out[i] == 0){
       mixed_err(MIXED_BUFFER_MISSING);
       return 0;
@@ -29,7 +29,7 @@ int basic_mixer_start(struct mixed_segment *segment){
   return 1;
 }
 
-int basic_mixer_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int basic_mixer_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   
   switch(field){
@@ -46,7 +46,7 @@ int basic_mixer_set_out(size_t field, size_t location, void *buffer, struct mixe
   }
 }
 
-int basic_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int basic_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
 
   switch(field){
@@ -73,12 +73,12 @@ int basic_mixer_set_in(size_t field, size_t location, void *buffer, struct mixed
 
 VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
-  size_t channels = data->channels;
-  size_t buffers = data->count / channels;
+  channel_t channels = data->channels;
+  uint32_t buffers = data->count / channels;
   if(buffers == 0){
-    for(size_t c=0; c<channels; ++c){
+    for(channel_t c=0; c<channels; ++c){
       float *out;
-      size_t samples = SIZE_MAX;
+      uint32_t samples = UINT32_MAX;
       mixed_buffer_request_write(&out, &samples, data->out[c]);
       memset(out, 0, samples*sizeof(float));
       mixed_buffer_finish_write(samples, data->out[c]);
@@ -87,10 +87,10 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
     float volume = data->volume;
     float div = volume;
 
-    for(size_t c=0; c<channels; ++c){
+    for(channel_t c=0; c<channels; ++c){
       // Compute how much we can mix on this channel.
-      size_t samples = mixed_buffer_available_write(data->out[c]);
-      for(size_t b=0; b<buffers; ++b)
+      uint32_t samples = mixed_buffer_available_write(data->out[c]);
+      for(uint32_t b=0; b<buffers; ++b)
         samples = MIN(samples, mixed_buffer_available_read(data->in[b*buffers+c]));
 
       float *in=0, *out=0;
@@ -99,16 +99,16 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
       // Mix first buffer directly.
       struct mixed_buffer *buffer = data->in[c];
       mixed_buffer_request_read(&in, &samples, buffer);
-      for(size_t i=0; i<samples; ++i){
+      for(uint32_t i=0; i<samples; ++i){
         out[i] = in[i]*div;
       }
       mixed_buffer_finish_read(samples, buffer);
 
       // Mix other buffers additively.
-      for(size_t b=1; b<buffers; ++b){
+      for(uint32_t b=1; b<buffers; ++b){
         struct mixed_buffer *buffer = data->in[b*buffers+c];
         mixed_buffer_request_read(&in, &samples, buffer);
-        for(size_t i=0; i<samples; ++i){
+        for(uint32_t i=0; i<samples; ++i){
           out[i] += in[i]*div;
         }
         mixed_buffer_finish_read(samples, buffer);
@@ -120,7 +120,7 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
 }
 
 // FIXME: add start method that checks for buffer completeness.
-int basic_mixer_set(size_t field, void *value, struct mixed_segment *segment){
+int basic_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   
   switch(field){
@@ -133,7 +133,7 @@ int basic_mixer_set(size_t field, void *value, struct mixed_segment *segment){
   }
 }
 
-int basic_mixer_get(size_t field, void *value, struct mixed_segment *segment){
+int basic_mixer_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   
   switch(field){
@@ -166,7 +166,7 @@ int basic_mixer_info(struct mixed_segment_info *info, struct mixed_segment *segm
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_basic_mixer(size_t channels, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_basic_mixer(channel_t channels, struct mixed_segment *segment){
   struct basic_mixer_data *data = calloc(1, sizeof(struct basic_mixer_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -195,7 +195,7 @@ MIXED_EXPORT int mixed_make_segment_basic_mixer(size_t channels, struct mixed_se
 }
 
 int __make_basic_mixer(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_basic_mixer(ARG(size_t, 0), segment);
+  return mixed_make_segment_basic_mixer(ARG(channel_t, 0), segment);
 }
 
-REGISTER_SEGMENT(basic_mixer, __make_basic_mixer, 1, {{.description = "channels", .type = MIXED_SIZE_T}})
+REGISTER_SEGMENT(basic_mixer, __make_basic_mixer, 1, {{.description = "channels", .type = MIXED_UINT8}})

@@ -47,9 +47,9 @@ int parse_arg(int type, void **target, char *in){
 
 int main(int argc, char **argv){
   struct mixed_segment segment = {0};
-  size_t segments = 0;
+  uint32_t segments = 0;
   char **names = 0;
-  size_t sargc = 0;
+  uint32_t sargc = 0;
   void **sargv = 0;
   int result = 1;
 
@@ -81,15 +81,15 @@ int main(int argc, char **argv){
       fprintf(stderr, "Failed to retrieve segment info:\n%s\n", mixed_error_string(-1));
     }
     if(argc-2 < sargc){
-      printf("%s requires the following construction arguments:\n");
+      printf("%s requires the following construction arguments:\n", name);
       for(size_t i=0; i<sargc; ++i){
         printf("- %s (%s)\n", arginfo[i].description, mixed_type_string(arginfo[i].type));
       }
     }else{
       sargv = calloc(sargc, sizeof(void *));
-      for(size_t i=0; i<sargc; ++i){
+      for(uint32_t i=0; i<sargc; ++i){
         if(!parse_arg(arginfo[i].type, &sargv[i], argv[i])){
-          fprintf(stderr, "Failed to parse argument %i\n", i);
+          fprintf(stderr, "Failed to parse argument %u\n", i);
           goto cleanup;
         }
       }

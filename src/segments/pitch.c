@@ -4,7 +4,7 @@ struct pitch_segment_data{
   struct mixed_buffer *in;
   struct mixed_buffer *out;
   struct pitch_data pitch_data;
-  size_t samplerate;
+  uint32_t samplerate;
   float pitch;
 };
 
@@ -26,7 +26,7 @@ int pitch_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int pitch_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int pitch_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
 
   switch(field){
@@ -43,7 +43,7 @@ int pitch_segment_set_in(size_t field, size_t location, void *buffer, struct mix
   }
 }
 
-int pitch_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int pitch_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
 
   switch(field){
@@ -67,7 +67,7 @@ int pitch_segment_mix(struct mixed_segment *segment){
     mixed_buffer_transfer(data->in, data->out);
   }else{
     float *in, *out;
-    size_t samples = SIZE_MAX;
+    uint32_t samples = UINT32_MAX;
     mixed_buffer_request_read(&in, &samples, data->in);
     mixed_buffer_request_write(&out, &samples, data->out);
     pitch_shift(data->pitch, in, out, samples, &data->pitch_data);
@@ -103,7 +103,7 @@ int pitch_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
                  "The amount of change in pitch that is excised.");
 
   set_info_field(field++, MIXED_SAMPLERATE,
-                 MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The samplerate at which the segment operates.");
 
   set_info_field(field++, MIXED_BYPASS,
@@ -114,26 +114,26 @@ int pitch_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
   return 1;
 }
 
-int pitch_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int pitch_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
   switch(field){
   case MIXED_PITCH_SHIFT: *((float *)value) = data->pitch; break;
-  case MIXED_SAMPLERATE: *((size_t *)value) = data->samplerate; break;
+  case MIXED_SAMPLERATE: *((uint32_t *)value) = data->samplerate; break;
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == pitch_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
 }
 
-int pitch_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int pitch_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
   switch(field){
   case MIXED_SAMPLERATE:
-    if(*(size_t *)value <= 0){
+    if(*(uint32_t *)value <= 0){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    data->samplerate = *(size_t *)value;
+    data->samplerate = *(uint32_t *)value;
     free_pitch_data(&data->pitch_data);
     if(!make_pitch_data(2048, 4, data->samplerate, &data->pitch_data)){
       return 0;
@@ -160,7 +160,7 @@ int pitch_segment_set(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_pitch(float pitch, size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_pitch(float pitch, uint32_t samplerate, struct mixed_segment *segment){
   struct pitch_segment_data *data = calloc(1, sizeof(struct pitch_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -188,9 +188,9 @@ MIXED_EXPORT int mixed_make_segment_pitch(float pitch, size_t samplerate, struct
 }
 
 int __make_pitch(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_pitch(ARG(float, 0), ARG(size_t, 1), segment);
+  return mixed_make_segment_pitch(ARG(float, 0), ARG(uint32_t, 1), segment);
 }
 
 REGISTER_SEGMENT(pitch, __make_pitch, 2, {
     {.description = "pitch", .type = MIXED_FLOAT},
-    {.description = "samplerate", .type = MIXED_SIZE_T}})
+    {.description = "samplerate", .type = MIXED_UINT32}})

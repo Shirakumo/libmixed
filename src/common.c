@@ -175,7 +175,7 @@ void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   return ptr;
 }
 
-void set_info_field(struct mixed_segment_field_info *info, size_t field, enum mixed_segment_field_type type, size_t count, enum mixed_segment_info_flags flags, char*description){
+void set_info_field(struct mixed_segment_field_info *info, uint32_t field, enum mixed_segment_field_type type, uint32_t count, enum mixed_segment_info_flags flags, char*description){
   info->field = field;
   info->description = description;
   info->flags = flags;

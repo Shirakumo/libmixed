@@ -88,7 +88,7 @@ int extract_encoding(int encodings){
   return -1;
 }
 
-int load_out_segment(size_t samples, struct out **_out){
+int load_out_segment(uint32_t samples, struct out **_out){
   long out_samplerate = output_samplerate;
   int out_channels = 2;
   int out_encoding = MPG123_ENC_SIGNED_16;
@@ -209,7 +209,7 @@ void free_mp3(struct mp3 *mp3){
   free(mp3);
 }
 
-int load_mp3_segment(char *file, size_t samples, struct mp3 **_mp3){
+int load_mp3_segment(char *file, uint32_t samples, struct mp3 **_mp3){
   long mp3_samplerate = 0;
   int mp3_channels = 0;
   int mp3_encoding = 0;

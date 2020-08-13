@@ -25,7 +25,7 @@ int volume_control_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int volume_control_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int volume_control_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
 
   switch(field){
@@ -41,7 +41,7 @@ int volume_control_segment_set_in(size_t field, size_t location, void *buffer, s
   }
 }
 
-int volume_control_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int volume_control_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
 
   switch(field){
@@ -62,18 +62,18 @@ int volume_control_segment_mix(struct mixed_segment *segment){
   float lvolume = data->volume * ((0.0<data->pan)?(1.0f-data->pan):1.0f);
   float rvolume = data->volume * ((data->pan<0.0)?(1.0f+data->pan):1.0f);
   float *in, *out;
-  size_t samples;
+  uint32_t samples;
 
   mixed_buffer_request_read(&in, &samples, data->in[MIXED_LEFT]);
   mixed_buffer_request_write(&out, &samples, data->out[MIXED_LEFT]);
-  for(size_t i=0; i<samples; ++i)
+  for(uint32_t i=0; i<samples; ++i)
     out[i] = in[i]*lvolume;
   mixed_buffer_finish_read(samples, data->in[MIXED_LEFT]);
   mixed_buffer_finish_write(samples, data->out[MIXED_LEFT]);
   
   mixed_buffer_request_read(&in, &samples, data->in[MIXED_RIGHT]);
   mixed_buffer_request_write(&out, &samples, data->out[MIXED_RIGHT]);
-  for(size_t i=0; i<samples; ++i)
+  for(uint32_t i=0; i<samples; ++i)
     out[i] = in[i]*rvolume;
   mixed_buffer_finish_read(samples, data->in[MIXED_RIGHT]);
   mixed_buffer_finish_write(samples, data->out[MIXED_RIGHT]);
@@ -118,7 +118,7 @@ int volume_control_segment_info(struct mixed_segment_info *info, struct mixed_se
   return 1;
 }
 
-int volume_control_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int volume_control_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
   switch(field){
   case MIXED_VOLUME: *((float *)value) = data->volume; break;
@@ -129,7 +129,7 @@ int volume_control_segment_get(size_t field, void *value, struct mixed_segment *
   return 1;
 }
 
-int volume_control_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int volume_control_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
   switch(field){
   case MIXED_VOLUME:

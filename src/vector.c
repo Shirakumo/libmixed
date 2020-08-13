@@ -31,13 +31,13 @@ int vector_add(void *element, struct vector *vector){
   return 1;
 }
 
-int vector_remove_pos(size_t i, struct vector *vector){
+int vector_remove_pos(uint32_t i, struct vector *vector){
   if(!vector->data){
     mixed_err(MIXED_NOT_INITIALIZED);
     return 0;
   }
   // Shift down
-  for(size_t j=i+1; j<vector->count; ++j){
+  for(uint32_t j=i+1; j<vector->count; ++j){
     vector->data[j-1] = vector->data[j];
   }
   --vector->count;
@@ -60,7 +60,7 @@ int vector_remove_item(void *element, struct vector *vector){
     mixed_err(MIXED_NOT_INITIALIZED);
     return 0;
   }
-  for(size_t i=0; i<vector->count; ++i){
+  for(uint32_t i=0; i<vector->count; ++i){
     if(vector->data[i] == element){
       vector_remove_pos(i, vector);
       break;

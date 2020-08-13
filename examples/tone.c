@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 100;
+  uint32_t samples = 100;
   WINDOW *window = 0;
   struct mixed_segment_sequence sequence = {0};
   struct mixed_segment generator = {0}, upmix = {0};

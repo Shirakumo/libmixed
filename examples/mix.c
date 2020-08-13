@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 100;
+  uint32_t samples = 100;
   struct mixed_segment_sequence sequence = {0};
   struct mixed_segment mix_segment = {0};
   struct mp3 *mp3s[argc-1];
@@ -36,7 +36,7 @@ int main(int argc, char **argv){
   }
 
   // Initialize MP3 sources
-  for(size_t i=0; i+1<argc; ++i){
+  for(int i=0; i+1<argc; ++i){
     struct mp3 *mp3 = 0;
     if(!load_mp3_segment(argv[i+1], samples, &mp3)){
       goto cleanup;
@@ -70,7 +70,7 @@ int main(int argc, char **argv){
   size_t read = 0, played = 0;
   do{
     void *buffer;
-    for(size_t i=0; i<argc-1; ++i){
+    for(int i=0; i<argc-1; ++i){
       struct mp3 *mp3 = mp3s[i];
       read = SIZE_MAX;
       mixed_pack_request_write(&buffer, &read, &mp3->pack);
@@ -91,11 +91,11 @@ int main(int argc, char **argv){
     mixed_pack_request_read(&buffer, &bytes, &out->pack);
     played = out123_play(out->handle, buffer, bytes);
     if(played < bytes){
-      fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
+      fprintf(stderr, "Warning: device not catching up with input (%lu vs %lu)\n", played, bytes);
     }
     mixed_pack_finish_read(played, &out->pack);
     
-    printf("\rRead: %4i Processed: %4i Played: %4i", read, bytes, played);
+    printf("\rRead: %4lu Processed: %4lu Played: %4lu", read, bytes, played);
     fflush(stdout);
   }while(played && !interrupted);
 
@@ -108,7 +108,7 @@ int main(int argc, char **argv){
   mixed_free_segment(&mix_segment);
   mixed_free_segment_sequence(&sequence);
 
-  for(size_t i=1; i<argc; ++i){
+  for(int i=1; i<argc; ++i){
     if(mp3s[i]){
       free_mp3(mp3s[i-1]);
     }

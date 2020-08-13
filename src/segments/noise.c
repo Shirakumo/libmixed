@@ -29,7 +29,7 @@ int noise_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int noise_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int noise_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct noise_segment_data *data = (struct noise_segment_data *)segment->data;
   switch(field){
   case MIXED_BUFFER:
@@ -86,9 +86,9 @@ int noise_segment_mix(struct mixed_segment *segment){
   float (*noise)(struct noise_segment_data *data) = data->type;
   float volume = data->volume;
   float *out;
-  size_t samples = SIZE_MAX;
+  uint32_t samples = UINT32_MAX;
   mixed_buffer_request_write(&out, &samples, data->out);
-  for(size_t i=0; i<samples; ++i){
+  for(uint32_t i=0; i<samples; ++i){
     out[i] = noise(data) * volume;
   }
   mixed_buffer_finish_write(samples, data->out);
@@ -121,7 +121,7 @@ int noise_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
   return 1;
 }
 
-int noise_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int noise_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct noise_segment_data *data = (struct noise_segment_data *)segment->data;
   
   switch(field){
@@ -141,7 +141,7 @@ int noise_segment_get(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-int noise_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int noise_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct noise_segment_data *data = (struct noise_segment_data *)segment->data;
 
   switch(field){
@@ -181,7 +181,7 @@ MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type type, struct mix
   long pmax = ((30 + 1) * (1<<(23)));
   data->pink_scalar = 1.0 / (float)pmax;
   data->pink_running_sum = 0;
-  for(size_t i=0; i<30; ++i) data->pink_rows[i] = 0;
+  for(uint32_t i=0; i<30; ++i) data->pink_rows[i] = 0;
   
   segment->free = noise_segment_free;
   segment->start = noise_segment_start;

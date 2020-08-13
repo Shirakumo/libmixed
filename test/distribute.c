@@ -13,9 +13,9 @@ define_test(distribute, {
     pass(mixed_segment_set_out(MIXED_BUFFER, 1, &out2, &distribute));
     // Fill
     float *data, *data1, *data2;
-    size_t samples = SIZE_MAX;
+    uint32_t samples = UINT32_MAX;
     mixed_buffer_request_write(&data, &samples, &buffer);
-    for(size_t i=0; i<samples; ++i)
+    for(uint32_t i=0; i<samples; ++i)
       data[i] = (float)i;
     mixed_buffer_finish_write(samples, &buffer);
     // Run
@@ -57,9 +57,9 @@ define_test(distribute_varying, {
     pass(mixed_segment_set_out(MIXED_BUFFER, 1, &out2, &distribute));
     // Fill
     float *data;
-    size_t samples = SIZE_MAX;
+    uint32_t samples = UINT32_MAX;
     mixed_buffer_request_write(&data, &samples, &buffer);
-    for(size_t i=0; i<samples; ++i)
+    for(uint32_t i=0; i<samples; ++i)
       data[i] = (float)i;
     mixed_buffer_finish_write(samples, &buffer);
     // Run

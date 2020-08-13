@@ -2,8 +2,8 @@
 
 int main(int argc, char **argv){
   int exit = 1;
-  size_t samples = 4096;
-  size_t samplerate = 44100;
+  uint32_t samples = 4096;
+  uint32_t samplerate = 44100;
   struct mixed_segment_sequence sequence = {0};
   struct mixed_segment ladspa = {0};
   struct mp3 *mp3 = 0;
@@ -65,7 +65,7 @@ int main(int argc, char **argv){
   size_t read, played;
   do{
     void *buffer;
-    read = SIZE_MAX;
+    read = UINT32_MAX;
     mixed_pack_request_write(&buffer, &read, &mp3->pack);
     if(mpg123_read(mp3->handle, buffer, read, &read) != MPG123_OK){
       fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
@@ -79,11 +79,11 @@ int main(int argc, char **argv){
       goto cleanup;
     }
 
-    size_t bytes = SIZE_MAX;
+    uint32_t bytes = UINT32_MAX;
     mixed_pack_request_read(&buffer, &bytes, &out->pack);
     played = out123_play(out->handle, buffer, bytes);
     if(played < out->pack.size){
-      fprintf(stderr, "Warning: device not catching up with input (%i vs %i)\n", played, bytes);
+      fprintf(stderr, "Warning: device not catching up with input (%lu vs %u)\n", played, bytes);
     }
     mixed_pack_finish_read(played, &out->pack);
   }while(played && !interrupted);

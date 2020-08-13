@@ -14,7 +14,7 @@ define_test(write_allocation, {
     struct mixed_buffer buffer = {0};
     pass(mixed_make_buffer(1024, &buffer));
     float *area=0, *area2=0, *area3=0;
-    size_t size = 512;
+    uint32_t size = 512;
     is(mixed_buffer_available_write(&buffer), 1024);
     is(mixed_buffer_available_read(&buffer), 0);
     // Write half
@@ -43,7 +43,7 @@ define_test(full_read_write, {
     struct mixed_buffer buffer = {0};
     pass(mixed_make_buffer(1024, &buffer));
     float *area=0, *area2=0;
-    size_t size=1024, size2=1024;
+    uint32_t size=1024, size2=1024;
     // Request full write
     pass(mixed_buffer_request_write(&area, &size, &buffer));
     is(size, 1024);
@@ -75,7 +75,7 @@ define_test(partial_read_write, {
     struct mixed_buffer buffer = {0};
     pass(mixed_make_buffer(1024, &buffer));
     float *w_area=0, *r_area=0;
-    size_t w_size=512, r_size=256;
+    uint32_t w_size=512, r_size=256;
     // Write to buffer a bit
     pass(mixed_buffer_request_write(&w_area, &w_size, &buffer));
     is(w_size, 512);
@@ -101,7 +101,7 @@ define_test(partial_read_write, {
 define_test(transfer, {
     struct mixed_buffer a={0}, b={0};
     float *area;
-    size_t size = 1024;
+    uint32_t size = 1024;
     float mem[size];
     // Allocate
     pass(mixed_make_buffer(size, &a));
@@ -123,7 +123,7 @@ define_test(transfer, {
     // Transfer from b to b
     pass(mixed_buffer_transfer(&b, &b));
     // Check b has stuff to read from
-    size = SIZE_MAX;
+    size = UINT32_MAX;
     pass(mixed_buffer_request_read(&area, &size, &b));
     is(size, 1024);
     is(memcmp(mem, area, sizeof(float)*size), 0);
@@ -136,7 +136,7 @@ define_test(transfer, {
 define_test(copy, {
     struct mixed_buffer a={0}, b={0};
     float *area;
-    size_t size = 1024;
+    uint32_t size = 1024;
     float mem[size];
     // Allocate
     pass(mixed_make_buffer(size, &a));
@@ -167,7 +167,7 @@ define_test(resize, {
     struct mixed_buffer buffer = {0};
     pass(mixed_make_buffer(1024, &buffer));
     float *w_area=0, *r_area=0;
-    size_t w_size=512, r_size=0;
+    uint32_t w_size=512, r_size=0;
     // Write to buffer a bit
     pass(mixed_buffer_request_write(&w_area, &w_size, &buffer));
     pass(mixed_buffer_finish_write(256, &buffer));
@@ -184,12 +184,12 @@ define_test(resize, {
 
 define_test(with_transfer, {
     float *area;
-    size_t size = 1024;
+    uint32_t size = 1024;
     float mem[size];
     struct mixed_buffer a = {0}, b = {0};
     pass(mixed_make_buffer(size, &a));
     pass(mixed_make_buffer(size, &b));
-    for(int i=0; i<size; i++)
+    for(uint32_t i=0; i<size; i++)
       mem[i] = rand();
     // Write to a
     pass(mixed_buffer_request_write(&area, &size, &a));
@@ -214,7 +214,7 @@ define_test(with_transfer, {
     // Check
     pass(mixed_buffer_request_read(&area, &size, &b));
     is(size, 1024);
-    for(int i=0; i<size; ++i)
+    for(uint32_t i=0; i<size; ++i)
       is_f(area[i], mem[i]+1);
     
   cleanup:

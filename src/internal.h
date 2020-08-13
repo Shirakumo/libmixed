@@ -36,13 +36,13 @@ static inline void __ignore(char _, ...){(void)_;}
 
 struct vector{
   void **data;
-  size_t count;
-  size_t size;
+  uint32_t count;
+  uint32_t size;
 };
 
 void free_vector(struct vector *vector);
 int vector_add(void *element, struct vector *vector);
-int vector_remove_pos(size_t i, struct vector *vector);
+int vector_remove_pos(uint32_t i, struct vector *vector);
 int vector_remove_item(void *element, struct vector *vector);
 int vector_clear(struct vector *vector);
 
@@ -64,8 +64,8 @@ struct pitch_data{
 };
 
 void free_pitch_data(struct pitch_data *data);
-int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, struct pitch_data *data);
-void pitch_shift(float pitch, float *in, float *out, size_t samples, struct pitch_data *data);
+int make_pitch_data(uint32_t framesize, uint32_t oversampling, uint32_t samplerate, struct pitch_data *data);
+void pitch_shift(float pitch, float *in, float *out, uint32_t samples, struct pitch_data *data);
 
 int mix_noop(struct mixed_segment *segment);
 
@@ -77,7 +77,7 @@ void *open_library(char *file);
 void close_library(void *handle);
 void *load_symbol(void *handle, char *name);
 
-void set_info_field(struct mixed_segment_field_info *info, size_t field, enum mixed_segment_field_type type, size_t count, enum mixed_segment_info_flags flags, char*description);
+void set_info_field(struct mixed_segment_field_info *info, uint32_t field, enum mixed_segment_field_type type, uint32_t count, enum mixed_segment_info_flags flags, char*description);
 void clear_info_field(struct mixed_segment_field_info *info);
 
 extern float (*mixed_random)();

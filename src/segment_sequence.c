@@ -17,8 +17,8 @@ MIXED_EXPORT int mixed_segment_sequence_remove(struct mixed_segment *segment, st
 }
 
 MIXED_EXPORT int mixed_segment_sequence_start(struct mixed_segment_sequence *mixer){
-  size_t count = mixer->count;
-  for(size_t i=0; i<count; ++i){
+  uint32_t count = mixer->count;
+  for(uint32_t i=0; i<count; ++i){
     struct mixed_segment *segment = mixer->segments[i];
     if(segment->start){
       if(!segment->start(segment)){
@@ -30,17 +30,17 @@ MIXED_EXPORT int mixed_segment_sequence_start(struct mixed_segment_sequence *mix
 }
 
 MIXED_EXPORT void mixed_segment_sequence_mix(struct mixed_segment_sequence *mixer){
-  size_t count = mixer->count;
+  uint32_t count = mixer->count;
   struct mixed_segment **segments = mixer->segments;
-  for(size_t i=0; i<count; ++i){
+  for(uint32_t i=0; i<count; ++i){
     struct mixed_segment *segment = segments[i];
     segment->mix(segment);
   }
 }
 
 MIXED_EXPORT int mixed_segment_sequence_end(struct mixed_segment_sequence *mixer){
-  size_t count = mixer->count;
-  for(size_t i=0; i<count; ++i){
+  uint32_t count = mixer->count;
+  for(uint32_t i=0; i<count; ++i){
     struct mixed_segment *segment = mixer->segments[i];
     if(segment->end){
       if(!segment->end(segment)){

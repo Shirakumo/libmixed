@@ -11,7 +11,7 @@ struct ladspa_segment_data{
   LADSPA_Descriptor *descriptor;
   LADSPA_Handle *handle;
   char active;
-  size_t samplerate;
+  uint32_t samplerate;
   struct ladspa_port *ports;
 };
 
@@ -32,13 +32,13 @@ int ladspa_segment_free(struct mixed_segment *segment){
 
 // FIXME: add start method that checks for buffer completeness.
 
-int ladspa_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int ladspa_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
-  size_t index = 0;
+  uint32_t index = 0;
 
   switch(field){
   case MIXED_BUFFER:
-    for(size_t i=0; i<data->descriptor->PortCount; ++i){
+    for(uint32_t i=0; i<data->descriptor->PortCount; ++i){
       const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
       if(LADSPA_IS_PORT_AUDIO(port) && LADSPA_IS_PORT_INPUT(port)){
         if(index == location){
@@ -57,13 +57,13 @@ int ladspa_segment_set_in(size_t field, size_t location, void *buffer, struct mi
   }
 }
 
-int ladspa_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int ladspa_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
-  size_t index = 0;
+  uint32_t index = 0;
 
   switch(field){
   case MIXED_BUFFER:
-    for(size_t i=0; i<data->descriptor->PortCount; ++i){
+    for(uint32_t i=0; i<data->descriptor->PortCount; ++i){
       const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
       if(LADSPA_IS_PORT_AUDIO(port) && LADSPA_IS_PORT_OUTPUT(port)){
         if(index == location){
@@ -84,8 +84,8 @@ int ladspa_segment_set_out(size_t field, size_t location, void *buffer, struct m
 
 int ladspa_segment_mix(struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
-  size_t samples = SIZE_MAX;
-  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+  uint32_t samples = UINT32_MAX;
+  for(uint32_t i=0; i<data->descriptor->PortCount; ++i){
     struct ladspa_port *port = &data->ports[i];
     if(port->buffer){
       float *buffer;
@@ -97,7 +97,7 @@ int ladspa_segment_mix(struct mixed_segment *segment){
     }
   }
   data->descriptor->run(data->handle, samples);
-  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+  for(uint32_t i=0; i<data->descriptor->PortCount; ++i){
     struct ladspa_port *port = &data->ports[i];
     if(port->buffer){
       if(port->direction == MIXED_IN)
@@ -152,7 +152,7 @@ int ladspa_segment_info(struct mixed_segment_info *info, struct mixed_segment *s
     info->flags = MIXED_INPLACE;
   }
   
-  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+  for(uint32_t i=0; i<data->descriptor->PortCount; ++i){
     const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
     if(LADSPA_IS_PORT_AUDIO(port)){
       if(LADSPA_IS_PORT_INPUT(port)){
@@ -170,14 +170,14 @@ int ladspa_segment_info(struct mixed_segment_info *info, struct mixed_segment *s
   return 1;
 }
 
-int ladspa_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int ladspa_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   // I don't think the LADSPA interface is compatible with how we want
   // to use it. If I read it correctly, it says that the output controls
   // are only updated while the plugin is actually run, which is not
   // what we want here in most cases.
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
-  size_t index = 0;
-  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+  uint32_t index = 0;
+  for(uint32_t i=0; i<data->descriptor->PortCount; ++i){
     const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
     if(LADSPA_IS_PORT_CONTROL(port) && LADSPA_IS_PORT_OUTPUT(port)){
       if(index == field){
@@ -191,10 +191,10 @@ int ladspa_segment_get(size_t field, void *value, struct mixed_segment *segment)
   return 0;
 }
 
-int ladspa_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int ladspa_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct ladspa_segment_data *data = (struct ladspa_segment_data *)segment->data;
-  size_t index = 0;
-  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+  uint32_t index = 0;
+  for(uint32_t i=0; i<data->descriptor->PortCount; ++i){
     const LADSPA_PortDescriptor port = data->descriptor->PortDescriptors[i];
     if(LADSPA_IS_PORT_CONTROL(port) && LADSPA_IS_PORT_INPUT(port)){
       if(index == field){
@@ -208,7 +208,7 @@ int ladspa_segment_set(size_t field, void *value, struct mixed_segment *segment)
   return 0;
 }
 
-int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descriptor){
+int ladspa_load_descriptor(char *file, uint32_t index, LADSPA_Descriptor **_descriptor){
   LADSPA_Descriptor_Function descriptor_function;
   const LADSPA_Descriptor *descriptor;
 
@@ -232,7 +232,7 @@ int ladspa_load_descriptor(char *file, size_t index, LADSPA_Descriptor **_descri
   return 0;
 }
 
-MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_ladspa(char *file, uint32_t index, uint32_t samplerate, struct mixed_segment *segment){
   struct ladspa_segment_data *data = 0;
 
   data = calloc(1, sizeof(struct ladspa_segment_data));
@@ -258,7 +258,7 @@ MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samp
   }
 
   // Connect all ports to shims
-  for(size_t i=0; i<data->descriptor->PortCount; ++i){
+  for(uint32_t i=0; i<data->descriptor->PortCount; ++i){
     data->descriptor->connect_port(data->handle, i, &data->ports[i].control);
   }
 
@@ -285,10 +285,10 @@ MIXED_EXPORT int mixed_make_segment_ladspa(char *file, size_t index, size_t samp
 }
 
 int __make_ladspa(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_ladspa(ARG(char *, 0), ARG(size_t, 1), ARG(size_t, 2), segment);
+  return mixed_make_segment_ladspa(ARG(char *, 0), ARG(uint32_t, 1), ARG(uint32_t, 2), segment);
 }
 
 REGISTER_SEGMENT(ladspa, __make_ladspa, 3, {
     {.description = "file", .type = MIXED_STRING},
-    {.description = "index", .type = MIXED_SIZE_T},
-    {.description = "samplerate", .type = MIXED_SIZE_T}})
+    {.description = "index", .type = MIXED_UINT32},
+    {.description = "samplerate", .type = MIXED_UINT32}})

@@ -7,7 +7,7 @@ struct fade_segment_data{
   float to;
   float time;
   enum mixed_fade_type type;
-  size_t samplerate;
+  uint32_t samplerate;
   float time_passed;
 };
 
@@ -30,7 +30,7 @@ int fade_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int fade_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int fade_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
 
   switch(field){
@@ -47,7 +47,7 @@ int fade_segment_set_in(size_t field, size_t location, void *buffer, struct mixe
   }
 }
 
-int fade_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int fade_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
 
   switch(field){
@@ -162,7 +162,7 @@ int fade_segment_info(struct mixed_segment_info *info, struct mixed_segment *seg
   return 1;
 }
 
-int fade_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int fade_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
   switch(field){
   case MIXED_FADE_FROM: *((float *)value) = data->from; break;
@@ -175,7 +175,7 @@ int fade_segment_get(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-int fade_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int fade_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
   switch(field){
   case MIXED_FADE_FROM:
@@ -221,7 +221,7 @@ int fade_segment_set(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_fade(float from, float to, float time, enum mixed_fade_type type, uint32_t samplerate, struct mixed_segment *segment){
   struct fade_segment_data *data = calloc(1, sizeof(struct fade_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -247,7 +247,7 @@ MIXED_EXPORT int mixed_make_segment_fade(float from, float to, float time, enum 
 }
 
 int __make_fade(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_fade(ARG(float, 0), ARG(float, 1), ARG(float, 2), ARG(enum mixed_fade_type, 3), ARG(size_t, 4), segment);
+  return mixed_make_segment_fade(ARG(float, 0), ARG(float, 1), ARG(float, 2), ARG(enum mixed_fade_type, 3), ARG(uint32_t, 4), segment);
 }
 
 REGISTER_SEGMENT(fade, __make_fade, 5, {
@@ -255,4 +255,4 @@ REGISTER_SEGMENT(fade, __make_fade, 5, {
     {.description = "to", .type = MIXED_FLOAT},
     {.description = "time", .type = MIXED_FLOAT},
     {.description = "type", .type = MIXED_FADE_TYPE_ENUM},
-    {.description = "samplerate", .type = MIXED_SIZE_T}});
+    {.description = "samplerate", .type = MIXED_UINT32}});

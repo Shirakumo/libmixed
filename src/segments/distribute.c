@@ -2,10 +2,10 @@
 
 struct distribute_data{
   struct mixed_buffer **out;
-  size_t count;
-  size_t size;
+  uint32_t count;
+  uint32_t size;
   struct mixed_buffer *in;
-  size_t was_available;
+  uint32_t was_available;
 };
 
 int distribute_free(struct mixed_segment *segment){
@@ -13,7 +13,7 @@ int distribute_free(struct mixed_segment *segment){
   return 1;
 }
 
-int distribute_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int distribute_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct distribute_data *data = (struct distribute_data *)segment->data;
   
   switch(field){
@@ -30,7 +30,7 @@ int distribute_set_in(size_t field, size_t location, void *buffer, struct mixed_
   }
 }
 
-int distribute_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int distribute_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct distribute_data *data = (struct distribute_data *)segment->data;
 
   switch(field){
@@ -70,7 +70,7 @@ int distribute_start(struct mixed_segment *segment){
     return 0;
   }
 
-  for(size_t i=0; i<data->count; ++i){
+  for(uint32_t i=0; i<data->count; ++i){
     struct mixed_buffer *buffer = data->out[i];
     buffer->_data = in->_data;
     buffer->size = in->size;
@@ -84,14 +84,14 @@ int distribute_mix(struct mixed_segment *segment){
   struct distribute_data *data = (struct distribute_data *)segment->data;
   struct mixed_buffer *in = data->in;
   // FIXME: This explicitly does /not/ support reads from both bip regions at once.
-  size_t max_available = mixed_buffer_available_read(data->out[0]);
-  for(size_t i=1; i<data->count; ++i){
+  uint32_t max_available = mixed_buffer_available_read(data->out[0]);
+  for(uint32_t i=1; i<data->count; ++i){
     max_available = MAX(max_available, mixed_buffer_available_read(data->out[i]));
   }
   mixed_buffer_finish_read(data->was_available - max_available, in);
   // Update virtual buffers with content of real buffer, disregarding R2.
   data->was_available = mixed_buffer_available_read(in);
-  for(size_t i=0; i<data->count; ++i){
+  for(uint32_t i=0; i<data->count; ++i){
     struct mixed_buffer *buffer = data->out[i];
     buffer->r1_start = in->r1_start;
     buffer->r1_size = in->r1_size;

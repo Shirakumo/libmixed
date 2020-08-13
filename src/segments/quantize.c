@@ -22,7 +22,7 @@ int quantize_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int quantize_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int quantize_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct quantize_segment_data *data = (struct quantize_segment_data *)segment->data;
 
   switch(field){
@@ -39,7 +39,7 @@ int quantize_segment_set_in(size_t field, size_t location, void *buffer, struct 
   }
 }
 
-int quantize_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int quantize_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct quantize_segment_data *data = (struct quantize_segment_data *)segment->data;
 
   switch(field){
@@ -94,17 +94,17 @@ int quantize_segment_info(struct mixed_segment_info *info, struct mixed_segment 
   return 1;
 }
 
-int quantize_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int quantize_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct quantize_segment_data *data = (struct quantize_segment_data *)segment->data;
   switch(field){
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == quantize_segment_mix_bypass); break;
-  case MIXED_QUANTIZE_STEPS: *((size_t *)value) = (size_t)data->steps; break;
+  case MIXED_QUANTIZE_STEPS: *((uint32_t *)value) = (uint32_t)data->steps; break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
 }
 
-int quantize_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int quantize_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct quantize_segment_data *data = (struct quantize_segment_data *)segment->data;
   switch(field){
   case MIXED_BYPASS:
@@ -115,7 +115,7 @@ int quantize_segment_set(size_t field, void *value, struct mixed_segment *segmen
     }
     break;
   case MIXED_QUANTIZE_STEPS:
-    data->steps = *(size_t *)value;
+    data->steps = *(uint32_t *)value;
     break;
   default:
     mixed_err(MIXED_INVALID_FIELD);
@@ -124,7 +124,7 @@ int quantize_segment_set(size_t field, void *value, struct mixed_segment *segmen
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_quantize(size_t steps, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_quantize(uint32_t steps, struct mixed_segment *segment){
   struct quantize_segment_data *data = calloc(1, sizeof(struct quantize_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -145,8 +145,8 @@ MIXED_EXPORT int mixed_make_segment_quantize(size_t steps, struct mixed_segment 
 }
 
 int __make_quantize(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_quantize(ARG(size_t, 0), segment);
+  return mixed_make_segment_quantize(ARG(uint32_t, 0), segment);
 }
 
 REGISTER_SEGMENT(quantize, __make_quantize, 1, {
-    {.description = "steps", .type = MIXED_SIZE_T}});
+    {.description = "steps", .type = MIXED_UINT32}});

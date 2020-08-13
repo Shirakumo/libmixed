@@ -6,8 +6,8 @@ struct pack_segment_data{
   struct mixed_buffer **buffers;
   SRC_DATA *resample_data;
   SRC_STATE *resample_state;
-  size_t samplerate;
-  size_t buffer_frames;
+  uint32_t samplerate;
+  uint32_t buffer_frames;
   float volume;
 };
 
@@ -27,7 +27,7 @@ int pack_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-int pack_segment_set_buffer(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int pack_segment_set_buffer(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
 
   switch(field){
@@ -74,20 +74,20 @@ int source_segment_mix(struct mixed_segment *segment){
     mixed_buffer_from_pack(data->pack, data->buffers, data->volume);
   }else{
     SRC_DATA *src_data = data->resample_data;
-    size_t frames = data->buffer_frames;
-    uint8_t channels = pack->channels;
-    size_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
+    uint32_t frames = data->buffer_frames;
+    channel_t channels = pack->channels;
+    uint32_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
     // Step 1: determine available space
     // FIXME: resampling changes frame count
-    for(uint8_t c=0; c<channels; ++c)
+    for(channel_t c=0; c<channels; ++c)
       frames = MIN(frames, mixed_buffer_available_write(data->buffers[c]));
     // Step 2: unpack to contiguous floats
     mixed_transfer_function_from decoder = mixed_translator_from(pack->encoding);
-    size_t bytes = SIZE_MAX;
+    uint32_t bytes = UINT32_MAX;
     void *pack_data;
     mixed_pack_request_read(&pack_data, &bytes, pack);
     frames = MIN(frames, bytes / frames_to_bytes);
-    decoder(pack_data, src_data->data_in, 1, frames*channels, data->volume); 
+    decoder(pack_data, (float*)src_data->data_in, 1, frames*channels, data->volume); 
     // Step 3: resample
     src_data->input_frames = frames;
     int e = src_process(data->resample_state, src_data);
@@ -99,11 +99,11 @@ int source_segment_mix(struct mixed_segment *segment){
     // Step 4: transfer from contigous to separate buffers
     frames = src_data->output_frames_gen;
     float *source = src_data->data_out;
-    for(uint8_t c=0; c<channels; ++c){
+    for(channel_t c=0; c<channels; ++c){
       float *target;
-      size_t count = frames;
+      uint32_t count = frames;
       mixed_buffer_request_write(&target, &count, data->buffers[c]);
-      for(size_t i=0; i<count; ++i)
+      for(uint32_t i=0; i<count; ++i)
         target[i] = source[i*channels];
       source++;
       mixed_buffer_finish_write(count, data->buffers[c]);
@@ -122,19 +122,19 @@ int drain_segment_mix(struct mixed_segment *segment){
     mixed_buffer_to_pack(data->buffers, pack, data->volume);
   }else{
     SRC_DATA *src_data = data->resample_data;
-    size_t frames = data->buffer_frames;
-    size_t channels = pack->channels;
-    size_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
-    size_t bytes = SIZE_MAX;
+    uint32_t frames = data->buffer_frames;
+    channel_t channels = pack->channels;
+    uint32_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
+    uint32_t bytes = UINT32_MAX;
     void *pack_data;
     mixed_pack_request_write(&pack_data, &bytes, pack);
     frames = MIN(frames, (bytes / src_data->src_ratio) / frames_to_bytes);
     // Step 1: pack to contigous, alternating float array
-    float *target = src_data->data_in;
-    for(size_t c=0; c<channels; ++c){
+    float *target = (float *)src_data->data_in;
+    for(channel_t c=0; c<channels; ++c){
       float *source;
       mixed_buffer_request_read(&source, &frames, data->buffers[c]);
-      for(size_t i=0; i<frames; ++i)
+      for(uint32_t i=0; i<frames; ++i)
         target[c+i*channels] = source[i];
     }
     // Step 2: resample
@@ -146,18 +146,18 @@ int drain_segment_mix(struct mixed_segment *segment){
       return 0;
     }
     // Step 3: re-encode
-    size_t out_frames = src_data->output_frames_gen;
+    uint32_t out_frames = src_data->output_frames_gen;
     mixed_transfer_function_to encoder = mixed_translator_to(pack->encoding);
     encoder(src_data->data_out, pack_data, 1, out_frames*channels, data->volume);
     // Step 4: update consumed buffers
     mixed_pack_finish_write(out_frames * frames_to_bytes, pack);
-    for(size_t c=0; c<channels; ++c)
+    for(channel_t c=0; c<channels; ++c)
       mixed_buffer_finish_read(src_data->input_frames_used, data->buffers[c]);
   }
   return 1;
 }
 
-int source_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int source_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   
   switch(field){
@@ -178,7 +178,7 @@ int source_segment_set(size_t field, void *value, struct mixed_segment *segment)
     return 1;
   case MIXED_BYPASS:
     if(*(bool *)value){
-      for(size_t i=0; i<data->pack->channels; ++i){
+      for(channel_t i=0; i<data->pack->channels; ++i){
         mixed_buffer_clear(data->buffers[i]);
       }
       segment->mix = mix_noop;
@@ -192,9 +192,7 @@ int source_segment_set(size_t field, void *value, struct mixed_segment *segment)
   }
 }
 
-int drain_segment_set(size_t field, void *value, struct mixed_segment *segment){
-  struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
-  
+int drain_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   switch(field){
   case MIXED_BYPASS:
     if(*(bool *)value){
@@ -208,7 +206,7 @@ int drain_segment_set(size_t field, void *value, struct mixed_segment *segment){
   }
 }
 
-int packer_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int packer_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   
   switch(field){
@@ -281,7 +279,7 @@ int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_dat
     goto cleanup;
   }
 
-  size_t pack_frames = pack->size / mixed_samplesize(pack->encoding) / pack->channels;
+  uint32_t pack_frames = pack->size / mixed_samplesize(pack->encoding) / pack->channels;
   int input_frames, output_frames;
   if(is_source){
     input_frames = pack_frames;
@@ -326,7 +324,7 @@ int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_dat
   return 0;
 }
 
-int make_pack_internal(struct mixed_pack *pack, size_t samplerate, int quality, struct mixed_segment *segment){
+int make_pack_internal(struct mixed_pack *pack, uint32_t samplerate, int quality, struct mixed_segment *segment){
   struct pack_segment_data *data = 0;
   struct mixed_buffer **buffers = 0;
 
@@ -375,7 +373,7 @@ int make_pack_internal(struct mixed_pack *pack, size_t samplerate, int quality, 
   return 0;
 }
 
-MIXED_EXPORT int mixed_make_segment_unpacker(struct mixed_pack *pack, size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_unpacker(struct mixed_pack *pack, uint32_t samplerate, struct mixed_segment *segment){
   segment->mix = source_segment_mix;
   segment->info = source_segment_info;
   segment->set = source_segment_set;
@@ -384,14 +382,14 @@ MIXED_EXPORT int mixed_make_segment_unpacker(struct mixed_pack *pack, size_t sam
 }
 
 int __make_unpacker(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_unpacker(ARG(struct mixed_pack*, 0), ARG(size_t, 1), segment);
+  return mixed_make_segment_unpacker(ARG(struct mixed_pack*, 0), ARG(uint32_t, 1), segment);
 }
 
 REGISTER_SEGMENT(unpacker, __make_unpacker, 2, {
     {.description = "pack", .type = MIXED_PACK_POINTER},
-    {.description = "samplerate", .type = MIXED_SIZE_T}})
+    {.description = "samplerate", .type = MIXED_UINT32}})
 
-MIXED_EXPORT int mixed_make_segment_packer(struct mixed_pack *pack, size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_packer(struct mixed_pack *pack, uint32_t samplerate, struct mixed_segment *segment){
   segment->mix = drain_segment_mix;
   segment->info = drain_segment_info;
   segment->set = drain_segment_set;
@@ -400,9 +398,9 @@ MIXED_EXPORT int mixed_make_segment_packer(struct mixed_pack *pack, size_t sampl
 }
 
 int __make_packer(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_packer(ARG(struct mixed_pack*, 0), ARG(size_t, 1), segment);
+  return mixed_make_segment_packer(ARG(struct mixed_pack*, 0), ARG(uint32_t, 1), segment);
 }
 
 REGISTER_SEGMENT(packer, __make_packer, 2, {
     {.description = "pack", .type = MIXED_PACK_POINTER},
-    {.description = "samplerate", .type = MIXED_SIZE_T}})
+    {.description = "samplerate", .type = MIXED_UINT32}})

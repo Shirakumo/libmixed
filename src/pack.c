@@ -1,6 +1,6 @@
 #include "internal.h"
 
-MIXED_EXPORT int mixed_make_pack(size_t frames, struct mixed_pack *pack){
+MIXED_EXPORT int mixed_make_pack(uint32_t frames, struct mixed_pack *pack){
   mixed_err(MIXED_NO_ERROR);
   pack->_data = calloc(frames*pack->channels, mixed_samplesize(pack->encoding));
   if(!pack->_data){
@@ -29,18 +29,18 @@ MIXED_EXPORT int mixed_pack_clear(struct mixed_pack *pack){
   return 1;
 }
 
-static inline size_t free_for_r2(struct mixed_pack *pack){
+static inline uint32_t free_for_r2(struct mixed_pack *pack){
   return pack->r1_start - pack->r2_start - pack->r2_size;
 }
 
-static inline size_t free_after_r1(struct mixed_pack *pack){
+static inline uint32_t free_after_r1(struct mixed_pack *pack){
   return pack->size - pack->r1_start - pack->r1_size;
 }
 
-MIXED_EXPORT int mixed_pack_request_write(void **area, size_t *size, struct mixed_pack *pack){
+MIXED_EXPORT int mixed_pack_request_write(void **area, uint32_t *size, struct mixed_pack *pack){
   mixed_err(MIXED_NO_ERROR);
   if(pack->r2_size){
-    size_t free = free_for_r2(pack);
+    uint32_t free = free_for_r2(pack);
     if(*size < free) free = *size;
     if(free == 0){
       *size = 0;
@@ -52,7 +52,7 @@ MIXED_EXPORT int mixed_pack_request_write(void **area, size_t *size, struct mixe
     pack->reserved_start = pack->r2_start + pack->r2_size;
     *area = pack->_data + pack->reserved_start;
   }else{
-    size_t free = free_after_r1(pack);
+    uint32_t free = free_after_r1(pack);
     if(pack->r1_start <= free){
       if(free == 0){
         *size = 0;
@@ -79,7 +79,7 @@ MIXED_EXPORT int mixed_pack_request_write(void **area, size_t *size, struct mixe
   return 1;
 }
 
-MIXED_EXPORT int mixed_pack_finish_write(size_t size, struct mixed_pack *pack){
+MIXED_EXPORT int mixed_pack_finish_write(uint32_t size, struct mixed_pack *pack){
   mixed_err(MIXED_NO_ERROR);
   if(pack->reserved_size < size){
     mixed_err(MIXED_BUFFER_OVERCOMMIT);
@@ -101,7 +101,7 @@ MIXED_EXPORT int mixed_pack_finish_write(size_t size, struct mixed_pack *pack){
   return 1;
 }
 
-MIXED_EXPORT int mixed_pack_request_read(void **area, size_t *size, struct mixed_pack *pack){
+MIXED_EXPORT int mixed_pack_request_read(void **area, uint32_t *size, struct mixed_pack *pack){
   mixed_err(MIXED_NO_ERROR);
   if(pack->r1_size == 0){
     *size = 0;
@@ -113,15 +113,15 @@ MIXED_EXPORT int mixed_pack_request_read(void **area, size_t *size, struct mixed
   return 1;
 }
 
-MIXED_EXPORT size_t mixed_pack_available_read(struct mixed_pack *pack){
+MIXED_EXPORT uint32_t mixed_pack_available_read(struct mixed_pack *pack){
   return pack->r1_size;
 }
 
-MIXED_EXPORT size_t mixed_pack_available_write(struct mixed_pack *pack){
+MIXED_EXPORT uint32_t mixed_pack_available_write(struct mixed_pack *pack){
   return (pack->r2_size)? free_for_r2(pack) : free_after_r1(pack);
 }
 
-MIXED_EXPORT int mixed_pack_finish_read(size_t size, struct mixed_pack *pack){
+MIXED_EXPORT int mixed_pack_finish_read(uint32_t size, struct mixed_pack *pack){
   mixed_err(MIXED_NO_ERROR);
   if(pack->r1_size < size){
     mixed_err(MIXED_BUFFER_OVERCOMMIT);

@@ -10,9 +10,9 @@ static int make_pack(enum mixed_encoding encoding, int channels, struct mixed_pa
   if(!mixed_make_pack(frames, pack))
     return 0;
   char *buffer;
-  size_t size = SIZE_MAX;
-  mixed_pack_request_write(&buffer, &size, pack);
-  for(int i=0; i<size; ++i)
+  uint32_t size = UINT32_MAX;
+  mixed_pack_request_write((void**)&buffer, &size, pack);
+  for(uint32_t i=0; i<size; ++i)
     buffer[i] = rand()%128;
   mixed_pack_finish_write(size, pack);
   return 1;
@@ -41,7 +41,7 @@ define_test(single_channel_no_resample, {
     // Check
     is(mixed_pack_available_read(&pack_i), 0);
     is(mixed_pack_available_read(&pack_o), pack_o.size);
-    for(int i=0; i<pack_o.size; ++i)
+    for(uint32_t i=0; i<pack_o.size; ++i)
       is(((char*)pack_o._data)[i], ((char*)pack_i._data)[i]);
 
   cleanup:
@@ -110,7 +110,7 @@ define_test(single_channel_resample_in_out, {
     // Fill data
     float *data_i = (float *)pack_i._data;
     float *data_o = (float *)pack_o._data;
-    for(int i=0; i<buffer.size; ++i){
+    for(uint32_t i=0; i<buffer.size; ++i){
       data_i[i] = ((float)i) / pack_i.size;
       data_o[i] = 0.0;
     }
@@ -119,7 +119,7 @@ define_test(single_channel_resample_in_out, {
     pass(mixed_segment_mix(&unpacker));
     pass(mixed_segment_mix(&packer));
     // Check for expected
-    for(int i=0; i<mixed_pack_available_read(&pack_o)/sizeof(float); ++i)
+    for(uint32_t i=0; i<mixed_pack_available_read(&pack_o)/sizeof(float); ++i)
       is(fabs(data_o[i]-data_i[i]) < 0.00005, 1);
 
   cleanup:
@@ -155,7 +155,7 @@ define_test(dual_channel_resample_in_out, {
     // Fill data
     float *data_i = (float *)pack_i._data;
     float *data_o = (float *)pack_o._data;
-    for(int i=0; i<pack_i.size/sizeof(float); ++i){
+    for(uint32_t i=0; i<pack_i.size/sizeof(float); ++i){
       data_i[i] = ((float)i) / (pack_i.size*sizeof(float))+(i%2/10.0);
       data_o[i] = 0.0;
     }
@@ -166,7 +166,7 @@ define_test(dual_channel_resample_in_out, {
     // Check for expected
     // KLUDGE: seems the first few samples are very distorted and in general
     //         the resampling quality here is /much/ lower.
-    for(int i=10; i<mixed_pack_available_read(&pack_o)/sizeof(float); ++i){
+    for(uint32_t i=10; i<mixed_pack_available_read(&pack_o)/sizeof(float); ++i){
       is(fabs(data_o[i]-data_i[i]) < 0.005, 1);
     }
 

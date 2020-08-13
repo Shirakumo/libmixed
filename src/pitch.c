@@ -61,7 +61,7 @@ void free_pitch_data(struct pitch_data *data){
   data->synthesized_magnitude = 0;
 }
 
-int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, struct pitch_data *data){
+int make_pitch_data(uint32_t framesize, uint32_t oversampling, uint32_t samplerate, struct pitch_data *data){
   // FIXME: determine which of these can be static and which actually
   //        need to be retained for processing over contiguous buffers
   data->in_fifo = calloc(framesize, sizeof(float));
@@ -97,9 +97,9 @@ int make_pitch_data(size_t framesize, size_t oversampling, size_t samplerate, st
   return 1;
 }
 
-VECTORIZE void pitch_shift(float pitch, float *in, float *out, size_t samples, struct pitch_data *data){
-  size_t framesize = data->framesize;
-  size_t oversampling = data->oversampling;
+VECTORIZE void pitch_shift(float pitch, float *in, float *out, uint32_t samples, struct pitch_data *data){
+  uint32_t framesize = data->framesize;
+  uint32_t oversampling = data->oversampling;
   float *in_fifo = data->in_fifo;
   float *out_fifo = data->out_fifo;
   float *fft_workspace = data->fft_workspace;

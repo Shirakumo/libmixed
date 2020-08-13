@@ -7,21 +7,21 @@ struct plugin_entry{
 
 struct plugin_vector{
   struct plugin_entry **entries;
-  size_t count;
-  size_t size;
+  uint32_t count;
+  uint32_t size;
 };
 
 struct segment_entry{
   char *name;
-  size_t argc;
+  uint32_t argc;
   struct mixed_segment_field_info *args;
   mixed_make_segment_function function;
 };
 
 struct segment_vector{
   struct segment_entry **entries;
-  size_t count;
-  size_t size;
+  uint32_t count;
+  uint32_t size;
 };
 
 struct plugin_vector plugins = {0};
@@ -67,7 +67,7 @@ MIXED_EXPORT int mixed_load_plugin(char *file){
 }
 
 MIXED_EXPORT int mixed_close_plugin(char *file){
-  for(size_t i=0; i<plugins.count; ++i){
+  for(uint32_t i=0; i<plugins.count; ++i){
     struct plugin_entry *entry = plugins.entries[i];
     if(strcmp(entry->file, file) == 0){
       mixed_free_plugin_function function;
@@ -88,7 +88,7 @@ MIXED_EXPORT int mixed_close_plugin(char *file){
   return 0;
 }
 
-MIXED_EXPORT int mixed_register_segment(char *name, size_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function){
+MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function){
   struct segment_entry *entry = 0;
 
   entry = calloc(1, sizeof(struct segment_entry));
@@ -103,7 +103,7 @@ MIXED_EXPORT int mixed_register_segment(char *name, size_t argc, struct mixed_se
     goto cleanup;
   }
 
-  for(size_t i=0; i<segments.count; ++i){
+  for(uint32_t i=0; i<segments.count; ++i){
     struct segment_entry *entry = segments.entries[i];
     if(strcmp(entry->name, name) == 0){
       mixed_err(MIXED_DUPLICATE_SEGMENT);
@@ -133,7 +133,7 @@ MIXED_EXPORT int mixed_register_segment(char *name, size_t argc, struct mixed_se
 }
 
 MIXED_EXPORT int mixed_deregister_segment(char *name){
-  for(size_t i=0; i<segments.count; ++i){
+  for(uint32_t i=0; i<segments.count; ++i){
     struct segment_entry *entry = segments.entries[i];
     if(strcmp(entry->name, name) == 0){
       free(entry->name);
@@ -146,18 +146,18 @@ MIXED_EXPORT int mixed_deregister_segment(char *name){
   return 0;
 }
 
-MIXED_EXPORT int mixed_list_segments(size_t *count, char **names){
+MIXED_EXPORT int mixed_list_segments(uint32_t *count, char **names){
   *count = segments.count;
   if(names){
-    for(size_t i=0; i<segments.count; ++i){
+    for(uint32_t i=0; i<segments.count; ++i){
       names[i] = segments.entries[i]->name;
     }
   }
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_info(char *name, size_t *argc, const struct mixed_segment_field_info **args){
-  for(size_t i=0; i<segments.count; ++i){
+MIXED_EXPORT int mixed_make_segment_info(char *name, uint32_t *argc, const struct mixed_segment_field_info **args){
+  for(uint32_t i=0; i<segments.count; ++i){
     struct segment_entry *entry = segments.entries[i];
     if(strcmp(entry->name, name) == 0){
       *argc = entry->argc;
@@ -170,7 +170,7 @@ MIXED_EXPORT int mixed_make_segment_info(char *name, size_t *argc, const struct 
 }
 
 MIXED_EXPORT int mixed_make_segment(char *name, void *args, struct mixed_segment *segment){
-  for(size_t i=0; i<segments.count; ++i){
+  for(uint32_t i=0; i<segments.count; ++i){
     struct segment_entry *entry = segments.entries[i];
     if(strcmp(entry->name, name) == 0){
       return entry->function(args, segment);

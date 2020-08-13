@@ -16,7 +16,7 @@ struct gate_segment_data{
   float attack;
   float hold;
   float release;
-  size_t samplerate;
+  uint32_t samplerate;
   float time;
   enum state state;
 };
@@ -49,7 +49,7 @@ int gate_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int gate_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int gate_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
 
   switch(field){
@@ -66,7 +66,7 @@ int gate_segment_set_in(size_t field, size_t location, void *buffer, struct mixe
   }
 }
 
-int gate_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int gate_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
 
   switch(field){
@@ -192,7 +192,7 @@ int gate_segment_info(struct mixed_segment_info *info, struct mixed_segment *seg
                  "The time during which the output volume is scaled down.");
 
   set_info_field(field++, MIXED_SAMPLERATE,
-                 MIXED_SIZE_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The samplerate at which the segment operates.");
 
   set_info_field(field++, MIXED_BYPASS,
@@ -203,7 +203,7 @@ int gate_segment_info(struct mixed_segment_info *info, struct mixed_segment *seg
   return 1;
 }
 
-int gate_segment_get(size_t field, void *value, struct mixed_segment *segment){
+int gate_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
   switch(field){
   case MIXED_GATE_OPEN_THRESHOLD: *((float *)value) = linear_to_db(data->open_threshold); break;
@@ -211,22 +211,22 @@ int gate_segment_get(size_t field, void *value, struct mixed_segment *segment){
   case MIXED_GATE_ATTACK: *((float *)value) = data->attack; break;
   case MIXED_GATE_HOLD: *((float *)value) = data->hold; break;
   case MIXED_GATE_RELEASE: *((float *)value) = data->release; break;
-  case MIXED_SAMPLERATE: *((size_t *)value) = data->samplerate; break;
+  case MIXED_SAMPLERATE: *((uint32_t *)value) = data->samplerate; break;
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == gate_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
 }
 
-int gate_segment_set(size_t field, void *value, struct mixed_segment *segment){
+int gate_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
   switch(field){
   case MIXED_SAMPLERATE:
-    if(*(size_t *)value <= 0){
+    if(*(uint32_t *)value <= 0){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    data->samplerate = *(size_t *)value;
+    data->samplerate = *(uint32_t *)value;
     break;
   case MIXED_GATE_OPEN_THRESHOLD:
     data->open_threshold = db_to_linear(*(float *)value);
@@ -269,7 +269,7 @@ int gate_segment_set(size_t field, void *value, struct mixed_segment *segment){
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_gate(size_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_gate(uint32_t samplerate, struct mixed_segment *segment){
   struct gate_segment_data *data = calloc(1, sizeof(struct gate_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -297,8 +297,8 @@ MIXED_EXPORT int mixed_make_segment_gate(size_t samplerate, struct mixed_segment
 }
 
 int __make_gate(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_gate(ARG(size_t, 0), segment);
+  return mixed_make_segment_gate(ARG(uint32_t, 0), segment);
 }
 
 REGISTER_SEGMENT(gate, __make_gate, 1, {
-    {.description = "samplerate", .type = MIXED_SIZE_T}})
+    {.description = "samplerate", .type = MIXED_UINT32}})

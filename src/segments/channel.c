@@ -3,8 +3,8 @@
 struct channel_data{
   struct mixed_buffer *in[8];
   struct mixed_buffer *out[8];
-  uint8_t in_channels;
-  uint8_t out_channels;
+  channel_t in_channels;
+  channel_t out_channels;
 };
 
 int channel_free(struct mixed_segment *segment){
@@ -17,13 +17,13 @@ int channel_free(struct mixed_segment *segment){
 
 int channel_start(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
-  for(int i=0; i<data->in_channels; ++i){
+  for(channel_t i=0; i<data->in_channels; ++i){
     if(data->in[i] == 0){
       mixed_err(MIXED_BUFFER_MISSING);
       return 0;
     }
   }
-  for(int i=0; i<data->out_channels; ++i){
+  for(channel_t i=0; i<data->out_channels; ++i){
     if(data->out[i] == 0){
       mixed_err(MIXED_BUFFER_MISSING);
       return 0;
@@ -32,7 +32,7 @@ int channel_start(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int channel_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
   switch(field){
@@ -49,7 +49,7 @@ int channel_set_out(size_t field, size_t location, void *buffer, struct mixed_se
   }
 }
 
-int channel_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
+int channel_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   switch(field){
@@ -69,12 +69,12 @@ int channel_set_in(size_t field, size_t location, void *buffer, struct mixed_seg
 int channel_mix_stereo_mono(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
-  size_t frames = SIZE_MAX;
+  uint32_t frames = UINT32_MAX;
   float *l, *r, *out;
   mixed_buffer_request_read(&l, &frames, data->in[0]);
   mixed_buffer_request_read(&r, &frames, data->in[1]);
   mixed_buffer_request_write(&out, &frames, data->out[0]);
-  for(size_t i=0; i<frames; ++i){
+  for(uint32_t i=0; i<frames; ++i){
     out[i] = (l[i]+r[i])*0.5;
   }
   mixed_buffer_finish_read(frames, data->in[0]);
@@ -87,12 +87,12 @@ int channel_mix_stereo_mono(struct mixed_segment *segment){
 int channel_mix_mono_stereo(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
-  size_t frames = SIZE_MAX;
+  uint32_t frames = UINT32_MAX;
   float *l, *r, *in;
   mixed_buffer_request_write(&l, &frames, data->out[0]);
   mixed_buffer_request_write(&r, &frames, data->out[1]);
   mixed_buffer_request_read(&in, &frames, data->in[0]);
-  for(size_t i=0; i<frames; ++i){
+  for(uint32_t i=0; i<frames; ++i){
     l[i] = in[i];
     r[i] = in[i];
   }
@@ -120,7 +120,7 @@ int channel_info(struct mixed_segment_info *info, struct mixed_segment *segment)
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_channel_convert(uint8_t in, uint8_t out, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out, struct mixed_segment *segment){
   if(in == 1 && out == 2){
     segment->mix = channel_mix_mono_stereo;
   }else if(in == 2 && out == 1){
@@ -149,9 +149,9 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(uint8_t in, uint8_t out, str
 }
 
 int __make_channel_convert(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_channel_convert(ARG(size_t, 0), ARG(size_t, 1), segment);
+  return mixed_make_segment_channel_convert(ARG(channel_t, 0), ARG(channel_t, 1), segment);
 }
 
 REGISTER_SEGMENT(channel_convert, __make_channel_convert, 2, {
-    {.description = "in", .type = MIXED_SIZE_T},
-    {.description = "out", .type = MIXED_SIZE_T}})
+    {.description = "in", .type = MIXED_UINT8},
+    {.description = "out", .type = MIXED_UINT8}})
