@@ -14,6 +14,21 @@ int basic_mixer_free(struct mixed_segment *segment){
   return 1;
 }
 
+int basic_mixer_start(struct mixed_segment *segment){
+  struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
+  if(data->count % data->channels != 0){
+    mixed_err(MIXED_BUFFER_MISSING);
+    return 0;
+  }
+  for(int i=0; i<data->channels; ++i){
+    if(data->out[i] == 0){
+      mixed_err(MIXED_BUFFER_MISSING);
+      return 0;
+    }
+  }
+  return 1;
+}
+
 int basic_mixer_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   
@@ -168,6 +183,7 @@ MIXED_EXPORT int mixed_make_segment_basic_mixer(size_t channels, struct mixed_se
   }
   
   segment->free = basic_mixer_free;
+  segment->start = basic_mixer_start;
   segment->mix = basic_mixer_mix;
   segment->set = basic_mixer_set;
   segment->get = basic_mixer_get;

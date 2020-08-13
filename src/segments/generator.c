@@ -16,7 +16,14 @@ int generator_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-// FIXME: add start method that checks for buffer completeness.
+int generator_segment_start(struct mixed_segment *segment){
+  struct generator_segment_data *data = (struct generator_segment_data *)segment->data;
+  if(data->out == 0){
+    mixed_err(MIXED_BUFFER_MISSING);
+    return 0;
+  }
+  return 1;
+}
 
 int generator_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct generator_segment_data *data = (struct generator_segment_data *)segment->data;
@@ -168,6 +175,7 @@ MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, si
   data->volume = 1.0f;
   
   segment->free = generator_segment_free;
+  segment->start = generator_segment_start;
   segment->mix = generator_segment_mix;
   segment->set_out = generator_segment_set_out;
   segment->info = generator_segment_info;

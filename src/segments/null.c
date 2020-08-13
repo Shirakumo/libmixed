@@ -5,6 +5,14 @@ int null_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
+int null_segment_start(struct mixed_segment *segment){
+  if(segment->data == 0){
+    mixed_err(MIXED_BUFFER_MISSING);
+    return 0;
+  }
+  return 1;
+}
+
 int null_segment_set(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   switch(field){
   case MIXED_BUFFER:
@@ -27,8 +35,8 @@ int void_segment_mix(struct mixed_segment *segment){
   return 1;
 }
 
-  int zero_segment_mix(struct mixed_segment *segment){
-    struct mixed_buffer *data = (struct mixed_buffer *)segment->data;
+int zero_segment_mix(struct mixed_segment *segment){
+  struct mixed_buffer *data = (struct mixed_buffer *)segment->data;
   float *buffer;
   size_t frames = SIZE_MAX;
   mixed_buffer_request_write(&buffer, &frames, data);
@@ -73,6 +81,7 @@ int zero_segment_info(struct mixed_segment_info *info, struct mixed_segment *seg
 
 MIXED_EXPORT int mixed_make_segment_void(struct mixed_segment *segment){
   segment->free = null_segment_free;
+  segment->start = null_segment_start;
   segment->set_in = null_segment_set;
   segment->set_out = null_segment_set;
   segment->mix = void_segment_mix;
@@ -89,6 +98,7 @@ REGISTER_SEGMENT(zero, __make_zero, 0, {0});
 
 MIXED_EXPORT int mixed_make_segment_zero(struct mixed_segment *segment){
   segment->free = null_segment_free;
+  segment->start = null_segment_start;
   segment->set_in = null_segment_set;
   segment->set_out = null_segment_set;
   segment->mix = zero_segment_mix;

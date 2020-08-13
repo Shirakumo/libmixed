@@ -37,7 +37,14 @@ int space_mixer_free(struct mixed_segment *segment){
   return 1;
 }
 
-// FIXME: add start method that checks for buffer completeness.
+int space_mixer_start(struct mixed_segment *segment){
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
+  if(data->left == 0 || data->right == 0){
+    mixed_err(MIXED_BUFFER_MISSING);
+    return 0;
+  }
+  return 1;
+}
 
 float attenuation_none(float min, float max, float dist, float roll){
   IGNORE(min, max, dist, roll);
@@ -540,6 +547,7 @@ MIXED_EXPORT int mixed_make_segment_space_mixer(size_t samplerate, struct mixed_
   
   segment->free = space_mixer_free;
   segment->info = space_mixer_info;
+  segment->start = space_mixer_start;
   segment->mix = space_mixer_mix;
   segment->set_in = space_mixer_set_in;
   segment->get_in = space_mixer_get_in;

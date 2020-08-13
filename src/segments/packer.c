@@ -49,6 +49,16 @@ int pack_segment_start(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   if(data->resample_state)
     src_reset(data->resample_state);
+  if(data->pack == 0){
+    mixed_err(MIXED_BUFFER_MISSING);
+    return 0;
+  }
+  for(int i=0; i<data->pack->channels; ++i){
+    if(data->buffers[i] == 0){
+      mixed_err(MIXED_BUFFER_MISSING);
+      return 0;
+    }
+  }
   return 1;
 }
 
@@ -197,8 +207,6 @@ int drain_segment_set(size_t field, void *value, struct mixed_segment *segment){
     return source_segment_set(field, value, segment);
   }
 }
-
-// FIXME: add start method that checks for buffer completeness.
 
 int packer_segment_get(size_t field, void *value, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;

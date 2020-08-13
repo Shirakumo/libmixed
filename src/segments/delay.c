@@ -17,12 +17,14 @@ int delay_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-// FIXME: add start method that checks for buffer completeness.
-
 int delay_segment_start(struct mixed_segment *segment){
   struct delay_segment_data *data = (struct delay_segment_data *)segment->data;
-  mixed_buffer_clear(&data->buffer);
+  if(data->in == 0 || data->out == 0){
+    mixed_err(MIXED_BUFFER_MISSING);
+    return 0;
+  }
   // Fill the entire buffer with nothing to initiate the delay.
+  mixed_buffer_clear(&data->buffer);
   size_t samples = SIZE_MAX;
   float *out;
   mixed_buffer_request_write(&out, &samples, &data->buffer);

@@ -18,6 +18,23 @@ int queue_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
+int queue_segment_start(struct mixed_segment *segment){
+  struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
+  for(int i=0; i<data->out_count; ++i){
+    if(data->out[i] == 0){
+      mixed_err(MIXED_BUFFER_MISSING);
+      return 0;
+    }
+  }
+  for(int i=0; i<data->in_count; ++i){
+    if(data->in[i] == 0){
+      mixed_err(MIXED_BUFFER_MISSING);
+      return 0;
+    }
+  }
+  return 1;
+}
+
 int queue_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct queue_segment_data *data = (struct queue_segment_data *)segment->data;
 

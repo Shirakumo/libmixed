@@ -13,6 +13,15 @@ int quantize_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
+int quantize_segment_start(struct mixed_segment *segment){
+  struct quantize_segment_data *data = (struct quantize_segment_data *)segment->data;
+  if(data->out == 0 || data->in == 0){
+    mixed_err(MIXED_BUFFER_MISSING);
+    return 0;
+  }
+  return 1;
+}
+
 int quantize_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct quantize_segment_data *data = (struct quantize_segment_data *)segment->data;
 
@@ -124,6 +133,7 @@ MIXED_EXPORT int mixed_make_segment_quantize(size_t steps, struct mixed_segment 
 
   data->steps = steps;
   segment->free = quantize_segment_free;
+  segment->start = quantize_segment_start;
   segment->mix = quantize_segment_mix;
   segment->set_in = quantize_segment_set_in;
   segment->set_out = quantize_segment_set_out;

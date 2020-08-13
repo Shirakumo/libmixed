@@ -15,6 +15,23 @@ int channel_free(struct mixed_segment *segment){
   return 1;
 }
 
+int channel_start(struct mixed_segment *segment){
+  struct channel_data *data = (struct channel_data *)segment->data;
+  for(int i=0; i<data->in_channels; ++i){
+    if(data->in[i] == 0){
+      mixed_err(MIXED_BUFFER_MISSING);
+      return 0;
+    }
+  }
+  for(int i=0; i<data->out_channels; ++i){
+    if(data->out[i] == 0){
+      mixed_err(MIXED_BUFFER_MISSING);
+      return 0;
+    }
+  }
+  return 1;
+}
+
 int channel_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
@@ -123,6 +140,7 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(uint8_t in, uint8_t out, str
   data->out_channels = out;
   
   segment->free = channel_free;
+  segment->start = channel_start;
   segment->set_in = channel_set_in;
   segment->set_out = channel_set_out;
   segment->info = channel_info;

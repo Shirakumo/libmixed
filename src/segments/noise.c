@@ -20,7 +20,14 @@ int noise_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-// FIXME: add start method that checks for buffer completeness.
+int noise_segment_start(struct mixed_segment *segment){
+  struct noise_segment_data *data = (struct noise_segment_data *)segment->data;
+  if(data->out == 0){
+    mixed_err(MIXED_BUFFER_MISSING);
+    return 0;
+  }
+  return 1;
+}
 
 int noise_segment_set_out(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct noise_segment_data *data = (struct noise_segment_data *)segment->data;
@@ -177,6 +184,7 @@ MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type type, struct mix
   for(size_t i=0; i<30; ++i) data->pink_rows[i] = 0;
   
   segment->free = noise_segment_free;
+  segment->start = noise_segment_start;
   segment->mix = noise_segment_mix;
   segment->set_out = noise_segment_set_out;
   segment->info = noise_segment_info;

@@ -59,6 +59,10 @@ int speed_segment_start(struct mixed_segment *segment){
   struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
   if(data->resample_state)
     src_reset(data->resample_state);
+  if(data->out == 0 || data->in == 0){
+    mixed_err(MIXED_BUFFER_MISSING);
+    return 0;
+  }
   return 1;
 }
 

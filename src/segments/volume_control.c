@@ -15,7 +15,15 @@ int volume_control_segment_free(struct mixed_segment *segment){
   return 1;
 }
 
-// FIXME: add start method that checks for buffer completeness.
+int volume_control_segment_start(struct mixed_segment *segment){
+  struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
+  if(data->out[0] == 0 || data->in[0] == 0
+  || data->out[1] == 0 || data->in[1] == 0){
+    mixed_err(MIXED_BUFFER_MISSING);
+    return 0;
+  }
+  return 1;
+}
 
 int volume_control_segment_set_in(size_t field, size_t location, void *buffer, struct mixed_segment *segment){
   struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
@@ -164,6 +172,7 @@ MIXED_EXPORT int mixed_make_segment_volume_control(float volume, float pan, stru
   data->pan = pan;
   
   segment->free = volume_control_segment_free;
+  segment->start = volume_control_segment_start;
   segment->mix = volume_control_segment_mix;
   segment->set_in = volume_control_segment_set_in;
   segment->set_out = volume_control_segment_set_out;
