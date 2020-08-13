@@ -4,7 +4,7 @@ struct generator_segment_data{
   struct mixed_buffer *out;
   enum mixed_generator_type type;
   float frequency;
-  uint32_t phase;
+  double phase;
   uint32_t samplerate;
   float volume;
 };
@@ -39,23 +39,23 @@ int generator_segment_set_out(uint32_t field, uint32_t location, void *buffer, s
   }
 }
 
-float sine_wave(float frequency, float phase, float samplerate){
+float sine_wave(float frequency, double phase, float samplerate){
   return sinf(2 * M_PI * frequency * phase / samplerate);
 }
 
-float square_wave(float frequency, float phase, float samplerate){
+float square_wave(float frequency, double phase, float samplerate){
   float length = samplerate / frequency;
   return (fmod(phase, length) < length/2)? 1.0f : -1.0f;
 }
 
-float triangle_wave(float frequency, float phase, float samplerate){
+float triangle_wave(float frequency, double phase, float samplerate){
   float length = samplerate / frequency;
   float temp = fmod(phase, length) / length;
   float abs  = (0.5 < temp)? 1.0-temp : temp;
   return abs*4.0 - 1.0;
 }
 
-float sawtooth_wave(float frequency, float phase, float samplerate){
+float sawtooth_wave(float frequency, double phase, float samplerate){
   float length = samplerate / frequency;
   return fmod(phase, length) / length * 2.0 - 1.0;
 }
@@ -63,7 +63,7 @@ float sawtooth_wave(float frequency, float phase, float samplerate){
 int generator_segment_mix(struct mixed_segment *segment){
   struct generator_segment_data *data = (struct generator_segment_data *)segment->data;
   uint32_t phase = data->phase;
-  float (*generator)(float frequency, float phase, float samplerate) = 0;
+  float (*generator)(float frequency, double phase, float samplerate) = 0;
   float volume = data->volume;
 
   switch(data->type){
@@ -78,7 +78,7 @@ int generator_segment_mix(struct mixed_segment *segment){
   mixed_buffer_request_write(&out, &samples, data->out);
   for(uint32_t i=0; i<samples; ++i){
     out[i] = generator(data->frequency, phase, data->samplerate) * volume;
-    phase = (phase+1) % data->samplerate;
+    phase = fmod(phase+1, data->samplerate);
   }
   mixed_buffer_finish_write(samples, data->out);
 
@@ -172,7 +172,7 @@ MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, ui
   data->frequency = frequency;
   data->type = type;
   data->samplerate = samplerate;
-  data->volume = 1.0f;
+  data->volume = 0.8f;
   
   segment->free = generator_segment_free;
   segment->start = generator_segment_start;
