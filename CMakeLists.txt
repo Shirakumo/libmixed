@@ -104,6 +104,14 @@ if(WIN32)
 else()
   target_link_libraries(mixed_shared dl m)
 endif()
+if(LINUX)
+  if(ARCH MATCHES "x86_64")
+    status()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -include ${CMAKE_SOURCE_DIR}glibcver/glibc_2.9_x64.h")
+  elseif(ARCH MATCHES "i386")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -include ${CMAKE_SOURCE_DIR}glibcver/glibc_2.9_x86.h")
+  endif()
+endif()
 
 ## Tester
 add_executable(tester
