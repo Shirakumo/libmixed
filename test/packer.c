@@ -36,6 +36,8 @@ define_test(single_channel_no_resample, {
     // Clear packer
     mixed_pack_clear(&pack_o);
     // Run
+    pass(mixed_segment_start(&unpacker));
+    pass(mixed_segment_start(&packer));
     pass(mixed_segment_mix(&unpacker));
     pass(mixed_segment_mix(&packer));
     // Check
@@ -75,6 +77,8 @@ define_test(single_channel_downsample_out, {
     // Clear packer
     mixed_pack_clear(&pack_o);
     // Run
+    pass(mixed_segment_start(&unpacker));
+    pass(mixed_segment_start(&packer));
     pass(mixed_segment_mix(&unpacker));
     pass(mixed_segment_mix(&packer));
     // Check for expected
@@ -116,6 +120,8 @@ define_test(single_channel_resample_in_out, {
     }
     mixed_pack_clear(&pack_o);
     // Run
+    pass(mixed_segment_start(&unpacker));
+    pass(mixed_segment_start(&packer));
     pass(mixed_segment_mix(&unpacker));
     pass(mixed_segment_mix(&packer));
     // Check for expected

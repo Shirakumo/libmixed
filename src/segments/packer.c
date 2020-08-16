@@ -4,52 +4,22 @@
 struct pack_segment_data{
   struct mixed_pack *pack;
   struct mixed_buffer **buffers;
-  SRC_DATA *resample_data;
   SRC_STATE *resample_state;
   uint32_t samplerate;
-  uint32_t buffer_frames;
   float volume;
   int quality;
+  float resample_in[512];
+  float resample_out[512];
 };
 
-int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_data *data, int is_source){
-  SRC_DATA *src_data = 0;
+int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_data *data){
   SRC_STATE *src_state = 0;
   
-  src_data = calloc(1, sizeof(SRC_DATA));
-  if(!src_data){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    goto cleanup;
-  }
-  
-  src_data->end_of_input = 0;
-  src_data->src_ratio = (is_source)
-    ? ((double)data->samplerate)/((double)pack->samplerate)
-    : ((double)pack->samplerate)/((double)data->samplerate);
-  if(src_data->src_ratio <= 0.003 || 256.0 < src_data->src_ratio){
+  double ratio = ((double)data->samplerate)/((double)pack->samplerate);
+  if(ratio <= 0.003 || 256.0 < ratio){
     mixed_err(MIXED_BAD_RESAMPLE_FACTOR);
     goto cleanup;
   }
-
-  uint32_t pack_frames = pack->size / mixed_samplesize(pack->encoding) / pack->channels;
-  int input_frames, output_frames;
-  if(is_source){
-    input_frames = pack_frames;
-    output_frames = 1+(int)(pack_frames * src_data->src_ratio);
-  }else{
-    input_frames = 1+(int)(pack_frames / src_data->src_ratio);
-    output_frames = pack_frames;
-  }
-  
-  src_data->data_in = calloc(input_frames*pack->channels, sizeof(float));
-  src_data->data_out = calloc(output_frames*pack->channels, sizeof(float));
-  if(!src_data->data_in || !src_data->data_out){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    goto cleanup;
-  }
-  
-  data->buffer_frames = MIN(output_frames, input_frames);
-  src_data->output_frames = output_frames;
   
   int err = 0;
   src_state = src_new(data->quality, pack->channels, &err);
@@ -58,36 +28,22 @@ int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_dat
     goto cleanup;
   }
   
-  data->resample_data = src_data;
   data->resample_state = src_state;
   return 1;
   
  cleanup:
-  if(src_data){
-    if(src_data->data_in)
-      free((float *)src_data->data_in);
-    if(src_data->data_out)
-      free(src_data->data_out);
-    free(src_data);
-  }
-  if(src_state){
+  if(src_state)
     src_delete(src_state);
-  }
   return 0;
 }
 
 int pack_segment_free(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   if(data){
-    free(data->buffers);
-    if(data->resample_data){
-      free(data->resample_data->data_in);
-      free(data->resample_data->data_out);
-      free(data->resample_data);
-    }
-    if(data->resample_state){
+    if(data->buffers)
+      free(data->buffers);
+    if(data->resample_state)
       src_delete(data->resample_state);
-    }
     free(data);
   }
   segment->data = 0;
@@ -129,10 +85,8 @@ int pack_segment_start(struct mixed_segment *segment){
   }
   
   if(data->samplerate != 0 && data->samplerate != data->pack->samplerate){
-    if(!initialize_resample_buffers(data->pack, data, (segment->info == source_segment_info))){
-      segment->data = 0;
+    if(!initialize_resample_buffers(data->pack, data))
       return 0;
-    }
   }
   return 1;
 }
@@ -145,46 +99,53 @@ int source_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   struct mixed_pack *pack = data->pack;
 
-  if(!data->resample_data){
+  if(!data->resample_state){
     mixed_buffer_from_pack(data->pack, data->buffers, data->volume);
   }else{
-    SRC_DATA *src_data = data->resample_data;
-    uint32_t frames = data->buffer_frames;
-    channel_t channels = pack->channels;
-    uint32_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
-    // Step 1: determine available space
-    // FIXME: resampling changes frame count
-    for(channel_t c=0; c<channels; ++c)
-      frames = MIN(frames, mixed_buffer_available_write(data->buffers[c]));
-    // Step 2: unpack to contiguous floats
-    mixed_transfer_function_from decoder = mixed_translator_from(pack->encoding);
-    uint32_t bytes = UINT32_MAX;
     void *pack_data;
-    mixed_pack_request_read(&pack_data, &bytes, pack);
-    frames = MIN(frames, bytes / frames_to_bytes);
-    decoder(pack_data, (float*)src_data->data_in, 1, frames*channels, data->volume); 
-    // Step 3: resample
-    src_data->input_frames = frames;
-    int e = src_process(data->resample_state, src_data);
-    if(e){
-      mixed_err(MIXED_RESAMPLE_FAILED);
-      printf("%s\n", src_strerror(e));
-      return 0;
-    }
-    // Step 4: transfer from contigous to separate buffers
-    frames = src_data->output_frames_gen;
-    float *source = src_data->data_out;
-    for(channel_t c=0; c<channels; ++c){
-      float *target;
-      uint32_t count = frames;
-      mixed_buffer_request_write(&target, &count, data->buffers[c]);
-      for(uint32_t i=0; i<count; ++i)
-        target[i] = source[i*channels];
-      source++;
-      mixed_buffer_finish_write(count, data->buffers[c]);
-    }
-    // Step 5: update consumed samples
-    mixed_pack_finish_read(src_data->input_frames_used * frames_to_bytes, pack);
+    float *target = data->resample_in;
+    channel_t channels = pack->channels;
+    uint32_t frames, buffer_frames = 512 / channels;
+    uint32_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
+    mixed_transfer_function_from decoder = mixed_translator_from(pack->encoding);
+    SRC_DATA src_data = {0};
+    src_data.src_ratio = ((double)data->samplerate)/((double)pack->samplerate);
+    src_data.output_frames = buffer_frames;
+    src_data.data_in = target;
+    src_data.data_out = data->resample_out;
+    do{
+      // Step 1: determine available space
+      frames = buffer_frames;
+      for(channel_t c=0; c<channels; ++c)
+        frames = MIN(frames, mixed_buffer_available_write(data->buffers[c]));
+      // Step 2: unpack to contiguous floats
+      uint32_t bytes = UINT32_MAX;
+      mixed_pack_request_read(&pack_data, &bytes, pack);
+      frames = MIN(frames, bytes / frames_to_bytes);
+      decoder(pack_data, (float*)src_data.data_in, 1, frames*channels, data->volume);
+      // Step 3: resample
+      src_data.input_frames = frames;
+      int e = src_process(data->resample_state, &src_data);
+      if(e){
+        mixed_err(MIXED_RESAMPLE_FAILED);
+        printf("%s\n", src_strerror(e));
+        return 0;
+      }
+      // Step 4: transfer from contigous to separate buffers
+      frames = src_data.input_frames_used;
+      float *source = src_data.data_out;
+      for(channel_t c=0; c<channels; ++c){
+        float *target;
+        size_t out_frames = src_data.output_frames_gen;
+        mixed_buffer_request_write(&target, &out_frames, data->buffers[c]);
+        for(uint32_t i=0; i<out_frames; ++i)
+          target[i] = source[i*channels];
+        source++;
+        mixed_buffer_finish_write(out_frames, data->buffers[c]);
+      }
+      // Step 5: update consumed samples
+      mixed_pack_finish_read(frames * frames_to_bytes, pack);
+    }while(frames);
   }
   return 1;
 }
@@ -193,53 +154,54 @@ int drain_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   struct mixed_pack *pack = data->pack;
 
-  if(!data->resample_data){
+  if(!data->resample_state){
     mixed_buffer_to_pack(data->buffers, pack, data->volume);
   }else{
-    SRC_DATA *src_data = data->resample_data;
-    uint32_t frames = data->buffer_frames;
-    channel_t channels = pack->channels;
-    uint32_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
-    uint32_t bytes = UINT32_MAX;
     void *pack_data;
-    mixed_pack_request_write(&pack_data, &bytes, pack);
-    frames = MIN(frames, (bytes / src_data->src_ratio) / frames_to_bytes);
-    // Step 1: pack to contigous, alternating float array
-    float *target = (float *)src_data->data_in;
-    for(channel_t c=0; c<channels; ++c){
-      float *source;
-      mixed_buffer_request_read(&source, &frames, data->buffers[c]);
-      for(uint32_t i=0; i<frames; ++i)
-        target[c+i*channels] = source[i];
-    }
-    // Step 2: resample
-    src_data->input_frames = frames;
-    int e = src_process(data->resample_state, src_data);
-    if(e){
-      printf("%s\n", src_strerror(e));
-      mixed_error(MIXED_RESAMPLE_FAILED);
-      return 0;
-    }
-    // Step 3: re-encode
-    uint32_t out_frames = src_data->output_frames_gen;
+    float *target = data->resample_in;
+    channel_t channels = pack->channels;
+    uint32_t frames, buffer_frames = 512 / channels;
+    uint32_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
     mixed_transfer_function_to encoder = mixed_translator_to(pack->encoding);
-    encoder(src_data->data_out, pack_data, 1, out_frames*channels, data->volume);
-    // Step 4: update consumed buffers
-    mixed_pack_finish_write(out_frames * frames_to_bytes, pack);
-    for(channel_t c=0; c<channels; ++c)
-      mixed_buffer_finish_read(src_data->input_frames_used, data->buffers[c]);
+    SRC_DATA src_data = {0};
+    src_data.src_ratio = ((double)pack->samplerate)/((double)data->samplerate);
+    src_data.output_frames = buffer_frames;
+    src_data.data_in = target;
+    src_data.data_out = data->resample_out;
+    do{
+      uint32_t bytes = UINT32_MAX;
+      // Interleave data, count frames
+      mixed_pack_request_write(&pack_data, &bytes, pack);
+      frames = MIN(buffer_frames, bytes / (src_data.src_ratio * frames_to_bytes));
+      for(channel_t c=0; c<channels; ++c){
+        float *source;
+        mixed_buffer_request_read(&source, &frames, data->buffers[c]);
+        for(uint32_t i=0; i<frames; ++i)
+          target[c+i*channels] = source[i];
+      }
+      // Resample
+      src_data.input_frames = frames;
+      int e = src_process(data->resample_state, &src_data);
+      if(e){
+        printf("%s\n", src_strerror(e));
+        mixed_error(MIXED_RESAMPLE_FAILED);
+        return 0;
+      }
+      // Pack
+      frames = src_data.input_frames_used;
+      uint32_t out_frames = src_data.output_frames_gen;
+      encoder(src_data.data_out, pack_data, 1, out_frames*channels, data->volume);
+      // Update consumed buffers
+      mixed_pack_finish_write(out_frames * frames_to_bytes, pack);
+      for(channel_t c=0; c<channels; ++c)
+        mixed_buffer_finish_read(frames, data->buffers[c]);
+    }while(frames);
   }
   return 1;
 }
 
 int pack_segment_end(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
-  if(data->resample_data){
-    free(data->resample_data->data_in);
-    free(data->resample_data->data_out);
-    free(data->resample_data);
-    data->resample_data = 0;
-  }
   if(data->resample_state){
     src_delete(data->resample_state);
     data->resample_state = 0;
