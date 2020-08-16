@@ -9,13 +9,80 @@ struct pack_segment_data{
   uint32_t samplerate;
   uint32_t buffer_frames;
   float volume;
+  int quality;
 };
+
+int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_data *data, int is_source){
+  SRC_DATA *src_data = 0;
+  SRC_STATE *src_state = 0;
+  
+  src_data = calloc(1, sizeof(SRC_DATA));
+  if(!src_data){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+  
+  src_data->end_of_input = 0;
+  src_data->src_ratio = (is_source)
+    ? ((double)data->samplerate)/((double)pack->samplerate)
+    : ((double)pack->samplerate)/((double)data->samplerate);
+  if(src_data->src_ratio <= 0.003 || 256.0 < src_data->src_ratio){
+    mixed_err(MIXED_BAD_RESAMPLE_FACTOR);
+    goto cleanup;
+  }
+
+  uint32_t pack_frames = pack->size / mixed_samplesize(pack->encoding) / pack->channels;
+  int input_frames, output_frames;
+  if(is_source){
+    input_frames = pack_frames;
+    output_frames = 1+(int)(pack_frames * src_data->src_ratio);
+  }else{
+    input_frames = 1+(int)(pack_frames / src_data->src_ratio);
+    output_frames = pack_frames;
+  }
+  
+  src_data->data_in = calloc(input_frames*pack->channels, sizeof(float));
+  src_data->data_out = calloc(output_frames*pack->channels, sizeof(float));
+  if(!src_data->data_in || !src_data->data_out){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+  
+  data->buffer_frames = MIN(output_frames, input_frames);
+  src_data->output_frames = output_frames;
+  
+  int err = 0;
+  src_state = src_new(data->quality, pack->channels, &err);
+  if(!src_state){
+    mixed_err(MIXED_RESAMPLE_FAILED);
+    goto cleanup;
+  }
+  
+  data->resample_data = src_data;
+  data->resample_state = src_state;
+  return 1;
+  
+ cleanup:
+  if(src_data){
+    if(src_data->data_in)
+      free((float *)src_data->data_in);
+    if(src_data->data_out)
+      free(src_data->data_out);
+    free(src_data);
+  }
+  if(src_state){
+    src_delete(src_state);
+  }
+  return 0;
+}
 
 int pack_segment_free(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   if(data){
     free(data->buffers);
     if(data->resample_data){
+      free(data->resample_data->data_in);
+      free(data->resample_data->data_out);
       free(data->resample_data);
     }
     if(data->resample_state){
@@ -45,6 +112,7 @@ int pack_segment_set_buffer(uint32_t field, uint32_t location, void *buffer, str
   }
 }
 
+int source_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment);
 int pack_segment_start(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   if(data->resample_state)
@@ -59,6 +127,13 @@ int pack_segment_start(struct mixed_segment *segment){
       return 0;
     }
   }
+  
+  if(data->samplerate != 0 && data->samplerate != data->pack->samplerate){
+    if(!initialize_resample_buffers(data->pack, data, (segment->info == source_segment_info))){
+      segment->data = 0;
+      return 0;
+    }
+  }
   return 1;
 }
 
@@ -70,7 +145,7 @@ int source_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   struct mixed_pack *pack = data->pack;
 
-  if(pack->samplerate == data->samplerate){
+  if(!data->resample_data){
     mixed_buffer_from_pack(data->pack, data->buffers, data->volume);
   }else{
     SRC_DATA *src_data = data->resample_data;
@@ -118,7 +193,7 @@ int drain_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   struct mixed_pack *pack = data->pack;
 
-  if(pack->samplerate == data->samplerate){
+  if(!data->resample_data){
     mixed_buffer_to_pack(data->buffers, pack, data->volume);
   }else{
     SRC_DATA *src_data = data->resample_data;
@@ -157,20 +232,38 @@ int drain_segment_mix(struct mixed_segment *segment){
   return 1;
 }
 
+int pack_segment_end(struct mixed_segment *segment){
+  struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
+  if(data->resample_data){
+    free(data->resample_data->data_in);
+    free(data->resample_data->data_out);
+    free(data->resample_data);
+    data->resample_data = 0;
+  }
+  if(data->resample_state){
+    src_delete(data->resample_state);
+    data->resample_state = 0;
+  }
+  return 1;
+}
+
 int source_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   
   switch(field){
   case MIXED_RESAMPLE_TYPE: {
     int error;
-    SRC_STATE *new = src_new(*(enum mixed_resample_type *)value, data->pack->channels, &error);
-    if(!new) {
-      mixed_err(MIXED_RESAMPLE_FAILED);
-      return 0;
+    data->quality = *(enum mixed_resample_type *)value;
+    if(data->resample_state){
+      SRC_STATE *new = src_new(data->quality, data->pack->channels, &error);
+      if(!new) {
+        mixed_err(MIXED_RESAMPLE_FAILED);
+        return 0;
+      }
+      if(data->resample_state)
+        src_delete(data->resample_state);
+      data->resample_state = new;
     }
-    if(data->resample_state)
-      src_delete(data->resample_state);
-    data->resample_state = new;
   }
     return 1;
   case MIXED_VOLUME:
@@ -260,70 +353,6 @@ int drain_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
   return 1;
 }
 
-int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_data *data, int quality, int is_source){
-  SRC_DATA *src_data = 0;
-  SRC_STATE *src_state = 0;
-  
-  src_data = calloc(1, sizeof(SRC_DATA));
-  if(!src_data){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    goto cleanup;
-  }
-  
-  src_data->end_of_input = 0;
-  src_data->src_ratio = (is_source)
-    ? ((double)data->samplerate)/((double)pack->samplerate)
-    : ((double)pack->samplerate)/((double)data->samplerate);
-  if(src_data->src_ratio <= 0.003 || 256.0 < src_data->src_ratio){
-    mixed_err(MIXED_BAD_RESAMPLE_FACTOR);
-    goto cleanup;
-  }
-
-  uint32_t pack_frames = pack->size / mixed_samplesize(pack->encoding) / pack->channels;
-  int input_frames, output_frames;
-  if(is_source){
-    input_frames = pack_frames;
-    output_frames = 1+(int)(pack_frames * src_data->src_ratio);
-  }else{
-    input_frames = 1+(int)(pack_frames / src_data->src_ratio);
-    output_frames = pack_frames;
-  }
-  
-  src_data->data_in = calloc(input_frames*pack->channels, sizeof(float));
-  src_data->data_out = calloc(output_frames*pack->channels, sizeof(float));
-  if(!src_data->data_in || !src_data->data_out){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    goto cleanup;
-  }
-  
-  data->buffer_frames = MIN(output_frames, input_frames);
-  src_data->output_frames = output_frames;
-  
-  int err = 0;
-  src_state = src_new(quality, pack->channels, &err);
-  if(!src_state){
-    mixed_err(MIXED_RESAMPLE_FAILED);
-    goto cleanup;
-  }
-  
-  data->resample_data = src_data;
-  data->resample_state = src_state;
-  return 1;
-  
- cleanup:
-  if(src_data){
-    if(src_data->data_in)
-      free((float *)src_data->data_in);
-    if(src_data->data_out)
-      free(src_data->data_out);
-    free(src_data);
-  }
-  if(src_state){
-    src_delete(src_state);
-  }
-  return 0;
-}
-
 int make_pack_internal(struct mixed_pack *pack, uint32_t samplerate, int quality, struct mixed_segment *segment){
   struct pack_segment_data *data = 0;
   struct mixed_buffer **buffers = 0;
@@ -349,19 +378,13 @@ int make_pack_internal(struct mixed_pack *pack, uint32_t samplerate, int quality
   data->pack = pack;
   data->samplerate = samplerate;
   data->volume = 1.0;
+  data->quality = quality;
 
   segment->free = pack_segment_free;
   segment->start = pack_segment_start;
+  segment->end = pack_segment_end;
   segment->get = packer_segment_get;
   segment->data = data;
-
-  if(samplerate != 0 && samplerate != pack->samplerate){
-    if(!initialize_resample_buffers(pack, data, quality, (segment->info == source_segment_info))){
-      segment->data = 0;
-      goto cleanup;
-    }
-  }
-
   return 1;
 
  cleanup:
