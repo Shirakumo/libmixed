@@ -12,31 +12,6 @@ struct pack_segment_data{
   float resample_out[512];
 };
 
-int initialize_resample_buffers(struct mixed_pack *pack, struct pack_segment_data *data){
-  SRC_STATE *src_state = 0;
-  
-  double ratio = ((double)data->samplerate)/((double)pack->samplerate);
-  if(ratio <= 0.003 || 256.0 < ratio){
-    mixed_err(MIXED_BAD_RESAMPLE_FACTOR);
-    goto cleanup;
-  }
-  
-  int err = 0;
-  src_state = src_new(data->quality, pack->channels, &err);
-  if(!src_state){
-    mixed_err(MIXED_RESAMPLE_FAILED);
-    goto cleanup;
-  }
-  
-  data->resample_state = src_state;
-  return 1;
-  
- cleanup:
-  if(src_state)
-    src_delete(src_state);
-  return 0;
-}
-
 int pack_segment_free(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   if(data){
@@ -68,11 +43,8 @@ int pack_segment_set_buffer(uint32_t field, uint32_t location, void *buffer, str
   }
 }
 
-int source_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment);
 int pack_segment_start(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
-  if(data->resample_state)
-    src_reset(data->resample_state);
   if(data->pack == 0){
     mixed_err(MIXED_BUFFER_MISSING);
     return 0;
@@ -84,9 +56,23 @@ int pack_segment_start(struct mixed_segment *segment){
     }
   }
   
-  if(data->samplerate != 0 && data->samplerate != data->pack->samplerate){
-    if(!initialize_resample_buffers(data->pack, data))
+  double ratio = ((double)data->samplerate)/((double)data->pack->samplerate);
+  if(ratio <= 0.003 || 256.0 < ratio){
+    mixed_err(MIXED_BAD_RESAMPLE_FACTOR);
+    return 0;
+  }
+
+  if(data->resample_state)
+    src_reset(data->resample_state);
+  else{
+    int e = 0;
+    SRC_STATE *src_state = src_new(data->quality, data->pack->channels, &e);
+    if(!src_state){
+      fprintf(stderr, "libsamplerate: %s\n", src_strerror(e));
+      mixed_err(MIXED_OUT_OF_MEMORY);
       return 0;
+    }
+    data->resample_state = src_state;
   }
   return 1;
 }
@@ -99,7 +85,7 @@ int source_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   struct mixed_pack *pack = data->pack;
 
-  if(!data->resample_state){
+  if(pack->samplerate == data->samplerate){
     mixed_buffer_from_pack(data->pack, data->buffers, data->volume);
   }else{
     void *pack_data;
@@ -127,16 +113,15 @@ int source_segment_mix(struct mixed_segment *segment){
       src_data.input_frames = frames;
       int e = src_process(data->resample_state, &src_data);
       if(e){
+        fprintf(stderr, "libsamplerate: %s\n", src_strerror(e));
         mixed_err(MIXED_RESAMPLE_FAILED);
-        printf("%s\n", src_strerror(e));
         return 0;
       }
       // Step 4: transfer from contigous to separate buffers
       frames = src_data.input_frames_used;
       float *source = src_data.data_out;
       for(channel_t c=0; c<channels; ++c){
-        float *target;
-        size_t out_frames = src_data.output_frames_gen;
+        uint32_t out_frames = src_data.output_frames_gen;
         mixed_buffer_request_write(&target, &out_frames, data->buffers[c]);
         for(uint32_t i=0; i<out_frames; ++i)
           target[i] = source[i*channels];
@@ -154,7 +139,7 @@ int drain_segment_mix(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   struct mixed_pack *pack = data->pack;
 
-  if(!data->resample_state){
+  if(pack->samplerate == data->samplerate){
     mixed_buffer_to_pack(data->buffers, pack, data->volume);
   }else{
     void *pack_data;
@@ -183,7 +168,7 @@ int drain_segment_mix(struct mixed_segment *segment){
       src_data.input_frames = frames;
       int e = src_process(data->resample_state, &src_data);
       if(e){
-        printf("%s\n", src_strerror(e));
+        fprintf(stderr, "libsamplerate: %s\n", src_strerror(e));
         mixed_error(MIXED_RESAMPLE_FAILED);
         return 0;
       }
@@ -193,8 +178,9 @@ int drain_segment_mix(struct mixed_segment *segment){
       encoder(src_data.data_out, pack_data, 1, out_frames*channels, data->volume);
       // Update consumed buffers
       mixed_pack_finish_write(out_frames * frames_to_bytes, pack);
-      for(channel_t c=0; c<channels; ++c)
+      for(channel_t c=0; c<channels; ++c){
         mixed_buffer_finish_read(frames, data->buffers[c]);
+      }
     }while(frames);
   }
   return 1;
@@ -265,6 +251,9 @@ int packer_segment_get(uint32_t field, void *value, struct mixed_segment *segmen
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   
   switch(field){
+  case MIXED_RESAMPLE_TYPE:
+    *((int *)value) = data->quality;
+    return 1;
   case MIXED_VOLUME:
     *((float *)value) = data->volume;
     return 1;
@@ -294,7 +283,7 @@ int source_segment_info(struct mixed_segment_info *info, struct mixed_segment *s
                  "The volume scaling factor.");
 
   set_info_field(field++, MIXED_RESAMPLE_TYPE,
-                 MIXED_RESAMPLE_TYPE_ENUM, 1, MIXED_SEGMENT | MIXED_SET,
+                 MIXED_RESAMPLE_TYPE_ENUM, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The type of resampling algorithm used.");
 
   set_info_field(field++, MIXED_BYPASS,
