@@ -214,7 +214,7 @@ void *open_library(char *file){
 void close_library(void *handle){
   if(handle)
 #ifdef _WIN32
-    FreeLibrar(handle);
+    FreeLibrary(handle);
 #else
     dlclose(handle);
 #endif
@@ -222,7 +222,7 @@ void close_library(void *handle){
 
 void *load_symbol(void *handle, char *name){
 #ifdef _WIN32
-  void *function = GetProcAddress(lib, "mixed_make_plugin");
+  void *function = GetProcAddress(handle, "mixed_make_plugin");
   if(!function){
     mixed_err(MIXED_BAD_DYNAMIC_LIBRARY);
     return 0;
