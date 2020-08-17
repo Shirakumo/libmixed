@@ -123,6 +123,7 @@ add_executable(tester
   "test/distribute.c")
 add_dependencies(tester mixed_shared)
 set_property(TARGET tester PROPERTY C_STANDARD 99)
+target_compile_options(tester PRIVATE ${COMPILATION_FLAGS})
 target_link_libraries(tester mixed_shared)
 
 ## Example Programs
