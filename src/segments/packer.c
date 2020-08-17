@@ -96,7 +96,6 @@ int source_segment_mix(struct mixed_segment *segment){
     mixed_transfer_function_from decoder = mixed_translator_from(pack->encoding);
     SRC_DATA src_data = {0};
     src_data.src_ratio = ((double)data->samplerate)/((double)pack->samplerate);
-    src_data.output_frames = buffer_frames;
     src_data.data_in = target;
     src_data.data_out = data->resample_out;
     do{
@@ -104,6 +103,7 @@ int source_segment_mix(struct mixed_segment *segment){
       frames = buffer_frames;
       for(channel_t c=0; c<channels; ++c)
         frames = MIN(frames, mixed_buffer_available_write(data->buffers[c]));
+      src_data.output_frames = frames;
       // Step 2: unpack to contiguous floats
       uint32_t bytes = UINT32_MAX;
       mixed_pack_request_read(&pack_data, &bytes, pack);
@@ -150,14 +150,14 @@ int drain_segment_mix(struct mixed_segment *segment){
     mixed_transfer_function_to encoder = mixed_translator_to(pack->encoding);
     SRC_DATA src_data = {0};
     src_data.src_ratio = ((double)pack->samplerate)/((double)data->samplerate);
-    src_data.output_frames = buffer_frames;
     src_data.data_in = target;
     src_data.data_out = data->resample_out;
     do{
       uint32_t bytes = UINT32_MAX;
       // Interleave data, count frames
       mixed_pack_request_write(&pack_data, &bytes, pack);
-      frames = MIN(buffer_frames, bytes / (src_data.src_ratio * frames_to_bytes));
+      src_data.output_frames = MIN(buffer_frames, bytes / frames_to_bytes);
+      frames = MIN(buffer_frames, (src_data.output_frames*data->samplerate) / pack->samplerate);
       for(channel_t c=0; c<channels; ++c){
         float *source;
         mixed_buffer_request_read(&source, &frames, data->buffers[c]);

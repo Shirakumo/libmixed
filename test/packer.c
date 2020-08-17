@@ -167,6 +167,8 @@ define_test(dual_channel_resample_in_out, {
     }
     mixed_pack_clear(&pack_o);
     // Run
+    pass(mixed_segment_start(&unpacker));
+    pass(mixed_segment_start(&packer));
     pass(mixed_segment_mix(&unpacker));
     pass(mixed_segment_mix(&packer));
     // Check for expected
