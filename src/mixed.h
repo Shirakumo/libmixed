@@ -1157,7 +1157,7 @@ extern "C" {
   //
   // In effect this calls the mix function of every segment in the mixer
   // in sequence. This function does not check for errors in any way.
-  MIXED_EXPORT void mixed_segment_sequence_mix(struct mixed_segment_sequence *mixer);
+  MIXED_EXPORT int mixed_segment_sequence_mix(struct mixed_segment_sequence *mixer);
 
   // End the mixing process.
   //

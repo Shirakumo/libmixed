@@ -29,13 +29,16 @@ MIXED_EXPORT int mixed_segment_sequence_start(struct mixed_segment_sequence *mix
   return 1;
 }
 
-MIXED_EXPORT void mixed_segment_sequence_mix(struct mixed_segment_sequence *mixer){
+MIXED_EXPORT int mixed_segment_sequence_mix(struct mixed_segment_sequence *mixer){
   uint32_t count = mixer->count;
   struct mixed_segment **segments = mixer->segments;
   for(uint32_t i=0; i<count; ++i){
     struct mixed_segment *segment = segments[i];
-    segment->mix(segment);
+    if(!segment->mix(segment)){
+      return 0;
+    }
   }
+  return 1;
 }
 
 MIXED_EXPORT int mixed_segment_sequence_end(struct mixed_segment_sequence *mixer){
