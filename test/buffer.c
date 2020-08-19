@@ -32,7 +32,7 @@ define_test(write_allocation, {
     is(mixed_buffer_available_write(&buffer), 0);
     is(mixed_buffer_available_read(&buffer), 1024);
     // Buffer now full
-    fail(mixed_buffer_request_write(&area3, &size, &buffer));
+    mixed_buffer_request_write(&area3, &size, &buffer);
     is(size, 0);
     is_p(area3, 0);
   cleanup:
@@ -93,6 +93,62 @@ define_test(partial_read_write, {
     pass(mixed_buffer_finish_write(w_size, &buffer));
     pass(mixed_buffer_request_read(&r_area, &r_size, &buffer));
     pass(mixed_buffer_finish_read(r_size, &buffer));
+    
+  cleanup:
+    mixed_free_buffer(&buffer);
+  });
+
+define_test(bip_read_write, {
+    struct mixed_buffer buffer = {0};
+    pass(mixed_make_buffer(100, &buffer));
+    float *area=0;
+    uint32_t size=UINT32_MAX;
+    // Write full
+    pass(mixed_buffer_request_write(&area, &size, &buffer));
+    is(size, buffer.size);
+    pass(mixed_buffer_finish_write(size, &buffer));
+    // Read half
+    size = UINT32_MAX;
+    pass(mixed_buffer_request_read(&area, &size, &buffer));
+    is(size, buffer.size);
+    pass(mixed_buffer_finish_read(size/2, &buffer));
+    is(mixed_buffer_available_read(&buffer), buffer.size/2);
+    is(mixed_buffer_available_write(&buffer), buffer.size/2);
+    // Write a quarter
+    size = UINT32_MAX;
+    pass(mixed_buffer_request_write(&area, &size, &buffer));
+    is(size, buffer.size/2);
+    pass(mixed_buffer_finish_write(size/2, &buffer));
+    is(mixed_buffer_available_read(&buffer), buffer.size/2);
+    is(mixed_buffer_available_write(&buffer), buffer.size/4);
+    // Read a quarter
+    size = UINT32_MAX;
+    pass(mixed_buffer_request_read(&area, &size, &buffer));
+    is(size, buffer.size/2);
+    pass(mixed_buffer_finish_read(size/2, &buffer));
+    is(mixed_buffer_available_read(&buffer), buffer.size/4);
+    is(mixed_buffer_available_write(&buffer), buffer.size/2);
+    // Write up to read
+    size = UINT32_MAX;
+    pass(mixed_buffer_request_write(&area, &size, &buffer));
+    is(size, buffer.size/2);
+    pass(mixed_buffer_finish_write(size, &buffer));
+    is(mixed_buffer_available_read(&buffer), buffer.size/4);
+    is(mixed_buffer_available_write(&buffer), 0);
+    // Read the rest of the second part
+    size = UINT32_MAX;
+    pass(mixed_buffer_request_read(&area, &size, &buffer));
+    is(size, buffer.size/4);
+    pass(mixed_buffer_finish_read(size, &buffer));
+    is(mixed_buffer_available_read(&buffer), buffer.size*3/4);
+    is(mixed_buffer_available_write(&buffer), buffer.size/4);
+    // Read up to write
+    size = UINT32_MAX;
+    pass(mixed_buffer_request_read(&area, &size, &buffer));
+    is(size, buffer.size*3/4);
+    pass(mixed_buffer_finish_read(size, &buffer));
+    is(mixed_buffer_available_read(&buffer), 0);
+    is(mixed_buffer_available_write(&buffer), buffer.size/4);
     
   cleanup:
     mixed_free_buffer(&buffer);

@@ -89,3 +89,6 @@ extern float (*mixed_random)();
     struct mixed_segment_field_info __args[count+1] = __VA_ARGS__;      \
     mixed_register_segment(#name, count, __args, function);             \
   }
+
+#define atomic_read(PLACE) __atomic_load_n(&PLACE, __ATOMIC_SEQ_CST)
+#define atomic_write(PLACE, VAL) __atomic_store_n(&PLACE, VAL, __ATOMIC_SEQ_CST)

@@ -158,6 +158,11 @@ int drain_segment_mix(struct mixed_segment *segment){
       mixed_pack_request_write(&pack_data, &bytes, pack);
       src_data.output_frames = MIN(buffer_frames, bytes / frames_to_bytes);
       frames = MIN(buffer_frames, (src_data.output_frames*data->samplerate) / pack->samplerate);
+      // KLUDGE: this prevents us from running into samplerate problems
+      //         when there's only a sliver of space available.
+      if(0 < src_data.output_frames && frames == 0){
+        frames = 1;
+      }
       for(channel_t c=0; c<channels; ++c){
         float *source;
         mixed_buffer_request_read(&source, &frames, data->buffers[c]);

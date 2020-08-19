@@ -26,121 +26,116 @@ MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer){
 }
 
 MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer){
-  buffer->r1_start = 0;
-  buffer->r1_size = 0;
-  buffer->r2_start = 0;
-  buffer->r2_size = 0;
-  buffer->reserved_start = 0;
-  buffer->reserved_size = 0;
+  buffer->read = 0;
+  buffer->write = 0;
+  buffer->full_r2 = 0;
+  buffer->reserved = 0;
   return 1;
-}
-
-static inline uint32_t free_for_r2(struct mixed_buffer *buffer){
-  return buffer->r1_start - buffer->r2_start - buffer->r2_size;
-}
-
-static inline uint32_t free_after_r1(struct mixed_buffer *buffer){
-  return buffer->size - buffer->r1_start - buffer->r1_size;
 }
 
 MIXED_EXPORT int mixed_buffer_request_write(float **area, uint32_t *size, struct mixed_buffer *buffer){
   mixed_err(MIXED_NO_ERROR);
-  if(buffer->r2_size){
-    uint32_t free = free_for_r2(buffer);
-    if(*size < free) free = *size;
-    if(free == 0){
-      *size = 0;
-      mixed_err(MIXED_BUFFER_FULL);
-      return 0;
-    }
-    *size = free;
-    buffer->reserved_size = free;
-    buffer->reserved_start = buffer->r2_start + buffer->r2_size;
-    *area = buffer->_data + buffer->reserved_start;
-  }else{
-    uint32_t free = free_after_r1(buffer);
-    if(buffer->r1_start <= free){
-      if(free == 0){
-        *size = 0;
-        mixed_err(MIXED_BUFFER_FULL);
-        return 0;
-      }
-      if(*size < free) free = *size;
-      *size = free;
-      buffer->reserved_size = free;
-      buffer->reserved_start = buffer->r1_start + buffer->r1_size;
-      *area = buffer->_data + buffer->reserved_start;
-    } else {
-      if(buffer->r1_start == 0) {
-        *size = 0;
-        mixed_err(MIXED_BUFFER_FULL);
-        return 0;
-      }
-      if(buffer->r1_start < *size) *size = buffer->r1_start;
-      buffer->reserved_size = *size;
-      buffer->reserved_start = 0;
+  uint32_t to_write = *size;
+  uint32_t read = atomic_read(buffer->read);
+  uint32_t write = atomic_read(buffer->write);
+  if(!atomic_read(buffer->full_r2)){
+    uint32_t available = buffer->size - write;
+    if(0 < available){
+      to_write = MIN(to_write, available);
+      *size = to_write;
+      *area = buffer->_data + write;
+      buffer->reserved = to_write;
+    }else if(0 < read){
+      to_write = MIN(to_write, read);
+      *size = to_write;
       *area = buffer->_data;
+      buffer->reserved = to_write;
+      atomic_write(buffer->full_r2, 1);
+      atomic_write(buffer->write, 0);
+    }else{
+      *size = 0;
+      *area = 0;
     }
+  }else if(write < read){
+    // We're behind read, but still have some space.
+    to_write = MIN(to_write, read-write);
+    *size = to_write;
+    *area = buffer->_data+write;
+    buffer->reserved = to_write;
+  }else{
+    *size = 0;
+    *area = 0;
+    return 0;
   }
   return 1;
 }
 
 MIXED_EXPORT int mixed_buffer_finish_write(uint32_t size, struct mixed_buffer *buffer){
-  mixed_err(MIXED_NO_ERROR);
-  if(buffer->reserved_size < size){
+  if(buffer->reserved < size){
     mixed_err(MIXED_BUFFER_OVERCOMMIT);
     return 0;
   }
-  if(size == 0){
-  }else if(buffer->r1_size == 0 && buffer->r2_size == 0){
-    buffer->r1_start = buffer->reserved_start;
-    buffer->r1_size = size;
-  }else if(buffer->reserved_start == buffer->r1_start + buffer->r1_size){
-    buffer->r1_size += size;
-  }else{
-    buffer->r2_size += size;
-  }
-  buffer->reserved_start = 0;
-  buffer->reserved_size = 0;
+  uint32_t write = atomic_read(buffer->write);
+  atomic_write(buffer->write, write+size);
+  buffer->reserved = 0;
   return 1;
 }
 
 MIXED_EXPORT int mixed_buffer_request_read(float **area, uint32_t *size, struct mixed_buffer *buffer){
-  mixed_err(MIXED_NO_ERROR);
-  if(buffer->r1_size == 0){
+  uint32_t read = atomic_read(buffer->read);
+  uint32_t available = atomic_read(buffer->full_r2)
+    ?(buffer->size - read)
+    :(atomic_read(buffer->write) - read);
+  if(0 < available){
+    *size = MIN(*size, available);
+    *area = buffer->_data + read;
+    return 1;
+  }else if(atomic_read(buffer->full_r2)){
+    atomic_write(buffer->full_r2, 0);
+    atomic_write(buffer->read, 0);
+    *size = MIN(*size, atomic_read(buffer->write));
+    *area = buffer->_data;
+    return 1;
+  }else{
     *size = 0;
-    mixed_err(MIXED_BUFFER_EMPTY);
+    *area = 0;
     return 0;
   }
-  *size = MIN(*size, buffer->r1_size);
-  *area = buffer->_data + buffer->r1_start;
+}
+
+MIXED_EXPORT int mixed_buffer_finish_read(uint32_t size, struct mixed_buffer *buffer){
+  uint32_t read = atomic_read(buffer->read);
+  uint32_t available = atomic_read(buffer->full_r2)
+    ?(buffer->size - read)
+    :(atomic_read(buffer->write) - read);
+  if(available < size){
+    mixed_err(MIXED_BUFFER_OVERCOMMIT);
+    return 0;
+  }
+  atomic_write(buffer->read, read+size);
   return 1;
 }
 
 MIXED_EXPORT uint32_t mixed_buffer_available_read(struct mixed_buffer *buffer){
-  return buffer->r1_size;
+  uint32_t read = atomic_read(buffer->read);
+  if(atomic_read(buffer->full_r2)){
+    if(read < buffer->size)
+      return buffer->size - read;
+    else
+      return atomic_read(buffer->write);
+  }else
+    return (atomic_read(buffer->write) - read);
 }
 
 MIXED_EXPORT uint32_t mixed_buffer_available_write(struct mixed_buffer *buffer){
-  return (buffer->r2_size)? free_for_r2(buffer) : free_after_r1(buffer);
-}
-
-MIXED_EXPORT int mixed_buffer_finish_read(uint32_t size, struct mixed_buffer *buffer){
-  mixed_err(MIXED_NO_ERROR);
-  if(buffer->r1_size < size){
-    mixed_err(MIXED_BUFFER_OVERCOMMIT);
-    return 0;
-  }
-  if(buffer->r1_size == size){
-    buffer->r1_start = buffer->r2_start;
-    buffer->r1_size = buffer->r2_size;
-    buffer->r2_start = 0;
-    buffer->r2_size = 0;
-  }else{
-    buffer->r1_size -= size;
-    buffer->r1_start += size;
-  }
-  return 1;
+  uint32_t read = atomic_read(buffer->read);
+  uint32_t write = atomic_read(buffer->write);
+  if(atomic_read(buffer->full_r2))
+    return read - write;
+  else if(write == buffer->size)
+    return read;
+  else
+    return buffer->size - write;
 }
 
 MIXED_EXPORT int mixed_buffer_transfer(struct mixed_buffer *from, struct mixed_buffer *to){
@@ -172,8 +167,7 @@ MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffe
 
 MIXED_EXPORT int mixed_buffer_resize(uint32_t size, struct mixed_buffer *buffer){
   mixed_err(MIXED_NO_ERROR);
-  // FIXME: fixup
-  void *new = realloc(buffer->_data, size*sizeof(float));
+  float *new = realloc(buffer->_data, size*sizeof(float));
   if(!new){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;

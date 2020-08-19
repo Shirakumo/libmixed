@@ -424,12 +424,10 @@ extern "C" {
   MIXED_EXPORT struct mixed_buffer{
     float *_data;
     uint32_t size;
-    uint32_t r1_start;
-    uint32_t r1_size;
-    uint32_t r2_start;
-    uint32_t r2_size;
-    uint32_t reserved_start;
-    uint32_t reserved_size;
+    uint32_t read;
+    uint32_t write;
+    uint32_t reserved;
+    char full_r2;
     // Whether the buffer owns the data array.
     char virtual;
   };
@@ -447,12 +445,10 @@ extern "C" {
     // Bip buffer internals
     unsigned char *_data;
     uint32_t size;
-    uint32_t r1_start;
-    uint32_t r1_size;
-    uint32_t r2_start;
-    uint32_t r2_size;
-    uint32_t reserved_start;
-    uint32_t reserved_size;
+    uint32_t read;
+    uint32_t write;
+    uint32_t reserved;
+    char full_r2;
     // The sample encoding in the byte array.
     enum mixed_encoding encoding;
     // The number of channels that are packed into the array.
