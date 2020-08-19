@@ -38,23 +38,25 @@ MIXED_EXPORT int mixed_buffer_request_write(float **area, uint32_t *size, struct
   uint32_t to_write = *size;
   uint32_t read = atomic_read(buffer->read);
   uint32_t write = atomic_read(buffer->write);
+  // Check if we're waiting for read to catch up with a full second region
   if(!atomic_read(buffer->full_r2)){
     uint32_t available = buffer->size - write;
-    if(0 < available){
+    if(0 < available){ // No, we still have space left.
       to_write = MIN(to_write, available);
       *size = to_write;
       *area = buffer->_data + write;
       buffer->reserved = to_write;
-    }else if(0 < read){
+    }else if(0 < read){ // We are at the end and need to wrap now.
       to_write = MIN(to_write, read);
       *size = to_write;
       *area = buffer->_data;
       buffer->reserved = to_write;
       atomic_write(buffer->full_r2, 1);
       atomic_write(buffer->write, 0);
-    }else{
+    }else{ // Read has not done anything yet, no space!
       *size = 0;
       *area = 0;
+      return 0;
     }
   }else if(write < read){
     // We're behind read, but still have some space.
