@@ -137,6 +137,7 @@ if(OUT123_FOUND AND MPG123_FOUND)
     add_dependencies(${example_name} mixed_shared)
     set_property(TARGET ${example_name} PROPERTY C_STANDARD 99)
     target_link_libraries(${example_name} mixed_shared ncursesw ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
+    target_include_directories(${example_name} PRIVATE ${MPG123_INCLUDE_DIR} ${OUT123_INCLUDE_DIR})
   endforeach()
 endif()
 
