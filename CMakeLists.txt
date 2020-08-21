@@ -1,27 +1,31 @@
 cmake_minimum_required(VERSION 3.1)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
-project(mixed)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+project(mixed C)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 ## Generate version
 find_program(GIT_SCM git DOC "Git version control")
 mark_as_advanced(GIT_SCM)
-find_file(GITDIR NAMES .git PATHS ${CMAKE_CURRENT_SOURCE_DIR} NO_DEFAULT_PATH)
+find_file(GITDIR NAMES .git PATHS ${PROJECT_SOURCE_DIR} NO_DEFAULT_PATH)
 if (GIT_SCM AND GITDIR)
   exec_program(
-    "git" ${CMAKE_CURRENT_SOURCE_DIR} ARGS "describe" "--tags" "--long"
+    "git" ${PROJECT_SOURCE_DIR} ARGS "describe" "--tags" "--long"
     OUTPUT_VARIABLE VERSION)
 else()
   file(READ "VERSION" VERSION)
 endif()
-string(REGEX MATCH "([0-9]+)\\.([0-9]+)-[0-9]+-(.+)" TMP ${VERSION})
+string(REGEX MATCH "([0-9]+)\\.([0-9]+)(-[0-9]+)?(-(.+))?" TMP ${VERSION})
 set(MIXED_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(MIXED_VERSION_MINOR ${CMAKE_MATCH_2})
-set(MIXED_VERSION_PATCH ${CMAKE_MATCH_3})
+set(MIXED_VERSION_PATCH ${CMAKE_MATCH_5})
+if(NOT MIXED_VERSION_PATCH)
+  set(MIXED_VERSION_PATCH "0")
+endif()
 set(MIXED_VERSION_STRING ${MIXED_VERSION_MAJOR}.${MIXED_VERSION_MINOR}-${MIXED_VERSION_PATCH})
+message(STATUS "Building ${MIXED_VERSION_MAJOR}.${MIXED_VERSION_MINOR}.${MIXED_VERSION_PATCH}")
 
 ## Optimize for target architecture
-include(TargetArch.cmake)
+include(TargetArch)
 target_architecture(ARCH)
 if(ARCH MATCHES "x86_64" OR ARG MATCHES "i386")
   ## Minimum supported platform is SSE4.2
@@ -128,7 +132,8 @@ target_link_libraries(tester mixed_shared)
 ## Example Programs
 find_package(mpg123)
 find_package(out123)
-if(OUT123_FOUND AND MPG123_FOUND)
+find_package(Curses)
+if(OUT123_FOUND AND MPG123_FOUND AND CURSES_FOUND)
   file(GLOB example_src "examples/*.c")
   foreach(example_file ${example_src})
     get_filename_component(example_name ${example_file} NAME_WE)
@@ -136,8 +141,8 @@ if(OUT123_FOUND AND MPG123_FOUND)
     add_executable(${example_name} ${example_file})
     add_dependencies(${example_name} mixed_shared)
     set_property(TARGET ${example_name} PROPERTY C_STANDARD 99)
-    target_include_directories(${example_name} PRIVATE ${MPG123_INCLUDE_DIR} ${OUT123_INCLUDE_DIR})
-    target_link_libraries(${example_name} mixed_shared ncurses ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
+    target_include_directories(${example_name} PRIVATE ${CURSES_INCLUDE_DIRS} ${MPG123_INCLUDE_DIR} ${OUT123_INCLUDE_DIR})
+    target_link_libraries(${example_name} mixed_shared ${CURSES_LIBRARIES} ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
   endforeach()
 endif()
 
@@ -146,4 +151,4 @@ install(TARGETS mixed DESTINATION /usr/local/lib)
 add_custom_target(test
   COMMAND "${CMAKE_BINARY_DIR}/tester"
   DEPENDS tester)
-  
+
