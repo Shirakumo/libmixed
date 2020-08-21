@@ -240,6 +240,7 @@ void *load_symbol(void *handle, char *name){
 #endif
 }
 
+float mixed_random_rdrand();
 float mixed_random_m(){
   return (float)rand()/(float)RAND_MAX;
 }
@@ -269,6 +270,9 @@ float mixed_random_rdrand(){
 #else
 uint8_t rdrand_available(){
   return 0;
+}
+float mixed_random_rdrand(){
+  return 0f0;
 }
 #endif
 
