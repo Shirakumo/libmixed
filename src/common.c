@@ -272,7 +272,7 @@ uint8_t rdrand_available(){
   return 0;
 }
 float mixed_random_rdrand(){
-  return 0f0;
+  return 0.0f;
 }
 #endif
 
