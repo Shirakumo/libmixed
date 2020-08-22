@@ -3,6 +3,11 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment ver
 project(mixed C)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
+option(BUILD_STATIC "Build the static library" ON)
+option(BUILD_SHARED "Build the shared library" ON)
+option(BUILD_EXAMPLES "Build the example applications" ON)
+option(BUILD_TESTER "Build the tester application" ON)
+
 ## Generate version
 find_program(GIT_SCM git DOC "Git version control")
 mark_as_advanced(GIT_SCM)
@@ -97,16 +102,22 @@ set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(mixed PRIVATE MIXED_BUILD=1 MIXED_VERSION="${MIXED_VERSION_STRING}")
 target_compile_options(mixed PRIVATE ${COMPILATION_FLAGS} -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes -Wno-enum-conversion)
 
-add_library(mixed_static STATIC $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:spiralfft> $<TARGET_OBJECTS:mixed>)
-set_target_properties(mixed_static PROPERTIES OUTPUT_NAME mixed)
-add_library(mixed_shared SHARED $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:spiralfft> $<TARGET_OBJECTS:mixed>)
-set_target_properties(mixed_shared PROPERTIES OUTPUT_NAME mixed)
-set_property(TARGET mixed_shared PROPERTY VERSION ${MIXED_VERSION_STRING})
-set_property(TARGET mixed_shared PROPERTY SOVERSION ${MIXED_VERSION_MAJOR})
-if(WIN32)
-  target_link_libraries(mixed_shared m)
-else()
-  target_link_libraries(mixed_shared dl m)
+if(BUILD_STATIC)
+  add_library(mixed_static STATIC $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:spiralfft> $<TARGET_OBJECTS:mixed>)
+  set_target_properties(mixed_static PROPERTIES OUTPUT_NAME mixed)
+  install(TARGETS mixed_static DESTINATION /usr/local/lib)
+endif()
+if(BUILD_SHARED)
+  add_library(mixed_shared SHARED $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:spiralfft> $<TARGET_OBJECTS:mixed>)
+  set_target_properties(mixed_shared PROPERTIES OUTPUT_NAME mixed)
+  set_property(TARGET mixed_shared PROPERTY VERSION ${MIXED_VERSION_STRING})
+  set_property(TARGET mixed_shared PROPERTY SOVERSION ${MIXED_VERSION_MAJOR})
+  install(TARGETS mixed_shared DESTINATION /usr/local/lib)
+  if(WIN32)
+    target_link_libraries(mixed_shared m)
+  else()
+    target_link_libraries(mixed_shared dl m)
+  endif()
 endif()
 if(LINUX)
   if(ARCH MATCHES "x86_64")
@@ -117,38 +128,41 @@ if(LINUX)
 endif()
 
 ## Tester
-add_executable(tester
-  "test/tester.h"
-  "test/tester.c"
-  "test/buffer.c"
-  "test/transfer.c"
-  "test/packer.c"
-  "test/distribute.c")
-add_dependencies(tester mixed_shared)
-set_property(TARGET tester PROPERTY C_STANDARD 99)
-target_compile_options(tester PRIVATE ${COMPILATION_FLAGS})
-target_link_libraries(tester mixed_shared)
+if(BUILD_TESTER)
+  add_executable(tester
+    "test/tester.h"
+    "test/tester.c"
+    "test/buffer.c"
+    "test/transfer.c"
+    "test/packer.c"
+    "test/distribute.c")
+  add_dependencies(tester mixed_shared)
+  set_property(TARGET tester PROPERTY C_STANDARD 99)
+  target_compile_options(tester PRIVATE ${COMPILATION_FLAGS})
+  target_link_libraries(tester mixed_shared)
 
-## Example Programs
-find_package(mpg123)
-find_package(out123)
-find_package(Curses)
-if(OUT123_FOUND AND MPG123_FOUND AND CURSES_FOUND)
-  file(GLOB example_src "examples/*.c")
-  foreach(example_file ${example_src})
-    get_filename_component(example_name ${example_file} NAME_WE)
-    set(example_name "example_${example_name}")
-    add_executable(${example_name} ${example_file})
-    add_dependencies(${example_name} mixed_shared)
-    set_property(TARGET ${example_name} PROPERTY C_STANDARD 99)
-    target_include_directories(${example_name} PRIVATE ${CURSES_INCLUDE_DIRS} ${MPG123_INCLUDE_DIR} ${OUT123_INCLUDE_DIR})
-    target_link_libraries(${example_name} mixed_shared ${CURSES_LIBRARIES} ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
-  endforeach()
+  add_custom_target(test
+    COMMAND "${CMAKE_BINARY_DIR}/tester"
+    DEPENDS tester)
 endif()
 
-install(TARGETS mixed DESTINATION /usr/local/lib)
-
-add_custom_target(test
-  COMMAND "${CMAKE_BINARY_DIR}/tester"
-  DEPENDS tester)
-
+## Example Programs
+if(BUILD_EXAMPLES)
+  find_package(mpg123)
+  find_package(out123)
+  find_package(Curses)
+  if(OUT123_FOUND AND MPG123_FOUND AND CURSES_FOUND)
+    file(GLOB example_src "examples/*.c")
+    foreach(example_file ${example_src})
+      get_filename_component(example_name ${example_file} NAME_WE)
+      set(example_name "example_${example_name}")
+      add_executable(${example_name} ${example_file})
+      add_dependencies(${example_name} mixed_shared)
+      set_property(TARGET ${example_name} PROPERTY C_STANDARD 99)
+      target_include_directories(${example_name} PRIVATE ${CURSES_INCLUDE_DIRS} ${MPG123_INCLUDE_DIR} ${OUT123_INCLUDE_DIR})
+      target_link_libraries(${example_name} mixed_shared ${CURSES_LIBRARIES} ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
+    endforeach()
+  else()
+    message(STATUS "Cannot build examples")
+  endif()
+endif()
