@@ -64,7 +64,7 @@ endif()
 target_include_directories(spiralfft PRIVATE "spiralfft/")
 target_compile_options(spiralfft PRIVATE -O3 ${COMPILATION_FLAGS})
 if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-  target_compile_options(samplerate PRIVATE -fpic -flto)
+  target_compile_options(spiralfft PRIVATE -fpic -flto)
 endif()
 
 ## Libmixed
