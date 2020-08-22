@@ -47,6 +47,9 @@ add_library(samplerate OBJECT
   "libsamplerate/src_sinc.c"
   "libsamplerate/src_zoh.c")
 target_compile_options(samplerate PRIVATE -O3 ${COMPILATION_FLAGS})
+if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+  target_compile_options(samplerate PRIVATE -fpic -flto)
+endif()
 
 ## Spiralfft
 if(ARCH MATCHES "x86_64")
@@ -58,8 +61,11 @@ else()
     "spiralfft/scalar/spiral_fft_float.c"
     "spiralfft/scalar/spiral_private.c")
 endif()
-target_compile_options(spiralfft PRIVATE -O3 ${COMPILATION_FLAGS})
 target_include_directories(spiralfft PRIVATE "spiralfft/")
+target_compile_options(spiralfft PRIVATE -O3 ${COMPILATION_FLAGS})
+if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+  target_compile_options(samplerate PRIVATE -fpic -flto)
+endif()
 
 ## Libmixed
 add_library(mixed OBJECT
