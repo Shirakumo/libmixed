@@ -1,5 +1,6 @@
 #define __TEST_SUITE buffer
 #include <string.h>
+#include <pthread.h>
 #include "tester.h"
 
 define_test(make, {
@@ -277,5 +278,59 @@ define_test(with_transfer, {
     mixed_free_buffer(&a);
     mixed_free_buffer(&b);
   });
+
+#define ASYNC_REPEAT 1000000
+
+void *async_reader(struct mixed_buffer *buffer){
+  uint32_t *status = calloc(sizeof(uint32_t), 1);
+  uint32_t size = buffer->size;
+  *status = 0;
+  for(int i=0; i<ASYNC_REPEAT; ++i){
+    float *area = 0;
+    uint32_t read = rand() % size;
+    mixed_buffer_request_read(&area, &read, buffer);
+    if(buffer->_data+size < area+read)
+      *status = 1;
+    if(!mixed_buffer_finish_read(read, buffer))
+      *status = 2;
+    if(*status != 0)
+      break;
+  }
+  return status;
+}
+
+define_test(async_read_write, {
+    struct mixed_buffer buffer = {0};
+    uint32_t size = 1024;
+    pthread_t reader = 0;
+    uint32_t *status = 0;
+    pass(mixed_make_buffer(size, &buffer));
+
+    if(pthread_create(&reader, 0, async_reader, &buffer) != 0){
+      fail_test("Failed to spawn thread.");
+    }
+
+    for(int i=0; i<ASYNC_REPEAT; ++i){
+      float *area = 0;
+      uint32_t write = rand() % size;
+      mixed_buffer_request_write(&area, &write, &buffer);
+      if(buffer._data+size < area+write){
+        fail_test("Writer thread failed with bad read size: [%p, %i] vs [%p, %i] (+%i)",
+                  buffer._data, size, area, write, (area+write)-(buffer._data+size));
+      }
+      pass(mixed_buffer_finish_write(write, &buffer));
+    }
+
+    pthread_join(reader, &status);
+    reader = 0;
+    if(*status != 0){
+      fail_test("Reader thread failed with exit code %i", *status);
+    }
+    
+  cleanup:
+    if(reader) pthread_cancel(reader);
+    if(status) free(status);
+    mixed_free_buffer(&buffer);
+  })
 
 #undef __TEST_SUITE
