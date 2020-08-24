@@ -85,8 +85,8 @@ MIXED_EXPORT int mixed_buffer_finish_write(uint32_t size, struct mixed_buffer *b
 }
 
 MIXED_EXPORT int mixed_buffer_request_read(float **area, uint32_t *size, struct mixed_buffer *buffer){
-  char full_r2 = atomic_read(buffer->full_r2);
   uint32_t write = atomic_read(buffer->write);
+  char full_r2 = atomic_read(buffer->full_r2);
   uint32_t read = atomic_read(buffer->read);
   if(full_r2){
     //printf("[A %i %i %i]", full_r2, write, read);
@@ -106,8 +106,8 @@ MIXED_EXPORT int mixed_buffer_request_read(float **area, uint32_t *size, struct 
 }
 
 MIXED_EXPORT int mixed_buffer_finish_read(uint32_t size, struct mixed_buffer *buffer){
-  char full_r2 = atomic_read(buffer->full_r2);
   uint32_t write = atomic_read(buffer->write);
+  char full_r2 = atomic_read(buffer->full_r2);
   uint32_t read = atomic_read(buffer->read);
   if(full_r2){
     if(buffer->size-read < size){

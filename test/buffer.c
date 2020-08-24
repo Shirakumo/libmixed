@@ -279,7 +279,7 @@ define_test(with_transfer, {
     mixed_free_buffer(&b);
   });
 
-#define ASYNC_REPEAT 1000000
+#define ASYNC_REPEAT 100000000
 
 void *async_reader(struct mixed_buffer *buffer){
   uint32_t *status = calloc(sizeof(uint32_t), 1);
