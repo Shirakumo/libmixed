@@ -36,10 +36,11 @@ MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer){
 MIXED_EXPORT int mixed_buffer_request_write(float **area, uint32_t *size, struct mixed_buffer *buffer){
   mixed_err(MIXED_NO_ERROR);
   uint32_t to_write = *size;
+  char full_r2 = atomic_read(buffer->full_r2);
   uint32_t read = atomic_read(buffer->read);
   uint32_t write = atomic_read(buffer->write);
   // Check if we're waiting for read to catch up with a full second region
-  if(!atomic_read(buffer->full_r2)){
+  if(!full_r2){
     uint32_t available = buffer->size - write;
     if(0 < available){ // No, we still have space left.
       to_write = MIN(to_write, available);
@@ -84,37 +85,54 @@ MIXED_EXPORT int mixed_buffer_finish_write(uint32_t size, struct mixed_buffer *b
 }
 
 MIXED_EXPORT int mixed_buffer_request_read(float **area, uint32_t *size, struct mixed_buffer *buffer){
+  char full_r2 = atomic_read(buffer->full_r2);
+  uint32_t write = atomic_read(buffer->write);
   uint32_t read = atomic_read(buffer->read);
-  uint32_t available = atomic_read(buffer->full_r2)
-    ?(buffer->size - read)
-    :(atomic_read(buffer->write) - read);
-  if(0 < available){
-    *size = MIN(*size, available);
-    *area = buffer->_data + read;
-    return 1;
-  }else if(atomic_read(buffer->full_r2)){
-    atomic_write(buffer->full_r2, 0);
-    atomic_write(buffer->read, 0);
-    *size = MIN(*size, atomic_read(buffer->write));
-    *area = buffer->_data;
-    return 1;
+  if(full_r2){
+    //printf("[A %i %i %i]", full_r2, write, read);
+    *size = MIN(*size, buffer->size-read);
+    *area = buffer->_data+read;
+  }else if(read<write){
+    //printf("[B %i %i %i]", full_r2, write, read);
+    *size = MIN(*size, write-read);
+    *area = buffer->_data+read;
   }else{
+    //printf("[C %i %i %i]", full_r2, write, read);
     *size = 0;
     *area = 0;
     return 0;
   }
+  return 1;
 }
 
 MIXED_EXPORT int mixed_buffer_finish_read(uint32_t size, struct mixed_buffer *buffer){
+  char full_r2 = atomic_read(buffer->full_r2);
+  uint32_t write = atomic_read(buffer->write);
   uint32_t read = atomic_read(buffer->read);
-  uint32_t available = atomic_read(buffer->full_r2)
-    ?(buffer->size - read)
-    :(atomic_read(buffer->write) - read);
-  if(available < size){
+  if(full_r2){
+    if(buffer->size-read < size){
+      mixed_err(MIXED_BUFFER_OVERCOMMIT);
+      //printf("{A %i %i %i}", full_r2, write, read);
+      return 0;
+    }else if(buffer->size-read == size){
+      //printf("{CR2}");
+      atomic_write(buffer->read, 0);
+      atomic_write(buffer->full_r2, 0);
+    }else{
+      atomic_write(buffer->read, read+size);
+    }
+  }else if(read<write){
+    if(write-read < size){
+      mixed_err(MIXED_BUFFER_OVERCOMMIT);
+      //printf("{B %i %i %i}", full_r2, write, read);
+      return 0;
+    }
+    atomic_write(buffer->read, read+size);
+  }else if(0 < size){
     mixed_err(MIXED_BUFFER_OVERCOMMIT);
+    //printf("{C %i %i %i %i}", full_r2, write, read, size);
     return 0;
   }
-  atomic_write(buffer->read, read+size);
   return 1;
 }
 
