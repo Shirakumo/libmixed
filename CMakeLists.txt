@@ -40,6 +40,14 @@ endif()
 
 set(COMPILATION_FLAGS -fvisibility=hidden -g ${CPU_EXTENSION_FLAGS})
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  if(ARCH MATCHES "x86_64")
+    set(COMPILATION_FLAGS ${COMPILATION_FLAGS} -static-libgcc -include ${CMAKE_SOURCE_DIR}/glibcver/glibc_2.9_x64.h)
+  elseif(ARCH MATCHES "i386")
+    set(COMPILATION_FLAGS ${COMPILATION_FLAGS} -static-libgcc -include ${CMAKE_SOURCE_DIR}/glibcver/glibc_2.9_x86.h)
+  endif()
+endif()
+
 ## Libsamplerate
 add_library(samplerate OBJECT
   "libsamplerate/samplerate.c"
@@ -123,13 +131,6 @@ if(BUILD_SHARED)
     target_link_libraries(mixed_shared m)
   else()
     target_link_libraries(mixed_shared dl m)
-  endif()
-endif()
-if(LINUX)
-  if(ARCH MATCHES "x86_64")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -include ${CMAKE_SOURCE_DIR}glibcver/glibc_2.9_x64.h")
-  elseif(ARCH MATCHES "i386")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -include ${CMAKE_SOURCE_DIR}glibcver/glibc_2.9_x86.h")
   endif()
 endif()
 
