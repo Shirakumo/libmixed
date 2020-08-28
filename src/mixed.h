@@ -252,11 +252,11 @@ extern "C" {
     // Access whether to pass frequencies above or below the cutoff.
     // This value is an enum mixed_frequency_pass.
     MIXED_FREQUENCY_PASS,
-    // Access the number of input buffers the segment can hold.
+    // Access the number of input buffers the segment holds.
     // The value is a uint32_t.
     // The default is 2.
     MIXED_IN_COUNT,
-    // Access the number of output buffers the segment can hold.
+    // Access the number of output buffers the segment holds.
     // The value is a uint32_t.
     // The default is 2.
     MIXED_OUT_COUNT,
@@ -548,25 +548,15 @@ extern "C" {
     void *data;
   };
 
-  // The primary mixer control unit.
-  //
-  // This merely holds the segments in the order that they should
-  // be processed and acts as a shorthand to perform bulk operations
-  // on them like starting, mixing, or ending.
-  //
-  // You should not modify any of its fields directly.
-  MIXED_EXPORT struct mixed_segment_sequence{
-    struct mixed_segment **segments;
-    uint32_t count;
-    uint32_t size;
-  };
-
   // Allocate a new pack.
   //
   // You /must/ set the pack fields encoding and channels before this.
   // The frames designates the number of frames that can be stored in
   // the pack's data array. Meaning a total number of bytes of:
   //   frames*channels*mixed_samplesize(encoding)
+  // 
+  // For the write and read functions, please see the analogous buffer
+  // functions.
   MIXED_EXPORT int mixed_make_pack(uint32_t frames, struct mixed_pack *pack);
   MIXED_EXPORT void mixed_free_pack(struct mixed_pack *pack);
   MIXED_EXPORT int mixed_pack_clear(struct mixed_pack *pack);
@@ -675,6 +665,11 @@ extern "C" {
   // if a previously reserved block has not yet been committed.
   // In the case of a failure, size will be set to zero and area
   // will be left untouched.
+  //
+  // It is safe to have one thread write to a buffer while another
+  // thread is reading from the buffer. It is however /NOT/ safe
+  // to write from multiple threads or read from multiple threads
+  // at the same time.
   MIXED_EXPORT int mixed_buffer_request_write(float **area, uint32_t *size, struct mixed_buffer *buffer);
 
   // Commit a reserved block after writing to it.
@@ -755,8 +750,6 @@ extern "C" {
   //
   // If the method is not implemented, the error is set to
   // MIXED_NOT_IMPLEMENTED.
-  //
-  // See mixed_segment_sequence_start
   MIXED_EXPORT int mixed_segment_start(struct mixed_segment *segment);
 
   // Run the segment.
@@ -766,16 +759,12 @@ extern "C" {
   // restarted. This happens if the segment is some kind of
   // finite source and has ended, or if an internal error
   // occurred that prevents the segment from operating.
-  //
-  // See mixed_segment_sequence_mix
   MIXED_EXPORT int mixed_segment_mix(struct mixed_segment *segment);
 
   // End the segment's mixing process.
   //
   // If the method is not implemented, the error is set to
   // MIXED_NOT_IMPLEMENTED.
-  //
-  // See mixed_segment_sequence_end
   MIXED_EXPORT int mixed_segment_end(struct mixed_segment *segment);
 
   // Set the value of an input buffer field.
@@ -1116,51 +1105,35 @@ extern "C" {
   // If a requested configuration is not supported, an error is created.
   MIXED_EXPORT int mixed_make_segment_channel_convert(uint8_t in, uint8_t out, struct mixed_segment *segment);
 
+  // Create a chain segment
+  //
+  // A chain segment is useful for operating on many segments at once.
+  MIXED_EXPORT int mixed_make_segment_chain(struct mixed_segment *segment);
+
   // A segment to quantize the amplitude
   //
   // The signal will be quantized into STEPS number of discrete amplitudes.
   MIXED_EXPORT int mixed_make_segment_quantize(uint32_t steps, struct mixed_segment *segment);
 
-  // Free the associated sequence data.
-  MIXED_EXPORT void mixed_free_segment_sequence(struct mixed_segment_sequence *mixer);
-
-  // Add a new segment to the mixer.
+  // Add a new segment to the chain.
   //
-  // This always adds to the end of the queue. You are responsible for
-  // adding the segments in the proper order to ensure that their inputs
-  // are satisfied.
-  MIXED_EXPORT int mixed_segment_sequence_add(struct mixed_segment *segment, struct mixed_segment_sequence *mixer);
+  // Without a specific index, the segment is appended to the end
+  // of the chain. With an index, elements at and after the index
+  // are shifted up first.
+  //
+  // It is /NOT/ safe to add elements to a chain from multiple
+  // threads at once.
+  MIXED_EXPORT int mixed_chain_add(struct mixed_segment *segment, struct mixed_segment *chain);
+  MIXED_EXPORT int mixed_chain_add_at(uint32_t i, struct mixed_segment *segment, struct mixed_segment *chain);
 
-  // Remove a segment from the mixer.
+  // Remove a segment from the chain.
   //
   // Segments after it will be shifted down as necessary.
-  MIXED_EXPORT int mixed_segment_sequence_remove(struct mixed_segment *segment, struct mixed_segment_sequence *mixer);
-
-  // Start the mixing process.
   //
-  // This function must be called before you call mixed_segment_sequence_mix,
-  // and it should be called relatively close to the first mix call. Changing
-  // the in/outs or fields of a segment after start has been called will
-  // result in undefined behaviour. If you do need to change the segments
-  // or add new segments to the mixer, you must first call mixed_segment_sequence_end.
-  //
-  // Note that some segments may optionally support changing their in/outs
-  // or flags while mixing has already been started, but this property is
-  // not guaranteed. See the documentation of the individual segment.
-  MIXED_EXPORT int mixed_segment_sequence_start(struct mixed_segment_sequence *mixer);
-
-  // Performs the mixing of all the segments in the sequence.
-  //
-  // In effect this calls the mix function of every segment in the mixer
-  // in sequence. This function does not check for errors in any way.
-  MIXED_EXPORT int mixed_segment_sequence_mix(struct mixed_segment_sequence *mixer);
-
-  // End the mixing process.
-  //
-  // This function must be called after you are done mixing elements.
-  // Once you have called end, you must call mixed_segment_sequence_start
-  // again before you are allowed to mix.
-  MIXED_EXPORT int mixed_segment_sequence_end(struct mixed_segment_sequence *mixer);
+  // It is /NOT/ safe to remove elements from a chain from multiple
+  // threads at once.
+  MIXED_EXPORT int mixed_chain_remove(struct mixed_segment *segment, struct mixed_segment *chain);
+  MIXED_EXPORT int mixed_chain_remove_at(uint32_t i, struct mixed_segment *chain);
 
   typedef int (*mixed_make_segment_function)(void *args, struct mixed_segment *segment);
   typedef int (*mixed_register_segment_function)(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);

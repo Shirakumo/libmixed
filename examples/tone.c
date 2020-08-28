@@ -4,8 +4,7 @@ int main(int argc, char **argv){
   int exit = 1;
   uint32_t samples = 100;
   WINDOW *window = 0;
-  struct mixed_segment_sequence sequence = {0};
-  struct mixed_segment generator = {0}, upmix = {0};
+  struct mixed_segment chain = {0}, generator = {0}, upmix = {0};
   struct mixed_segment fade = {0};
   struct mixed_buffer buffer = {0};
   struct out *out = 0;
@@ -46,7 +45,8 @@ int main(int argc, char **argv){
 
   if(!mixed_make_segment_generator(wave_type, frequency, internal_samplerate, &generator)
      || !mixed_make_segment_channel_convert(1, 2, &upmix)
-     || !mixed_make_segment_fade(0.0, 0.8, 5.0, MIXED_CUBIC_IN_OUT, internal_samplerate, &fade)){
+     || !mixed_make_segment_fade(0.0, 0.8, 5.0, MIXED_CUBIC_IN_OUT, internal_samplerate, &fade)
+     || !mixed_make_segment_chain(&chain)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -61,11 +61,11 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_segment_sequence_add(&generator, &sequence) ||
-     !mixed_segment_sequence_add(&fade, &sequence) ||
-     !mixed_segment_sequence_add(&upmix, &sequence) ||
-     !mixed_segment_sequence_add(&out->segment, &sequence)){
-    fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
+  if(!mixed_chain_add(&generator, &chain) ||
+     !mixed_chain_add(&fade, &chain) ||
+     !mixed_chain_add(&upmix, &chain) ||
+     !mixed_chain_add(&out->segment, &chain)){
+    fprintf(stderr, "Failed to assemble chain: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
   
@@ -73,10 +73,10 @@ int main(int argc, char **argv){
   window = load_curses();
   mvprintw(0, 0, "<←/→>: Change frequency <SPC>: Cycle wave-type");
 
-  mixed_segment_sequence_start(&sequence);
+  mixed_segment_start(&chain);
   size_t played;
   do{
-    mixed_segment_sequence_mix(&sequence);
+    mixed_segment_mix(&chain);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
@@ -108,12 +108,12 @@ int main(int argc, char **argv){
     refresh();
   }while(!interrupted);
   
-  mixed_segment_sequence_end(&sequence);
+  mixed_segment_end(&chain);
 
   exit = 0;
 
  cleanup:
-  mixed_free_segment_sequence(&sequence);
+  mixed_free_segment(&chain);
   mixed_free_segment(&generator);
   mixed_free_segment(&fade);
   free_out(out);

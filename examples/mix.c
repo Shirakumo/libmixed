@@ -3,8 +3,7 @@
 int main(int argc, char **argv){
   int exit = 1;
   uint32_t samples = 100;
-  struct mixed_segment_sequence sequence = {0};
-  struct mixed_segment mix_segment = {0};
+  struct mixed_segment chain = {0}, mix_segment = {0};
   struct mp3 *mp3s[argc-1];
   struct out *out = 0;
 
@@ -24,7 +23,8 @@ int main(int argc, char **argv){
     goto cleanup;
   }
   
-  if(!mixed_make_segment_basic_mixer(2, &mix_segment)){
+  if(!mixed_make_segment_basic_mixer(2, &mix_segment)
+     || !mixed_make_segment_chain(&chain)){
     fprintf(stderr, "Failed to create segment: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -49,7 +49,7 @@ int main(int argc, char **argv){
       goto cleanup;
     }
     // Register with sequence.
-    if(!mixed_segment_sequence_add(&mp3->segment, &sequence)){
+    if(!mixed_chain_add(&mp3->segment, &chain)){
       fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
       goto cleanup;
     }
@@ -58,14 +58,14 @@ int main(int argc, char **argv){
   // The order in which segments are added does matter, as the system
   // will not figure out on its own in which order the segments should
   // be called. We specify this here.
-  if(!mixed_segment_sequence_add(&mix_segment, &sequence) ||
-     !mixed_segment_sequence_add(&out->segment, &sequence)){
+  if(!mixed_chain_add(&mix_segment, &chain) ||
+     !mixed_chain_add(&out->segment, &chain)){
     fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
   // Perform the mixing
-  mixed_segment_sequence_start(&sequence);
+  mixed_segment_start(&chain);
 
   size_t read = 0, played = 0;
   do{
@@ -81,7 +81,7 @@ int main(int argc, char **argv){
       mixed_pack_finish_write(read, &mp3->pack);
     }
 
-    mixed_segment_sequence_mix(&sequence);
+    mixed_segment_mix(&chain);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
@@ -99,14 +99,14 @@ int main(int argc, char **argv){
     fflush(stdout);
   }while(played && !interrupted);
 
-  mixed_segment_sequence_end(&sequence);
+  mixed_segment_end(&chain);
 
   // Clean the shop
   exit = 0;
   
  cleanup:
   mixed_free_segment(&mix_segment);
-  mixed_free_segment_sequence(&sequence);
+  mixed_free_segment(&chain);
 
   for(int i=1; i<argc; ++i){
     if(mp3s[i]){

@@ -12,8 +12,7 @@ int main(int argc, char **argv){
   int exit = 1;
   uint32_t samples = 100;
   WINDOW *window = 0;
-  struct mixed_segment_sequence sequence = {0};
-  struct mixed_segment space = {0}, downmix = {0};
+  struct mixed_segment chain = {0}, space = {0}, downmix = {0};
   struct mixed_buffer mono = {0};
   struct out *out = 0;
   struct mp3 *mp3 = 0;
@@ -63,7 +62,8 @@ int main(int argc, char **argv){
   }
 
   if(!mixed_make_segment_space_mixer(internal_samplerate, &space)
-     || !mixed_make_segment_channel_convert(2, 1, &downmix)){
+     || !mixed_make_segment_channel_convert(2, 1, &downmix)
+     || !mixed_make_segment_chain(&chain)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
@@ -78,11 +78,11 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_segment_sequence_add(&mp3->segment, &sequence)
-     || !mixed_segment_sequence_add(&downmix, &sequence)
-     || !mixed_segment_sequence_add(&space, &sequence)
-     || !mixed_segment_sequence_add(&out->segment, &sequence)){
-    fprintf(stderr, "Failed to assemble sequence: %s\n", mixed_error_string(-1));
+  if(!mixed_chain_add(&mp3->segment, &chain)
+     || !mixed_chain_add(&downmix, &chain)
+     || !mixed_chain_add(&space, &chain)
+     || !mixed_chain_add(&out->segment, &chain)){
+    fprintf(stderr, "Failed to assemble chain: %s\n", mixed_error_string(-1));
     goto cleanup;
   }
 
@@ -98,7 +98,7 @@ int main(int argc, char **argv){
   float doppler = 1.0;
   
   // Perform the mixing
-  mixed_segment_sequence_start(&sequence);
+  mixed_segment_start(&chain);
   size_t read = 0, played = 0;
   do{
     void *buffer;
@@ -110,7 +110,7 @@ int main(int argc, char **argv){
     }
     mixed_pack_finish_write(read, &mp3->pack);
 
-    mixed_segment_sequence_mix(&sequence);
+    mixed_segment_mix(&chain);
     if(mixed_error() != MIXED_NO_ERROR){
       fprintf(stderr, "Failure during mixing: %s\n", mixed_error_string(-1));
       goto cleanup;
@@ -144,13 +144,13 @@ int main(int argc, char **argv){
 
     mvprintw(1, 0, "Read: %4u Processed: %4u Played: %4u Speed: %f Radius: %f\n", read, bytes, played, dphi, r);
     refresh();
-  }while(played && !interrupted);
-  mixed_segment_sequence_end(&sequence);
+  }while(!interrupted);
+  mixed_segment_end(&chain);
 
   exit = 0;
 
  cleanup:
-  mixed_free_segment_sequence(&sequence);
+  mixed_free_segment(&chain);
   mixed_free_segment(&downmix);
   mixed_free_segment(&space);
   mixed_free_buffer(&mono);
