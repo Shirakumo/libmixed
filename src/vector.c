@@ -6,7 +6,7 @@ void free_vector(struct vector *vector){
   vector->data = 0;
 }
 
-int vector_add(void *element, struct vector *vector){
+int vector_add_pos(uint32_t i, void *element, struct vector *vector){
   void **data = vector->data;
   // Not yet initialised
   if(!data){
@@ -24,11 +24,18 @@ int vector_add(void *element, struct vector *vector){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
-  // All good
-  data[vector->count] = element;
+  // Shift
+  for(uint32_t j=vector->count+1; i<j; --j){
+    data[j] = data[j-1];
+  }
+  data[i] = element;
   vector->data = data;
   ++vector->count;
   return 1;
+}
+
+int vector_add(void *element, struct vector *vector){
+  return vector_add_pos(vector->count, element, vector);
 }
 
 int vector_remove_pos(uint32_t i, struct vector *vector){
@@ -37,8 +44,8 @@ int vector_remove_pos(uint32_t i, struct vector *vector){
     return 0;
   }
   // Shift down
-  for(uint32_t j=i+1; j<vector->count; ++j){
-    vector->data[j-1] = vector->data[j];
+  for(uint32_t j=i; j<vector->count-1; ++j){
+    vector->data[j] = vector->data[j+1];
   }
   --vector->count;
   vector->data[vector->count] = 0;
