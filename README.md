@@ -6,15 +6,15 @@ Libmixed will not do any audio file reading or audio playback for you. To do tha
 
 There's a set of example applications in the [example](example/) directory that you can look at to see how a fully working application would be put together. For the purposes of this documentation, and for the sake of brevity, we're going to look at the process in a more disconnected manner.
 
-The first step involves allocating space for a `struct mixed_segment_sequence` and for a `struct mixed_segment` for each of the segments in the pipeline that you would like. For each of those segments you might also need a set of `struct mixed_buffer` instances to hold the audio data.
+The first step involves allocating space for a `struct mixed_segment` for each of the segments in the pipeline that you would like. For each of those segments you might also need a set of `struct mixed_buffer` instances to hold the audio data.
 
 Once you have the space allocated, either on stack or on heap, you instantiate the segments with their respective `make` functions. For example, to create an unpack segment you would call `mixed_make_segment_unpacker`.
 
 When the segments have been instantiated successfully, the next step is to set their inputs and outputs using `mixed_segment_set_in` and `mixed_segment_set_out` respectively. Usually the field you will want to set for an in/out is the `MIXED_BUFFER`, where the value is a pointer to a `struct mixed_buffer`. You will have to connect a buffer to each of the inputs and outputs of each segment as they are required. Failure to connect a required buffer will lead to crashes.
 
-Once all the buffers are connected, you will want to add the segments to the mixer using `mixed_segment_sequence_add`. The order should follow the topological sorting of the directed acyclic graph described by the inputs and outputs of your segments.
+Once all the buffers are connected, you will want to add them to a chain to manage them easily. A chain is created using `mixed_make_segment_chain`, and you can add segments using `mixed_chain_add`.
 
-After that, your sequence is fully assembled and ready to process audio. Before you enter the main mixing loop though, you will need to call `mixed_segment_sequence_start` as some segments need some additional steps to prepare after their settings have been configured. Within the mixing loop you'll then want to cause your sources to read in the necessary audio data, then call `mixed_segment_sequence_mix` to process it, and finally make your drains play back or consume the processed audio somehow. On exit from the mixing loop, you'll want to call `mixed_segment_sequence_end` to finalise the segments and ready them for reconfiguration.
+After that, your system is fully assembled and ready to process audio. Before you enter the main mixing loop though, you will need to call `mixed_segment_start` on the chain, as some segments need some additional steps to prepare after their settings have been configured. Within the mixing loop you'll then want to cause your sources to read in the necessary audio data, then call `mixed_segment_mix` to process the chain, and finally make your drains play back or consume the processed audio somehow. On exit from the mixing loop, you'll want to call `mixed_segment_end` to finalise the segments and ready them for reconfiguration.
 
 The [mixed header](src/mixed.h) should describe the public API and the available segments in sufficient detail for you to be able to figure out how to put together your own systems as desired.
 
@@ -23,9 +23,8 @@ In "short", omitting error checking, your usual procedure will look as follows:
 ```C
 // Set up source and drain
 
-struct mixed_segment source = {0}, drain = {0}, something = {0};
+struct mixed_segment chain = {0}, source = {0}, drain = {0}, something = {0};
 struct mixed_buffer left = {0}, right = {0};
-struct mixed_segment_sequence sequence = {0};
 
 mixed_make_buffer(samples, &left);
 mixed_make_buffer(samples, &right);
@@ -43,21 +42,21 @@ mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &right, &something);
 mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &left, &drain);
 mixed_segment_set_in(MIXED_BUFFER, MIXED_RIGHT, &right, &drain);
 
-mixed_segment_sequence_add(&source, &mixer);
-mixed_segment_sequence_add(&something, &mixer);
-mixed_segment_sequence_add(&drain, &mixer);
+mixed_chain_add(&source, &chain);
+mixed_chain_add(&something, &chain);
+mixed_chain_add(&drain, &chain);
 
-mixed_segment_sequence_start(&mixer);
+mixed_segment_start(&chain);
 do{
   // Process source...
   
-  mixed_segment_sequence_mix(samples, &mixer);
+  mixed_segment_mix(samples, &chain);
   
   // Process drain...
 }while(!ended)
-mixed_segment_sequence_end(&mixer);
+mixed_segment_end(&chain);
 
-mixed_free_segment_sequence(&mixer);
+mixed_free_segment(&chain);
 mixed_free_segment(&source);
 mixed_free_segment(&something);
 mixed_free_segment(&drain);
