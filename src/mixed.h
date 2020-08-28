@@ -447,7 +447,6 @@ extern "C" {
     uint32_t read;
     uint32_t write;
     uint32_t reserved;
-    char full_r2;
     // The sample encoding in the byte array.
     enum mixed_encoding encoding;
     // The number of channels that are packed into the array.

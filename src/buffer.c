@@ -1,4 +1,5 @@
 #include "internal.h"
+#include "bip.h"
 
 MIXED_EXPORT int mixed_make_buffer(uint32_t size, struct mixed_buffer *buffer){
   mixed_err(MIXED_NO_ERROR);
@@ -32,131 +33,40 @@ MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer){
   return 1;
 }
 
-#define read_buffer_state(READ, WRITE, FULL_R2, BUFFER) \
-  uint32_t READ = atomic_read(BUFFER->read);            \
-  uint32_t WRITE ## _ = atomic_read(BUFFER->write);     \
-  char FULL_R2 = WRITE ## _ >> 31;                      \
-  uint32_t WRITE = WRITE ## _ & 0x7FFFFFFF;
-
 MIXED_EXPORT int mixed_buffer_request_write(float **area, uint32_t *size, struct mixed_buffer *buffer){
-  mixed_err(MIXED_NO_ERROR);
-  uint32_t to_write = *size;
-  read_buffer_state(read, write, full_r2, buffer);
-  // Check if we're waiting for read to catch up with a full second region
-  if(!full_r2){
-    uint32_t available = buffer->size - write;
-    if(0 < available){ // No, we still have space left.
-      to_write = MIN(to_write, available);
-      *size = to_write;
-      *area = buffer->_data + write;
-      buffer->reserved = to_write;
-    }else if(0 < read){ // We are at the end and need to wrap now.
-      to_write = MIN(to_write, read);
-      *size = to_write;
-      *area = buffer->_data;
-      buffer->reserved = to_write;
-      atomic_write(buffer->write, 0x80000000);
-    }else{ // Read has not done anything yet, no space!
-      *size = 0;
-      *area = 0;
-      return 0;
-    }
-  }else if(write < read){
-    // We're behind read, but still have some space.
-    to_write = MIN(to_write, read-write);
-    *size = to_write;
-    *area = buffer->_data+write;
-    buffer->reserved = to_write;
-  }else{
-    *size = 0;
+  uint32_t off = 0;
+  if(!bip_request_write(&off, size, (struct bip*)buffer)){
     *area = 0;
     return 0;
   }
+  *area = buffer->_data+off;
   return 1;
 }
 
 MIXED_EXPORT int mixed_buffer_finish_write(uint32_t size, struct mixed_buffer *buffer){
-  if(buffer->reserved < size){
-    mixed_err(MIXED_BUFFER_OVERCOMMIT);
-    return 0;
-  }
-  uint32_t write = atomic_read(buffer->write);
-  atomic_write(buffer->write, write+size);
-  buffer->reserved = 0;
-  return 1;
+  return bip_finish_write(size, (struct bip*)buffer);
 }
 
 MIXED_EXPORT int mixed_buffer_request_read(float **area, uint32_t *size, struct mixed_buffer *buffer){
-  read_buffer_state(read, write, full_r2, buffer);
-  if(full_r2){
-    //printf("[A %i %i %i]", full_r2, write, read);
-    *size = MIN(*size, buffer->size-read);
-    *area = buffer->_data+read;
-  }else if(read<write){
-    //printf("[B %i %i %i]", full_r2, write, read);
-    *size = MIN(*size, write-read);
-    *area = buffer->_data+read;
-  }else{
-    //printf("[C %i %i %i]", full_r2, write, read);
-    *size = 0;
+  uint32_t off = 0;
+  if(!bip_request_read(&off, size, (struct bip*)buffer)){
     *area = 0;
     return 0;
   }
+  *area = buffer->_data+off;
   return 1;
 }
 
 MIXED_EXPORT int mixed_buffer_finish_read(uint32_t size, struct mixed_buffer *buffer){
- retry:
-  {
-  read_buffer_state(read, write, full_r2, buffer);
-  if(full_r2){
-    if(buffer->size-read < size){
-      mixed_err(MIXED_BUFFER_OVERCOMMIT);
-      //printf("{A %i %i %i}", full_r2, write, read);
-      return 0;
-    }else if(buffer->size-read == size){
-      //printf("{CR2}");
-      atomic_write(buffer->read, 0);
-      if(!atomic_cas(buffer->write, write_, write))
-        goto retry;
-    }else{
-      atomic_write(buffer->read, read+size);
-    }
-  }else if(read<write){
-    if(write-read < size){
-      mixed_err(MIXED_BUFFER_OVERCOMMIT);
-      //printf("{B %i %i %i}", full_r2, write, read);
-      return 0;
-    }
-    atomic_write(buffer->read, read+size);
-  }else if(0 < size){
-    mixed_err(MIXED_BUFFER_OVERCOMMIT);
-    //printf("{C %i %i %i %i}", full_r2, write, read, size);
-    return 0;
-  }
-  return 1;
-  }
+  return bip_finish_read(size, (struct bip*)buffer);
 }
 
 MIXED_EXPORT uint32_t mixed_buffer_available_read(struct mixed_buffer *buffer){
-  read_buffer_state(read, write, full_r2, buffer);
-  if(full_r2){
-    if(read < buffer->size)
-      return buffer->size - read;
-    else
-      return write;
-  }else
-    return write - read;
+  return bip_available_read((struct bip*)buffer);
 }
 
 MIXED_EXPORT uint32_t mixed_buffer_available_write(struct mixed_buffer *buffer){
-  read_buffer_state(read, write, full_r2, buffer);
-  if(full_r2)
-    return read - write;
-  else if(write == buffer->size)
-    return read;
-  else
-    return buffer->size - write;
+  return bip_available_write((struct bip*)buffer);
 }
 
 MIXED_EXPORT int mixed_buffer_transfer(struct mixed_buffer *from, struct mixed_buffer *to){

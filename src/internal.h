@@ -1,3 +1,4 @@
+#pragma once
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -39,6 +40,14 @@ static inline void __ignore(char _, ...){(void)_;}
 #else
 #define VECTORIZE
 #endif
+
+struct bip{
+  void *data;
+  uint32_t size;
+  uint32_t read;
+  uint32_t write;
+  uint32_t reserved;
+};
 
 struct vector{
   void **data;

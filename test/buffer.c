@@ -294,27 +294,36 @@ define_test(randomized, {
       if(rand() % 2 == 0){
         mixed_buffer_request_write(&area, &avail, &buffer);
         avail = rand() % (avail+1);
-        mixed_buffer_finish_write(avail, &buffer);
+        pass(mixed_buffer_finish_write(avail, &buffer));
         wptr = (wptr + avail) % size;
         full += avail;
       }else{
         mixed_buffer_request_read(&area, &avail, &buffer);
         avail = rand() % (avail+1);
-        mixed_buffer_finish_read(avail, &buffer);
+        pass(mixed_buffer_finish_read(avail, &buffer));
         rptr = (rptr + avail) % size;
         full -= avail;
       }
+      avail = UINT32_MAX;
       if(size < full) fail("Over/Underflow");
       if(rptr < wptr){
+        mixed_buffer_request_read(&area, &avail, &buffer);
+        is(avail, wptr-rptr);
         is(mixed_buffer_available_read(&buffer), wptr-rptr);
         is(mixed_buffer_available_write(&buffer), size-wptr);
       }else if(wptr < rptr){
+        mixed_buffer_request_read(&area, &avail, &buffer);
+        is(avail, size-rptr);
         is(mixed_buffer_available_read(&buffer), size-rptr);
         is(mixed_buffer_available_write(&buffer), rptr-wptr);
       }else if(full == 0){
+        mixed_buffer_request_read(&area, &avail, &buffer);
+        is(avail, 0);
         is(mixed_buffer_available_read(&buffer), 0);
         is(mixed_buffer_available_write(&buffer), size-wptr);
       }else{
+        mixed_buffer_request_read(&area, &avail, &buffer);
+        is(avail, size-rptr);
         is(mixed_buffer_available_write(&buffer), 0);
         is(mixed_buffer_available_read(&buffer), size-rptr);
       }
