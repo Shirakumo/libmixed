@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include "tester.h"
 
+#define RANDOMIZED_REPEAT 100000000
+
 define_test(make, {
     struct mixed_buffer buffer = {0};
     pass(mixed_make_buffer(1024, &buffer));
@@ -279,13 +281,54 @@ define_test(with_transfer, {
     mixed_free_buffer(&b);
   });
 
-#define ASYNC_REPEAT 100000000
+define_test(randomized, {
+    struct mixed_buffer buffer = {0};
+    uint32_t size = 1024;
+    uint32_t wptr = 0, rptr = 0, full = 0;
+    
+    pass(mixed_make_buffer(size, &buffer));
+
+    for(int i=0; i<RANDOMIZED_REPEAT; ++i){
+      float *area = 0;
+      uint32_t avail = UINT32_MAX;
+      if(rand() % 2 == 0){
+        mixed_buffer_request_write(&area, &avail, &buffer);
+        avail = rand() % (avail+1);
+        mixed_buffer_finish_write(avail, &buffer);
+        wptr = (wptr + avail) % size;
+        full += avail;
+      }else{
+        mixed_buffer_request_read(&area, &avail, &buffer);
+        avail = rand() % (avail+1);
+        mixed_buffer_finish_read(avail, &buffer);
+        rptr = (rptr + avail) % size;
+        full -= avail;
+      }
+      if(size < full) fail("Over/Underflow");
+      if(rptr < wptr){
+        is(mixed_buffer_available_read(&buffer), wptr-rptr);
+        is(mixed_buffer_available_write(&buffer), size-wptr);
+      }else if(wptr < rptr){
+        is(mixed_buffer_available_read(&buffer), size-rptr);
+        is(mixed_buffer_available_write(&buffer), rptr-wptr);
+      }else if(full == 0){
+        is(mixed_buffer_available_read(&buffer), 0);
+        is(mixed_buffer_available_write(&buffer), size-wptr);
+      }else{
+        is(mixed_buffer_available_write(&buffer), 0);
+        is(mixed_buffer_available_read(&buffer), size-rptr);
+      }
+    }
+
+  cleanup:
+    mixed_free_buffer(&buffer);
+  });
 
 void *async_reader(struct mixed_buffer *buffer){
   uint32_t *status = calloc(sizeof(uint32_t), 1);
   uint32_t size = buffer->size;
   *status = 0;
-  for(int i=0; i<ASYNC_REPEAT; ++i){
+  for(int i=0; i<RANDOMIZED_REPEAT; ++i){
     float *area = 0;
     uint32_t read = rand() % size;
     mixed_buffer_request_read(&area, &read, buffer);
@@ -310,7 +353,7 @@ define_test(async_read_write, {
       fail_test("Failed to spawn thread.");
     }
 
-    for(int i=0; i<ASYNC_REPEAT; ++i){
+    for(int i=0; i<RANDOMIZED_REPEAT; ++i){
       float *area = 0;
       uint32_t write = rand() % size;
       mixed_buffer_request_write(&area, &write, &buffer);
