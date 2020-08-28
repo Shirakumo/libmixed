@@ -76,7 +76,6 @@ int distribute_start(struct mixed_segment *segment){
     buffer->size = in->size;
     buffer->read = in->read;
     buffer->write = in->write;
-    buffer->full_r2 = in->full_r2;
   }
 
   data->was_available = 0;
@@ -96,11 +95,9 @@ int distribute_mix(struct mixed_segment *segment){
   data->was_available = mixed_buffer_available_read(in);
   uint32_t read = atomic_read(in->read);
   uint32_t write = atomic_read(in->write);
-  uint32_t full_r2 = atomic_read(in->full_r2);
   for(uint32_t i=0; i<data->count; ++i){
     struct mixed_buffer *buffer = data->out[i];
     atomic_write(buffer->write, write);
-    atomic_write(buffer->full_r2, full_r2);
     atomic_write(buffer->read, read);
   }
   return 1;

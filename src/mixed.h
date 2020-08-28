@@ -427,7 +427,6 @@ extern "C" {
     uint32_t read;
     uint32_t write;
     uint32_t reserved;
-    char full_r2;
     // Whether the buffer owns the data array.
     char virtual;
   };
