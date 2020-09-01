@@ -52,6 +52,7 @@ struct test *search_test(const char *name){
 
 int run_test(struct test *test){
   printf("Running %-10s %-36s \033[0;90m...\033[0;0m ", test->suite, test->name);
+  fflush(stdout);
   int result = test->fun();
   printf((result==0)?"\033[1;31m[FAIL]":"\033[0;32m[OK  ]");
   printf("\033[0;0m\n");

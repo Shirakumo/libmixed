@@ -88,14 +88,14 @@ int main(int argc, char **argv){
 
   // Start up ncurses
   window = load_curses();
-  mvprintw(0, 0, "<←/→>: Change speed <↑/↓>: Change radius <SPC>: Toggle doppler effect");
+  if(window)mvprintw(0, 0, "<←/→>: Change speed <↑/↓>: Change radius <SPC>: Toggle doppler effect");
 
   double dt = ((double)samples) / ((double)internal_samplerate);
   float phi = 0.0;
   float vel[3] = {0.0, 0.0, 0.0};
   float pos[3] = {r, 0.0, 0.0};
   float rad;
-  float doppler = 1.0;
+  float doppler = 0.0;
   
   // Perform the mixing
   mixed_segment_start(&chain);
@@ -122,6 +122,7 @@ int main(int argc, char **argv){
     mixed_pack_finish_read(played, &out->pack);
     
     // IO
+    if(!window) continue;
     int c = getch();
     switch(c){
     case 'q': interrupted = 1; break;

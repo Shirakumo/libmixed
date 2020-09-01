@@ -99,6 +99,39 @@ define_test(partial_read_write, {
     mixed_free_buffer(&buffer);
   });
 
+define_test(read_bounds, {
+    struct mixed_buffer buffer = {0};
+    pass(mixed_make_buffer(1024, &buffer));
+    float *area;
+    uint32_t size=1024;
+    // Fill buffer
+    pass(mixed_buffer_request_write(&area, &size, &buffer));
+    is(size, 1024);
+    pass(mixed_buffer_finish_write(size, &buffer));
+    // Read back
+    size = 1000;
+    pass(mixed_buffer_request_read(&area, &size, &buffer));
+    is(size, 1000);
+    pass(mixed_buffer_finish_read(size, &buffer));
+    size = 24;
+    pass(mixed_buffer_request_read(&area, &size, &buffer));
+    is(size, 24);
+    pass(mixed_buffer_finish_read(size, &buffer));
+    // Write more
+    size = 1024;
+    pass(mixed_buffer_request_write(&area, &size, &buffer));
+    is(size, 1024);
+    pass(mixed_buffer_finish_write(size, &buffer));
+    // Read more, wrapping around.
+    size = 200;
+    pass(mixed_buffer_request_read(&area, &size, &buffer));
+    is(size, 200);
+    pass(mixed_buffer_finish_read(size, &buffer));
+    
+  cleanup:
+    mixed_free_buffer(&buffer);
+  });
+
 define_test(bip_read_write, {
     struct mixed_buffer buffer = {0};
     pass(mixed_make_buffer(100, &buffer));
@@ -288,7 +321,7 @@ define_test(randomized, {
 
     for(int i=0; i<RANDOMIZED_REPEAT; ++i){
       float *area = 0;
-      uint32_t avail = UINT32_MAX;
+      uint32_t avail = rand() % size;
       uint32_t prev_avail = avail;
       if(rand() % 2 == 0){
         mixed_buffer_request_write(&area, &avail, &buffer);

@@ -70,7 +70,7 @@ inline int bip_request_read(uint32_t *off, uint32_t *size, struct bip *buffer){
         goto retry;
       }
       //printf("[A %i %i %i]", full_r2, write, read);
-      *size = write;
+      *size = MIN(*size, write);
       *off = 0;
       atomic_write(buffer->read, 0);
     }else{ // Write has not done anything yet, no space!
