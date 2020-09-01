@@ -3,8 +3,6 @@
 #include <pthread.h>
 #include "tester.h"
 
-#define RANDOMIZED_REPEAT 100000000
-
 define_test(make, {
     struct mixed_buffer buffer = {0};
     pass(mixed_make_buffer(1024, &buffer));

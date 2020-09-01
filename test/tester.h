@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include"../src/mixed.h"
+#define RANDOMIZED_REPEAT 10000000
 
 struct test{
   char *suite;
