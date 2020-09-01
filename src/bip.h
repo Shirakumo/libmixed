@@ -6,7 +6,7 @@
   char FULL_R2 = WRITE ## _ >> 31;                      \
   uint32_t WRITE = WRITE ## _ & 0x7FFFFFFF;
 
-inline int bip_request_write(uint32_t *off, uint32_t *size, struct bip *buffer){
+static inline int bip_request_write(uint32_t *off, uint32_t *size, struct bip *buffer){
   mixed_err(MIXED_NO_ERROR);
   uint32_t to_write = *size;
   read_buffer_state(read, write, full_r2, buffer);
@@ -43,7 +43,7 @@ inline int bip_request_write(uint32_t *off, uint32_t *size, struct bip *buffer){
   return 1;
 }
 
-inline int bip_finish_write(uint32_t size, struct bip *buffer){
+static inline int bip_finish_write(uint32_t size, struct bip *buffer){
   if(buffer->reserved < size){
     mixed_err(MIXED_BUFFER_OVERCOMMIT);
     return 0;
@@ -54,7 +54,7 @@ inline int bip_finish_write(uint32_t size, struct bip *buffer){
   return 1;
 }
 
-inline int bip_request_read(uint32_t *off, uint32_t *size, struct bip *buffer){
+static inline int bip_request_read(uint32_t *off, uint32_t *size, struct bip *buffer){
   read_buffer_state(read, write, full_r2, buffer);
   if(full_r2){
     uint32_t available = buffer->size - read;
@@ -87,7 +87,7 @@ inline int bip_request_read(uint32_t *off, uint32_t *size, struct bip *buffer){
   return 1;
 }
 
-inline int bip_finish_read(uint32_t size, struct bip *buffer){
+static inline int bip_finish_read(uint32_t size, struct bip *buffer){
   read_buffer_state(read, write, full_r2, buffer);
   if(full_r2){
     if(buffer->size-read < size){
@@ -109,7 +109,7 @@ inline int bip_finish_read(uint32_t size, struct bip *buffer){
   return 1;
 }
 
-inline uint32_t bip_available_read(struct bip *buffer){
+static inline uint32_t bip_available_read(struct bip *buffer){
   read_buffer_state(read, write, full_r2, buffer);
   if(full_r2){
     if(read < buffer->size)
@@ -120,7 +120,7 @@ inline uint32_t bip_available_read(struct bip *buffer){
     return write - read;
 }
 
-inline uint32_t bip_available_write(struct bip *buffer){
+static inline uint32_t bip_available_write(struct bip *buffer){
   read_buffer_state(read, write, full_r2, buffer);
   if(full_r2)
     return read - write;
