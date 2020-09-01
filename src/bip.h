@@ -48,8 +48,11 @@ static inline int bip_finish_write(uint32_t size, struct bip *buffer){
     mixed_err(MIXED_BUFFER_OVERCOMMIT);
     return 0;
   }
-  uint32_t write = atomic_read(buffer->write);
-  atomic_write(buffer->write, write+size);
+ retry: {
+    uint32_t write = atomic_read(buffer->write);
+    if(!atomic_cas(buffer->write, write, write+size))
+      goto retry;
+  }
   buffer->reserved = 0;
   return 1;
 }
