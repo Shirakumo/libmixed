@@ -289,14 +289,19 @@ define_test(randomized, {
     for(int i=0; i<RANDOMIZED_REPEAT; ++i){
       float *area = 0;
       uint32_t avail = UINT32_MAX;
+      uint32_t prev_avail = avail;
       if(rand() % 2 == 0){
         mixed_buffer_request_write(&area, &avail, &buffer);
+        if(prev_avail < avail) fail("Write more than requested.");
+        if(avail) isnt_p(area, 0);
         avail = rand() % (avail+1);
         pass(mixed_buffer_finish_write(avail, &buffer));
         wptr = (wptr + avail) % size;
         full += avail;
       }else{
         mixed_buffer_request_read(&area, &avail, &buffer);
+        if(prev_avail < avail) fail("Read more than requested.");
+        if(avail) isnt_p(area, 0);
         avail = rand() % (avail+1);
         pass(mixed_buffer_finish_read(avail, &buffer));
         rptr = (rptr + avail) % size;
