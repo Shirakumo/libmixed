@@ -59,7 +59,6 @@ inline int bip_request_read(uint32_t *off, uint32_t *size, struct bip *buffer){
   if(full_r2){
     uint32_t available = buffer->size - read;
     if(0 < available){
-      //printf("[B %i %i %i]", full_r2, write, read);
       *size = MIN(*size, available);
       *off = read;
     }else if(0 < write){ // We are at the end and need to wrap now.
@@ -69,22 +68,18 @@ inline int bip_request_read(uint32_t *off, uint32_t *size, struct bip *buffer){
         write = write_ & 0x7FFFFFFF;
         goto retry;
       }
-      //printf("[A %i %i %i]", full_r2, write, read);
       *size = MIN(*size, write);
       *off = 0;
       atomic_write(buffer->read, 0);
     }else{ // Write has not done anything yet, no space!
-      //printf("[0 %i %i %i]", full_r2, write, read);
       *size = 0;
       *off = 0;
       return 0;
     }
   }else if(read < write){
-    //printf("[C %i %i %i]", full_r2, write, read);
     *size = MIN(*size, write-read);
     *off = read;
   }else{
-    //printf("[D %i %i %i]", full_r2, write, read);
     *size = 0;
     *off = 0;
     return 0;
@@ -97,7 +92,6 @@ inline int bip_finish_read(uint32_t size, struct bip *buffer){
   if(full_r2){
     if(buffer->size-read < size){
       mixed_err(MIXED_BUFFER_OVERCOMMIT);
-      //printf("{A %i %i %i}", full_r2, write, read);
       return 0;
     }else{
       atomic_write(buffer->read, read+size);
@@ -105,13 +99,11 @@ inline int bip_finish_read(uint32_t size, struct bip *buffer){
   }else if(read<write){
     if(write-read < size){
       mixed_err(MIXED_BUFFER_OVERCOMMIT);
-      //printf("{B %i %i %i}", full_r2, write, read);
       return 0;
     }
     atomic_write(buffer->read, read+size);
   }else if(0 < size){
     mixed_err(MIXED_BUFFER_OVERCOMMIT);
-    //printf("{C %i %i %i %i}", full_r2, write, read, size);
     return 0;
   }
   return 1;
