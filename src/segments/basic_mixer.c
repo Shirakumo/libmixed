@@ -88,12 +88,13 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
     float div = volume;
 
     for(channel_t c=0; c<channels; ++c){
+      float *in=0, *out=0;
+      
       // Compute how much we can mix on this channel.
       uint32_t samples = mixed_buffer_available_write(data->out[c]);
-      for(uint32_t b=0; b<buffers; ++b)
-        samples = MIN(samples, mixed_buffer_available_read(data->in[b*buffers+c]));
+      for(uint32_t i=c; i<data->count; i+=channels)
+        mixed_buffer_request_read(&in, &samples, data->in[i]);
 
-      float *in=0, *out=0;
       mixed_buffer_request_write(&out, &samples, data->out[c]);
 
       // Mix first buffer directly.
@@ -105,11 +106,11 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
       mixed_buffer_finish_read(samples, buffer);
 
       // Mix other buffers additively.
-      for(uint32_t b=1; b<buffers; ++b){
-        struct mixed_buffer *buffer = data->in[b*buffers+c];
+      for(uint32_t i=c+channels; i<data->count; i+=channels){
+        struct mixed_buffer *buffer = data->in[i];
         mixed_buffer_request_read(&in, &samples, buffer);
-        for(uint32_t i=0; i<samples; ++i){
-          out[i] += in[i]*div;
+        for(uint32_t j=0; j<samples; ++j){
+          out[j] += in[j]*div;
         }
         mixed_buffer_finish_read(samples, buffer);
       }
