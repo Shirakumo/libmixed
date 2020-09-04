@@ -149,60 +149,39 @@ VECTORIZE float calculate_pitch_shift(struct space_mixer_data *listener, struct 
 
 VECTORIZE int space_mixer_mix(struct mixed_segment *segment){
   struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
-
-  // Shift frequencies
-  for(uint32_t s=0; s<data->count; ++s){
-    struct space_source *source = data->sources[s];
-    float pitch = clamp(0.5, calculate_pitch_shift(data, source), 2.0);
-    if(pitch != 1.0){
-      float *inout;
-      uint32_t samples = UINT32_MAX;
-      mixed_buffer_request_read(&inout, &samples, source->buffer);
-      // KLUDGE: Using too few samples here creates massive distortion.
-      //         Just /not/ pitch shifting seems to work out fine, though.
-      //         At least I don't notice anything myself.
-      if(10 < samples)
-        pitch_shift(pitch, inout, inout, samples, &data->pitch_data);
-    }
-  }
-
   float *left, *right, *in;
-  uint32_t count = data->count;
   uint32_t samples = UINT32_MAX;
-  for(uint32_t s=0; s<count; ++s)
-    samples = MIN(samples, mixed_buffer_available_read(data->sources[s]->buffer));
   
+  // Compute sample counts
   mixed_buffer_request_write(&left, &samples, data->left);
   mixed_buffer_request_write(&right, &samples, data->right);
-  if(count == 0){
-    memset(left, 0, samples*sizeof(float));
-    memset(right, 0, samples*sizeof(float));
-  }else{
+  for(uint32_t s=0; s<data->count; ++s){
+    struct space_source *source = data->sources[s];
+    if(!source) continue;
+
+    mixed_buffer_request_read(&in, &samples, source->buffer);
+    if(samples == 0) break;
+  }
+  
+  memset(left, 0, samples*sizeof(float));
+  memset(right, 0, samples*sizeof(float));
+  for(uint32_t s=0; s<data->count; ++s){
+    struct space_source *source = data->sources[s];
+    if(!source) continue;
+  
     float lvolume, rvolume;
-    // Mix the first source directly to avoid a clearing loop.
-    struct space_source *source = data->sources[0];
-    
     mixed_buffer_request_read(&in, &samples, source->buffer);
     calculate_volumes(&lvolume, &rvolume, source, data);
+    float pitch = clamp(0.5, calculate_pitch_shift(data, source), 2.0);
+    if(pitch != 1.0)
+      pitch_shift(pitch, in, in, samples, &data->pitch_data);
     for(uint32_t i=0; i<samples; ++i){
-      left[i] = in[i] * lvolume;
-      right[i] = in[i] * rvolume;
+      left[i] += in[i] * lvolume;
+      right[i] += in[i] * rvolume;
     }
     mixed_buffer_finish_read(samples, source->buffer);
-    
-    // Mix the rest of the sources additively.
-    for(uint32_t s=1; s<count; ++s){
-      source = data->sources[s];
-      
-      mixed_buffer_request_read(&in, &samples, source->buffer);
-      calculate_volumes(&lvolume, &rvolume, source, data);
-      for(uint32_t i=0; i<samples; ++i){
-        left[i] += in[i] * lvolume;
-        right[i] += in[i] * rvolume;
-      }
-      mixed_buffer_finish_read(samples, source->buffer);
-    }
   }
+    
   mixed_buffer_finish_write(samples, data->left);
   mixed_buffer_finish_write(samples, data->right);
   return 1;
@@ -246,24 +225,25 @@ int space_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
   switch(field){
   case MIXED_BUFFER:
     if(buffer){ // Add or set an element
-      if(location < data->count){
-        data->sources[location]->buffer = (struct mixed_buffer *)buffer;
-    }else{
-        struct space_source *source = calloc(1, sizeof(struct space_source));
-        if(!source){
-          mixed_err(MIXED_OUT_OF_MEMORY);
-          return 0;
-        }
-        source->buffer = (struct mixed_buffer *)buffer;
-        return vector_add(source, (struct vector *)data);
+      struct space_source *source = 0;
+      if(location < data->count)
+        source = data->sources[location];
+      if(!source)
+        source = calloc(1, sizeof(struct space_source));
+      if(!source){
+        mixed_err(MIXED_OUT_OF_MEMORY);
+        return 0;
       }
+      source->buffer = (struct mixed_buffer *)buffer;
+      if(location < data->count) data->sources[location] = source;
+      else return vector_add_pos(location, source, (struct vector *)data);
     }else{ // Remove an element
       if(data->count <= location){
         mixed_err(MIXED_INVALID_LOCATION);
         return 0;
       }
       free(data->sources[location]);
-      return vector_remove_pos(location, (struct vector *)data);
+      data->sources[location] = 0;
     }
     return 1;
   case MIXED_SPACE_LOCATION:
@@ -302,6 +282,10 @@ int space_mixer_get_in(uint32_t field, uint32_t location, void *buffer, struct m
   }
   
   struct space_source *source = data->sources[location];
+  if(source == 0){
+    mixed_err(MIXED_INVALID_LOCATION);
+    return 0;
+  }
 
   switch(field){
   case MIXED_BUFFER:

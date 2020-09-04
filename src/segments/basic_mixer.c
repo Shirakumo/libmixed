@@ -55,14 +55,15 @@ int basic_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
       if(location < data->count){
         data->in[location] = (struct mixed_buffer *)buffer;
       }else{
-        return vector_add(buffer, (struct vector *)data);
+        return vector_add_pos(location, buffer, (struct vector *)data);
       }
     }else{ // Remove an element
       if(data->count <= location){
         mixed_err(MIXED_INVALID_LOCATION);
         return 0;
       }
-      return vector_remove_pos(location, (struct vector *)data);
+      data->in[location] = 0;
+      return 1;
     }
     return 1;
   default:
@@ -74,48 +75,35 @@ int basic_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
 VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   channel_t channels = data->channels;
-  uint32_t buffers = data->count / channels;
-  if(buffers == 0){
-    for(channel_t c=0; c<channels; ++c){
-      float *out;
-      uint32_t samples = UINT32_MAX;
-      mixed_buffer_request_write(&out, &samples, data->out[c]);
-      memset(out, 0, samples*sizeof(float));
-      mixed_buffer_finish_write(samples, data->out[c]);
-    }
-  }else{
-    float volume = data->volume;
-    float div = volume;
+  float volume = data->volume;
+  float div = volume;
 
-    for(channel_t c=0; c<channels; ++c){
-      float *in=0, *out=0;
+  for(channel_t c=0; c<channels; ++c){
+    float *in=0, *out=0;
+    uint32_t samples = UINT32_MAX;
+    
+    // Compute how much we can mix on this channel.
+    mixed_buffer_request_write(&out, &samples, data->out[c]);
+    for(uint32_t i=c; i<data->count; i+=channels){
+      struct mixed_buffer *buffer = data->in[i];
+      if(!buffer) continue;
       
-      // Compute how much we can mix on this channel.
-      uint32_t samples = mixed_buffer_available_write(data->out[c]);
-      for(uint32_t i=c; i<data->count; i+=channels)
-        mixed_buffer_request_read(&in, &samples, data->in[i]);
-
-      mixed_buffer_request_write(&out, &samples, data->out[c]);
-
-      // Mix first buffer directly.
-      struct mixed_buffer *buffer = data->in[c];
       mixed_buffer_request_read(&in, &samples, buffer);
-      for(uint32_t i=0; i<samples; ++i){
-        out[i] = in[i]*div;
+      if(samples == 0) break;
+    }
+
+    memset(out, 0, samples*sizeof(float));
+    for(uint32_t i=c; i<data->count; i+=channels){
+      struct mixed_buffer *buffer = data->in[i];
+      if(!buffer) continue;
+      
+      mixed_buffer_request_read(&in, &samples, buffer);
+      for(uint32_t j=0; j<samples; ++j){
+        out[j] += in[j] * div;
       }
       mixed_buffer_finish_read(samples, buffer);
-
-      // Mix other buffers additively.
-      for(uint32_t i=c+channels; i<data->count; i+=channels){
-        struct mixed_buffer *buffer = data->in[i];
-        mixed_buffer_request_read(&in, &samples, buffer);
-        for(uint32_t j=0; j<samples; ++j){
-          out[j] += in[j]*div;
-        }
-        mixed_buffer_finish_read(samples, buffer);
-      }
-      mixed_buffer_finish_write(samples, data->out[c]);
     }
+    mixed_buffer_finish_write(samples, data->out[c]);
   }
   return 1;
 }
