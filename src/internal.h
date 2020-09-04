@@ -58,6 +58,7 @@ struct vector{
 void free_vector(struct vector *vector);
 int vector_add(void *element, struct vector *vector);
 int vector_add_pos(uint32_t i, void *element, struct vector *vector);
+int vector_remove_count(uint32_t i, uint32_t n, struct vector *vector);
 int vector_remove_pos(uint32_t i, struct vector *vector);
 int vector_remove_item(void *element, struct vector *vector);
 int vector_clear(struct vector *vector);

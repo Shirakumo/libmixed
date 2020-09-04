@@ -6,6 +6,19 @@ void free_vector(struct vector *vector){
   vector->data = 0;
 }
 
+int vector_maybe_shrink(struct vector *vector){
+  if(vector->count < vector->size/4 && BASE_VECTOR_SIZE < vector->size){
+    void **data = crealloc(vector->data, vector->size, vector->size/2, sizeof(void *));
+    if(!data){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+    vector->size /= 2;
+    vector->data = data;
+  }
+  return 1;
+}
+
 int vector_add_pos(uint32_t i, void *element, struct vector *vector){
   void **data = vector->data;
   // Not yet initialised
@@ -15,7 +28,7 @@ int vector_add_pos(uint32_t i, void *element, struct vector *vector){
     vector->count = 0;
   }
   // Too small
-  if(vector->count == vector->size){
+  while(data && vector->size <= i){
     data = crealloc(vector->data, vector->size, vector->size*2, sizeof(void *));
     if(data) vector->size *= 2;
   }
@@ -30,7 +43,7 @@ int vector_add_pos(uint32_t i, void *element, struct vector *vector){
   }
   data[i] = element;
   vector->data = data;
-  ++vector->count;
+  vector->count = (vector->count < i)? i : vector->count+1;
   return 1;
 }
 
@@ -38,28 +51,24 @@ int vector_add(void *element, struct vector *vector){
   return vector_add_pos(vector->count, element, vector);
 }
 
-int vector_remove_pos(uint32_t i, struct vector *vector){
+int vector_remove_count(uint32_t i, uint32_t n, struct vector *vector){
   if(!vector->data){
     mixed_err(MIXED_NOT_INITIALIZED);
     return 0;
   }
   // Shift down
-  for(uint32_t j=i; j<vector->count-1; ++j){
-    vector->data[j] = vector->data[j+1];
+  for(uint32_t j=i; j<vector->count-n; ++j){
+    vector->data[j] = vector->data[j+n];
   }
-  --vector->count;
-  vector->data[vector->count] = 0;
-  // We have sufficiently deallocated. Shrink.
-  if(vector->count < vector->size/4 && BASE_VECTOR_SIZE < vector->size){
-    void **data = crealloc(vector->data, vector->size, vector->size/2, sizeof(void *));
-    if(!data){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    vector->size /= 2;
-    vector->data = data;
+  vector->count -= n;
+  for(uint32_t j=0; j<n; ++j){
+    vector->data[j+vector->count] = 0;
   }
-  return 1;
+  return vector_maybe_shrink(vector);
+}
+
+int vector_remove_pos(uint32_t i, struct vector *vector){
+  return vector_remove_count(i, 1, vector);
 }
 
 int vector_remove_item(void *element, struct vector *vector){
@@ -77,16 +86,9 @@ int vector_remove_item(void *element, struct vector *vector){
 }
 
 int vector_clear(struct vector *vector){
-  vector->count = 0;
-  // We have sufficiently deallocated. Shrink.
-  if(BASE_VECTOR_SIZE < vector->size){
-    void **data = crealloc(vector->data, vector->size, BASE_VECTOR_SIZE, sizeof(void *));
-    if(!data){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    vector->size = BASE_VECTOR_SIZE;
-    vector->data = data;
+  for(uint32_t i=0; i<vector->count; ++i){
+    vector->data[i] = 0;
   }
-  return 1;
+  vector->count = 0;
+  return vector_maybe_shrink(vector);
 }
