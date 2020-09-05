@@ -375,7 +375,15 @@ extern "C" {
     MIXED_LEFT_REAR = 2,
     MIXED_RIGHT_REAR = 3,
     MIXED_CENTER = 4,
-    MIXED_SUBWOOFER = 5
+    MIXED_SUBWOOFER = 5,
+    MIXED_LEFT_FRONT_BOTTOM = 0,
+    MIXED_RIGHT_FRONT_BOTTOM = 1,
+    MIXED_LEFT_REAR_BOTTOM = 2,
+    MIXED_RIGHT_REAR_BOTTOM = 3,
+    MIXED_LEFT_FRONT_TOP = 6,
+    MIXED_RIGHT_FRONT_TOP = 7,
+    MIXED_LEFT_REAR_TOP = 8,
+    MIXED_RIGHT_REAR_TOP = 9,
   };
 
   // This enum holds type descriptors for the segment fields.
