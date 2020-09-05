@@ -41,13 +41,14 @@ struct test *find_test(int id){
   return &tests[id];
 }
 
-struct test *search_test(const char *name){
+void search_tests(const char *name, struct test **matched, int *n){
+  int j = 0;
   for(int i=0; i<test_count; ++i){
     if(strncmp(name, tests[i].suite, strlen(tests[i].suite)) == 0
        || strncmp(name, tests[i].name, strlen(tests[i].name)) == 0)
-      return &tests[i];
+      matched[j++] = &tests[i];
   }
-  return 0;
+  *n = j;
 }
 
 int run_test(struct test *test){
@@ -91,9 +92,12 @@ int main(int argc, char *argv[]){
   int tests_to_runc = 0;
   if(1 < argc){
     for(int i=1; i<argc; ++i){
-      struct test *test = search_test(argv[i]);
-      if(!test) fprintf(stderr, "WARN: No test matching \"%s\" found.\n", argv[i]);
-      else tests_to_run[tests_to_runc++] = test;
+      struct test *tests[MAX_TESTS] = {0};
+      int n = MAX_TESTS;
+      search_tests(argv[i], tests, &n);
+      if(n==0) fprintf(stderr, "WARN: No tests matching \"%s\" found.\n", argv[i]);
+      else for(int j=0; j<n; ++j)
+             tests_to_run[tests_to_runc++] = tests[j];
     }
   }else{
     for(int i=0; i<test_count; ++i){
