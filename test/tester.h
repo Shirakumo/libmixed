@@ -76,6 +76,14 @@ struct test *find_test(int id);
       else ++__formid;                                                  \
   }
 
+#define is_a(A, B, D){                                                  \
+    ssize_t __a = (ssize_t)(A);                                         \
+    ssize_t __b = (ssize_t)(B);                                         \
+    if(D < labs(__a - __b))                                              \
+      fail_test("Value was %li but should have been %li", __a, __b)     \
+      else ++__formid;                                                  \
+  }
+
 #define isnt(A, B){                                                     \
     ssize_t __a = (ssize_t)(A);                                         \
     ssize_t __b = (ssize_t)(B);                                         \
@@ -88,7 +96,7 @@ struct test *find_test(int id);
     size_t __a = (size_t)(A);                                           \
     size_t __b = (size_t)(B);                                           \
     if(__a != __b)                                                      \
-      fail_test("Value was %u but should have been %u", __a, __b)       \
+      fail_test("Value was %lu but should have been %lu", __a, __b)     \
     else ++__formid;                                                    \
   }
 

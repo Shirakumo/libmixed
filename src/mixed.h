@@ -506,7 +506,7 @@ extern "C" {
     enum mixed_segment_info_flags flags;
     // The minimal number of inputs that this segment requires.
     uint32_t min_inputs;
-    // The maximal number of inputs that this segment can support.
+    // The maximal number of outputs that this segment can support.
     uint32_t max_inputs;
     // The number of outputs that this segment provides.
     uint32_t outputs;

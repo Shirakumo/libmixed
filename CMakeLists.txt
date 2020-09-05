@@ -140,6 +140,7 @@ if(BUILD_TESTER)
     "test/tester.h"
     "test/tester.c"
     "test/buffer.c"
+    "test/encoding.c"
     "test/pack.c"
     "test/transfer.c"
     "test/packer.c"
