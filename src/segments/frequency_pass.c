@@ -190,7 +190,7 @@ int frequency_pass_segment_set(uint32_t field, void *value, struct mixed_segment
     compute_coefficients(data);
     break;
   case MIXED_FREQUENCY_CUTOFF:
-    if(*(uint32_t *)value <= 0 || data->samplerate <= *(uint32_t *)value){
+    if(*(uint32_t *)value <= 0 || data->samplerate < *(uint32_t *)value){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
