@@ -3,30 +3,11 @@
 struct frequency_pass_segment_data{
   struct mixed_buffer *in;
   struct mixed_buffer *out;
-  float x[2];
-  float y[2];
-  float a[2];
-  float b[2];
-  float k;
+  struct lowpass_data lowpass;
   uint32_t cutoff;
   uint32_t samplerate;
   enum mixed_frequency_pass pass;
 };
-
-void compute_coefficients(struct frequency_pass_segment_data *data){
-  float a = tan(M_PI*data->cutoff/data->samplerate);
-  float a2 = a*a;
-  float s2 = sqrt(2);
-  data->k = (a2)/(1+s2*a+a2);
-  data->a[0] = (2*(a2-1))/(1+s2*a+a2);
-  data->a[1] = (1-s2*a+a2)/(1+s2*a+a2);
-  data->b[0] = 2;
-  data->b[1] = 1;
-  data->x[0] = 0;
-  data->x[1] = 0;
-  data->y[0] = 0;
-  data->y[1] = 0;
-}
 
 int frequency_pass_segment_free(struct mixed_segment *segment){
   if(segment->data){
@@ -38,10 +19,10 @@ int frequency_pass_segment_free(struct mixed_segment *segment){
 
 int frequency_pass_segment_start(struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
-  data->x[0] = 0;
-  data->x[1] = 0;
-  data->y[0] = 0;
-  data->y[1] = 0;
+  data->lowpass.x[0] = 0;
+  data->lowpass.x[1] = 0;
+  data->lowpass.y[0] = 0;
+  data->lowpass.y[1] = 0;
 
   if(data->in == 0 || data->out == 0){
     mixed_err(MIXED_BUFFER_MISSING);
@@ -87,11 +68,11 @@ int frequency_pass_segment_set_out(uint32_t field, uint32_t location, void *buff
 int low_pass_segment_mix(struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
 
-  float *x = data->x;
-  float *y = data->y;
-  float *a = data->a;
-  float *b = data->b;
-  float k = data->k;
+  float *x = data->lowpass.x;
+  float *y = data->lowpass.y;
+  float *a = data->lowpass.a;
+  float *b = data->lowpass.b;
+  float k =  data->lowpass.k;
 
   with_mixed_buffer_transfer(i, samples, in, data->in, out, data->out, {
       float s = in[i];
@@ -107,11 +88,11 @@ int low_pass_segment_mix(struct mixed_segment *segment){
 int high_pass_segment_mix(struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
 
-  float *x = data->x;
-  float *y = data->y;
-  float *a = data->a;
-  float *b = data->b;
-  float k = data->k;
+  float *x = data->lowpass.x;
+  float *y = data->lowpass.y;
+  float *a = data->lowpass.a;
+  float *b = data->lowpass.b;
+  float k =  data->lowpass.k;
 
   with_mixed_buffer_transfer(i, samples, in, data->in, out, data->out, {
       float s = in[i];
@@ -187,7 +168,7 @@ int frequency_pass_segment_set(uint32_t field, void *value, struct mixed_segment
       return 0;
     }
     data->samplerate = *(uint32_t *)value;
-    compute_coefficients(data);
+    lowpass_init(data->samplerate, data->cutoff, &data->lowpass);
     break;
   case MIXED_FREQUENCY_CUTOFF:
     if(*(uint32_t *)value <= 0 || data->samplerate < *(uint32_t *)value){
@@ -195,7 +176,7 @@ int frequency_pass_segment_set(uint32_t field, void *value, struct mixed_segment
       return 0;
     }
     data->cutoff = *(uint32_t *)value;
-    compute_coefficients(data);
+    lowpass_init(data->samplerate, data->cutoff, &data->lowpass);
     break;
   case MIXED_FREQUENCY_PASS:
     if(*(enum mixed_frequency_pass *)value < MIXED_PASS_LOW ||
@@ -242,7 +223,7 @@ MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pas
   data->samplerate = samplerate;
   data->pass = pass;
 
-  compute_coefficients(data);
+  lowpass_init(samplerate, cutoff, &data->lowpass);
   
   segment->free = frequency_pass_segment_free;
   segment->start = frequency_pass_segment_start;

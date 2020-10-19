@@ -84,6 +84,17 @@ void free_pitch_data(struct pitch_data *data);
 int make_pitch_data(uint32_t framesize, uint32_t oversampling, uint32_t samplerate, struct pitch_data *data);
 void pitch_shift(float pitch, float *in, float *out, uint32_t samples, struct pitch_data *data);
 
+struct lowpass_data{
+  float x[2];
+  float y[2];
+  float a[2];
+  float b[2];
+  float k;
+};
+
+void lowpass_init(uint32_t samplerate, uint32_t cutoff, struct lowpass_data *data);
+float lowpass(float sample, struct lowpass_data *data);
+
 int mix_noop(struct mixed_segment *segment);
 
 void mixed_err(int errorcode);

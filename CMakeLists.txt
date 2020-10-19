@@ -83,6 +83,7 @@ add_library(mixed OBJECT
   "src/encoding.h"
   "src/internal.h"
   "src/ladspa.h"
+  "src/lowpass.c"
   "src/mixed.h"
   "src/pack.c"
   "src/pitch.c"

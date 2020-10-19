@@ -1109,7 +1109,7 @@ extern "C" {
   //
   // This segment allows changing between different channel representations.
   // If a requested configuration is not supported, an error is created.
-  MIXED_EXPORT int mixed_make_segment_channel_convert(uint8_t in, uint8_t out, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_channel_convert(uint8_t in, uint8_t out, uint32_t samplerate, struct mixed_segment *segment);
 
   // Create a chain segment
   //
