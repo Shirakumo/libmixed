@@ -14,8 +14,8 @@ struct channel_data_2_to_5_1{
   channel_t out_channels;
   struct lowpass_data lp[3];
   uint32_t delay_i;
+  uint32_t delay_size;
   float *delay;
-  float *ps[2];
 };
 
 int channel_free(struct mixed_segment *segment){
@@ -122,6 +122,7 @@ int channel_mix_stereo_5_1(struct mixed_segment *segment){
   
   uint32_t frames = UINT32_MAX;
   uint32_t delay_i = data->delay_i;
+  const uint32_t delay_size = data->delay_size;
   float *l, *r, *fl, *fr, *rl, *rr, *ce, *lfe;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
@@ -136,18 +137,15 @@ int channel_mix_stereo_5_1(struct mixed_segment *segment){
     float ri = r[i];
     float c = (li+ri)*invsqrt;
     float s = (li-ri)*invsqrt;
-    // Center is low-pass 4kHz
+    // Center low-pass 4kHz
     float ci = lowpass(c, &data->lp[0]);
-    // Surround is low-pass 200Hz
+    // Subwoofer low-pass 200Hz
     float lfei = lowpass(c, &data->lp[1]);
-    // First delay by 12ms
-    float d = data->delay[delay_i];
-    data->delay[delay_i] = s;
-    delay_i++;
-    // Then low-pass 7kHz
-    float r = lowpass(d, &data->lp[2]);
-    // Finally phase-shift +-90 deg.
-    float rri = phase(r, +90);
+    // Surround low-pass 7kHz
+    float r = lowpass(s, &data->lp[2]);
+    // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
+    float rri = hilbert(r, data->delay, delay_size, delay_i);
+    delay_i = (delay_i+1) % (delay_size-1);
     float rli = 1.0f-rri;
 
     fl[i] = li;

@@ -95,6 +95,8 @@ struct lowpass_data{
 void lowpass_init(uint32_t samplerate, uint32_t cutoff, struct lowpass_data *data);
 float lowpass(float sample, struct lowpass_data *data);
 
+float hilbert(float input, float *delay, uint32_t delay_size, uint32_t delay_i);
+
 int mix_noop(struct mixed_segment *segment);
 
 void mixed_err(int errorcode);

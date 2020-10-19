@@ -62,7 +62,7 @@ int main(int argc, char **argv){
   }
 
   if(!mixed_make_segment_space_mixer(internal_samplerate, &space)
-     || !mixed_make_segment_channel_convert(2, 1, &downmix)
+     || !mixed_make_segment_channel_convert(2, 1, internal_samplerate, &downmix)
      || !mixed_make_segment_chain(&chain)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;

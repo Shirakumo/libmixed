@@ -44,7 +44,7 @@ int main(int argc, char **argv){
   }
 
   if(!mixed_make_segment_generator(wave_type, frequency, internal_samplerate, &generator)
-     || !mixed_make_segment_channel_convert(1, 2, &upmix)
+     || !mixed_make_segment_channel_convert(1, 2, internal_samplerate, &upmix)
      || !mixed_make_segment_fade(0.0, 0.8, 5.0, MIXED_CUBIC_IN_OUT, internal_samplerate, &fade)
      || !mixed_make_segment_chain(&chain)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));

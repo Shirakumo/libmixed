@@ -81,6 +81,7 @@ add_library(mixed OBJECT
   "src/common.c"
   "src/encoding.c"
   "src/encoding.h"
+  "src/hilbert.c"
   "src/internal.h"
   "src/ladspa.h"
   "src/lowpass.c"
