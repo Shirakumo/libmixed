@@ -380,10 +380,14 @@ extern "C" {
     MIXED_RIGHT_FRONT_BOTTOM = 1,
     MIXED_LEFT_REAR_BOTTOM = 2,
     MIXED_RIGHT_REAR_BOTTOM = 3,
+    MIXED_CENTER_FRONT = 4,
     MIXED_LEFT_FRONT_TOP = 6,
     MIXED_RIGHT_FRONT_TOP = 7,
     MIXED_LEFT_REAR_TOP = 8,
     MIXED_RIGHT_REAR_TOP = 9,
+    MIXED_CENTER_REAR = 10,
+    MIXED_LEFT_SIDE = 11,
+    MIXED_RIGHT_SIDE = 12,
   };
 
   // This enum holds type descriptors for the segment fields.
