@@ -18,6 +18,17 @@ struct channel_data_2_to_5_1{
   float *delay;
 };
 
+struct channel_data_2_to_4_0{
+  struct mixed_buffer *in[8];
+  struct mixed_buffer *out[8];
+  channel_t in_channels;
+  channel_t out_channels;
+  struct lowpass_data lp;
+  uint32_t delay_i;
+  uint32_t delay_size;
+  float *delay;
+};
+
 int channel_free(struct mixed_segment *segment){
   if(segment->data){
     free(segment->data);
@@ -114,6 +125,47 @@ int channel_mix_mono_stereo(struct mixed_segment *segment){
   return 1;
 }
 
+int channel_mix_stereo_4_0(struct mixed_segment *segment){
+  struct channel_data_2_to_4_0 *data = (struct channel_data_2_to_4_0 *)segment->data;
+  const float invsqrt = 1.0/sqrt(2);
+  
+  uint32_t frames = UINT32_MAX;
+  uint32_t delay_i = data->delay_i;
+  const uint32_t delay_size = data->delay_size;
+  float *l, *r, *fl, *fr, *rl, *rr;
+  mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
+  mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
+  mixed_buffer_request_write(&fl, &frames, data->out[MIXED_LEFT_FRONT]);
+  mixed_buffer_request_write(&fr, &frames, data->out[MIXED_RIGHT_FRONT]);
+  mixed_buffer_request_write(&rl, &frames, data->out[MIXED_LEFT_REAR]);
+  mixed_buffer_request_write(&rr, &frames, data->out[MIXED_RIGHT_REAR]);
+  for(uint32_t i=0; i<frames; ++i){
+    float li = l[i];
+    float ri = r[i];
+    float s = (li-ri)*invsqrt;
+    // Surround low-pass 7kHz
+    float r = lowpass(s, &data->lp);
+    // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
+    float rri = hilbert(r, data->delay, delay_size, delay_i);
+    delay_i = (delay_i+1) % (delay_size-1);
+    float rli = 1.0f-rri;
+
+    fl[i] = li;
+    fr[i] = ri;
+    rl[i] = rli;
+    rr[i] = rri;
+  }
+  mixed_buffer_finish_read(frames, data->in[MIXED_LEFT]);
+  mixed_buffer_finish_read(frames, data->in[MIXED_RIGHT]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_LEFT_FRONT]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_FRONT]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_LEFT_REAR]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_REAR]);
+  data->delay_i = delay_i;
+
+  return 1;
+}
+
 // Based on Real-Time Conversion of Stereo Audio to 5.1 Channel Audio for Providing Realistic Sounds by Chan Jun Chun et al.
 //   https://core.ac.uk/download/pdf/25789335.pdf
 int channel_mix_stereo_5_1(struct mixed_segment *segment){
@@ -126,12 +178,12 @@ int channel_mix_stereo_5_1(struct mixed_segment *segment){
   float *l, *r, *fl, *fr, *rl, *rr, *ce, *lfe;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
-  mixed_buffer_request_write(&fl, &frames, data->in[MIXED_LEFT_FRONT]);
-  mixed_buffer_request_write(&fr, &frames, data->in[MIXED_RIGHT_FRONT]);
-  mixed_buffer_request_write(&rl, &frames, data->in[MIXED_LEFT_REAR]);
-  mixed_buffer_request_write(&rr, &frames, data->in[MIXED_RIGHT_REAR]);
-  mixed_buffer_request_write(&ce, &frames, data->in[MIXED_CENTER]);
-  mixed_buffer_request_write(&lfe, &frames, data->in[MIXED_SUBWOOFER]);
+  mixed_buffer_request_write(&fl, &frames, data->out[MIXED_LEFT_FRONT]);
+  mixed_buffer_request_write(&fr, &frames, data->out[MIXED_RIGHT_FRONT]);
+  mixed_buffer_request_write(&rl, &frames, data->out[MIXED_LEFT_REAR]);
+  mixed_buffer_request_write(&rr, &frames, data->out[MIXED_RIGHT_REAR]);
+  mixed_buffer_request_write(&ce, &frames, data->out[MIXED_CENTER]);
+  mixed_buffer_request_write(&lfe, &frames, data->out[MIXED_SUBWOOFER]);
   for(uint32_t i=0; i<frames; ++i){
     float li = l[i];
     float ri = r[i];
@@ -157,12 +209,12 @@ int channel_mix_stereo_5_1(struct mixed_segment *segment){
   }
   mixed_buffer_finish_read(frames, data->in[MIXED_LEFT]);
   mixed_buffer_finish_read(frames, data->in[MIXED_RIGHT]);
-  mixed_buffer_finish_write(frames, data->in[MIXED_LEFT_FRONT]);
-  mixed_buffer_finish_write(frames, data->in[MIXED_RIGHT_FRONT]);
-  mixed_buffer_finish_write(frames, data->in[MIXED_LEFT_REAR]);
-  mixed_buffer_finish_write(frames, data->in[MIXED_RIGHT_REAR]);
-  mixed_buffer_finish_write(frames, data->in[MIXED_CENTER]);
-  mixed_buffer_finish_write(frames, data->in[MIXED_SUBWOOFER]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_LEFT_FRONT]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_FRONT]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_LEFT_REAR]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_REAR]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_CENTER]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_SUBWOOFER]);
   data->delay_i = delay_i;
 
   return 1;
@@ -189,6 +241,8 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
     segment->mix = channel_mix_mono_stereo;
   }else if(in == 2 && out == 1){
     segment->mix = channel_mix_stereo_mono;
+  }else if(in == 2 && out == 4){
+    segment->mix = channel_mix_stereo_4_0;
   }else if(in == 2 && out == 6){
     segment->mix = channel_mix_stereo_5_1;
   }else{
@@ -198,7 +252,8 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
 
   struct channel_data *data = 
     calloc(1, (out == 6)? sizeof(struct channel_data_2_to_5_1)
-                        : sizeof(struct channel_data));
+             :(out == 4)? sizeof(struct channel_data_2_to_4_0)
+             :            sizeof(struct channel_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
@@ -209,7 +264,8 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
 
   if(out == 6){
     struct channel_data_2_to_5_1 *_data = (struct channel_data_2_to_5_1*)data;
-    _data->delay = calloc((samplerate*12)/1000, sizeof(float));
+    _data->delay_size = (samplerate*12)/1000;
+    _data->delay = calloc(_data->delay_size, sizeof(float));
     if(!_data->delay){
       free(data);
       mixed_err(MIXED_OUT_OF_MEMORY);
@@ -218,6 +274,16 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
     lowpass_init(samplerate, 4000, &_data->lp[0]);
     lowpass_init(samplerate,  200, &_data->lp[1]);
     lowpass_init(samplerate, 7000, &_data->lp[2]);
+  }else if(out == 4){
+    struct channel_data_2_to_4_0 *_data = (struct channel_data_2_to_4_0*)data;
+    _data->delay_size = (samplerate*12)/1000;
+    _data->delay = calloc(_data->delay_size, sizeof(float));
+    if(!_data->delay){
+      free(data);
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+    lowpass_init(samplerate, 7000, &_data->lp);
   }
   
   segment->free = channel_free;
