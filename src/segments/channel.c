@@ -266,6 +266,8 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
       return 0;
     }
     
+    data->in_channels = in;
+    data->out_channels = out;
     data->delay_size = (samplerate*12)/1000;
     data->delay = calloc(data->delay_size, sizeof(float));
     if(!data->delay){
@@ -283,6 +285,8 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
       return 0;
     }
     
+    data->in_channels = in;
+    data->out_channels = out;
     data->delay_size = (samplerate*12)/1000;
     data->delay = calloc(data->delay_size, sizeof(float));
     if(!data->delay){
