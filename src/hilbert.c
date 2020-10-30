@@ -31,7 +31,7 @@ float hilbert(float input, float *delay, uint32_t delay_size, uint32_t delay_i){
   delay[delay_i] = input;
   float hilb = 0.0f;
   for(int i=0; i<100; ++i){
-    hilb += xcoeffs[i] * delay[(delay_i - i*2) & (delay_size-1)];
+    hilb += xcoeffs[i] * delay[(delay_i - i*2) % delay_size];
   }
   return hilb;
 }
