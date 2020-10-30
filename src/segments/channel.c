@@ -238,60 +238,73 @@ int channel_info(struct mixed_segment_info *info, struct mixed_segment *segment)
 
 MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out, uint32_t samplerate, struct mixed_segment *segment){
   if(in == 1 && out == 2){
+    struct channel_data *data = calloc(1, sizeof(struct channel_data));
+    if(!data){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+    
+    data->in_channels = in;
+    data->out_channels = out;
     segment->mix = channel_mix_mono_stereo;
+    segment->data = data;
   }else if(in == 2 && out == 1){
+    struct channel_data *data = calloc(1, sizeof(struct channel_data));
+    if(!data){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+
+    data->in_channels = in;
+    data->out_channels = out;
     segment->mix = channel_mix_stereo_mono;
+    segment->data = data;
   }else if(in == 2 && out == 4){
+    struct channel_data_2_to_4_0 *data = calloc(1, sizeof(struct channel_data_2_to_4_0));
+    if(!data){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+    
+    data->delay_size = (samplerate*12)/1000;
+    data->delay = calloc(data->delay_size, sizeof(float));
+    if(!data->delay){
+      free(data);
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+    lowpass_init(samplerate, 7000, &data->lp);
     segment->mix = channel_mix_stereo_4_0;
+    segment->data = data;
   }else if(in == 2 && out == 6){
+    struct channel_data_2_to_5_1 *data = calloc(1, sizeof(struct channel_data_2_to_5_1));
+    if(!data){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+    
+    data->delay_size = (samplerate*12)/1000;
+    data->delay = calloc(data->delay_size, sizeof(float));
+    if(!data->delay){
+      free(data);
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+    lowpass_init(samplerate, 4000, &data->lp[0]);
+    lowpass_init(samplerate,  200, &data->lp[1]);
+    lowpass_init(samplerate, 7000, &data->lp[2]);
     segment->mix = channel_mix_stereo_5_1;
+    segment->data = data;
   }else{
     mixed_err(MIXED_BAD_CHANNEL_CONFIGURATION);
     return 0;
   }
 
-  struct channel_data *data = 
-    calloc(1, (out == 6)? sizeof(struct channel_data_2_to_5_1)
-             :(out == 4)? sizeof(struct channel_data_2_to_4_0)
-             :            sizeof(struct channel_data));
-  if(!data){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    return 0;
-  }
-
-  data->in_channels = in;
-  data->out_channels = out;
-
-  if(out == 6){
-    struct channel_data_2_to_5_1 *_data = (struct channel_data_2_to_5_1*)data;
-    _data->delay_size = (samplerate*12)/1000;
-    _data->delay = calloc(_data->delay_size, sizeof(float));
-    if(!_data->delay){
-      free(data);
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    lowpass_init(samplerate, 4000, &_data->lp[0]);
-    lowpass_init(samplerate,  200, &_data->lp[1]);
-    lowpass_init(samplerate, 7000, &_data->lp[2]);
-  }else if(out == 4){
-    struct channel_data_2_to_4_0 *_data = (struct channel_data_2_to_4_0*)data;
-    _data->delay_size = (samplerate*12)/1000;
-    _data->delay = calloc(_data->delay_size, sizeof(float));
-    if(!_data->delay){
-      free(data);
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    lowpass_init(samplerate, 7000, &_data->lp);
-  }
-  
   segment->free = channel_free;
   segment->start = channel_start;
   segment->set_in = channel_set_in;
   segment->set_out = channel_set_out;
   segment->info = channel_info;
-  segment->data = data;
   return 1;
 }
 

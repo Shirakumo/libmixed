@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE)
 project(mixed C)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
@@ -46,6 +46,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   elseif(ARCH MATCHES "i386")
     set(COMPILATION_FLAGS ${COMPILATION_FLAGS} -static-libgcc -include ${CMAKE_SOURCE_DIR}/glibcver/glibc_2.9_x86.h)
   endif()
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(COMPILATION_FLAGS ${COMPILATION_FLAGS} -mmacosx-version-min=10.9)
 endif()
 
 ## Libsamplerate
