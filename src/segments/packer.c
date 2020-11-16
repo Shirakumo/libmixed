@@ -3,7 +3,7 @@
 
 struct pack_segment_data{
   struct mixed_pack *pack;
-  struct mixed_buffer **buffers;
+  struct mixed_buffer *buffers[12];
   SRC_STATE *resample_state;
   uint32_t samplerate;
   float volume;
@@ -15,8 +15,6 @@ struct pack_segment_data{
 int pack_segment_free(struct mixed_segment *segment){
   struct pack_segment_data *data = (struct pack_segment_data *)segment->data;
   if(data){
-    if(data->buffers)
-      free(data->buffers);
     if(data->resample_state)
       src_delete(data->resample_state);
     free(data);
@@ -30,7 +28,7 @@ int pack_segment_set_buffer(uint32_t field, uint32_t location, void *buffer, str
 
   switch(field){
   case MIXED_BUFFER:
-    if(location<data->pack->channels){
+    if(location<data->pack->channels && location<12){
       data->buffers[location] = (struct mixed_buffer *)buffer;
       return 1;
     }else{
@@ -49,6 +47,12 @@ int pack_segment_start(struct mixed_segment *segment){
     mixed_err(MIXED_BUFFER_MISSING);
     return 0;
   }
+  
+  if(12 < data->pack->channels){
+    mixed_err(MIXED_INVALID_VALUE);
+    return 0;
+  }
+
   for(int i=0; i<data->pack->channels; ++i){
     if(data->buffers[i] == 0){
       mixed_err(MIXED_BUFFER_MISSING);
@@ -311,7 +315,6 @@ int drain_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
 
 int make_pack_internal(struct mixed_pack *pack, uint32_t samplerate, int quality, struct mixed_segment *segment){
   struct pack_segment_data *data = 0;
-  struct mixed_buffer **buffers = 0;
 
   if(pack->encoding < MIXED_INT8 || MIXED_DOUBLE < pack->encoding){
     mixed_err(MIXED_UNKNOWN_ENCODING);
@@ -324,13 +327,6 @@ int make_pack_internal(struct mixed_pack *pack, uint32_t samplerate, int quality
     goto cleanup;
   }
 
-  buffers = calloc(pack->channels, sizeof(struct mixed_buffer *));
-  if(!buffers){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    goto cleanup;
-  }
-
-  data->buffers = buffers;
   data->pack = pack;
   data->samplerate = samplerate;
   data->volume = 1.0;
@@ -346,9 +342,6 @@ int make_pack_internal(struct mixed_pack *pack, uint32_t samplerate, int quality
  cleanup:
   if(data)
     free(data);
-
-  if(buffers)
-    free(buffers);
   return 0;
 }
 
