@@ -15,6 +15,13 @@ void lowpass_init(uint32_t samplerate, uint32_t cutoff, struct lowpass_data *dat
   data->y[1] = 0;
 }
 
+void lowpass_reset(struct lowpass_data *data){
+  data->x[0] = 0;
+  data->x[1] = 0;
+  data->y[0] = 0;
+  data->y[1] = 0;
+}
+
 float lowpass(float s, struct lowpass_data *data){
   float *x = data->x;
   float *y = data->y;

@@ -6,6 +6,7 @@ struct frequency_pass_segment_data{
   struct lowpass_data lowpass;
   uint32_t cutoff;
   uint32_t samplerate;
+  float mix;
   enum mixed_frequency_pass pass;
 };
 
@@ -19,10 +20,7 @@ int frequency_pass_segment_free(struct mixed_segment *segment){
 
 int frequency_pass_segment_start(struct mixed_segment *segment){
   struct frequency_pass_segment_data *data = (struct frequency_pass_segment_data *)segment->data;
-  data->lowpass.x[0] = 0;
-  data->lowpass.x[1] = 0;
-  data->lowpass.y[0] = 0;
-  data->lowpass.y[1] = 0;
+  lowpass_reset(&data->lowpass);
 
   if(data->in == 0 || data->out == 0){
     mixed_err(MIXED_BUFFER_MISSING);
@@ -73,14 +71,16 @@ int low_pass_segment_mix(struct mixed_segment *segment){
   float *a = data->lowpass.a;
   float *b = data->lowpass.b;
   float k =  data->lowpass.k;
+  float mix = data->mix;
 
   with_mixed_buffer_transfer(i, samples, in, data->in, out, data->out, {
       float s = in[i];
-      out[i] = k*s + k*b[0]*x[0] + k*b[1]*x[1] - a[0]*y[0] - a[1]*y[1];
+      float o = k*s + k*b[0]*x[0] + k*b[1]*x[1] - a[0]*y[0] - a[1]*y[1];
       x[1] = x[0];
       x[0] = s;
       y[1] = y[0];
-      y[0] = out[i];
+      y[0] = o;
+      out[i] = LERP(s, o, mix);
     })
   return 1;
 }
@@ -93,15 +93,16 @@ int high_pass_segment_mix(struct mixed_segment *segment){
   float *a = data->lowpass.a;
   float *b = data->lowpass.b;
   float k =  data->lowpass.k;
+  float mix = data->mix;
 
   with_mixed_buffer_transfer(i, samples, in, data->in, out, data->out, {
       float s = in[i];
-      out[i] = k*s + k*b[0]*x[0] + k*b[1]*x[1] - a[0]*y[0] - a[1]*y[1];
+      float o = k*s + k*b[0]*x[0] + k*b[1]*x[1] - a[0]*y[0] - a[1]*y[1];
       x[1] = x[0];
       x[0] = s;
       y[1] = y[0];
-      y[0] = out[i];
-      out[i] = s-out[i];
+      y[0] = o;
+      out[i] = LERP(s, s-o, mix);
     })
   return 1;
 }
@@ -139,6 +140,10 @@ int frequency_pass_segment_info(struct mixed_segment_info *info, struct mixed_se
                  MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The samplerate at which the segment operates.");
 
+  set_info_field(field++, MIXED_MIX,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "How much of the output to mix with the input.");
+
   set_info_field(field++, MIXED_BYPASS,
                  MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "Bypass the segment's processing.");
@@ -153,6 +158,7 @@ int frequency_pass_segment_get(uint32_t field, void *value, struct mixed_segment
   case MIXED_SAMPLERATE: *((uint32_t *)value) = data->samplerate; break;
   case MIXED_FREQUENCY_CUTOFF: *((uint32_t *)value) = data->cutoff; break;
   case MIXED_FREQUENCY_PASS: *((enum mixed_frequency_pass *)value) = data->pass; break;
+  case MIXED_MIX: *((float *)value) = data->mix; break;
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == frequency_pass_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
@@ -191,7 +197,22 @@ int frequency_pass_segment_set(uint32_t field, void *value, struct mixed_segment
         : high_pass_segment_mix;
     }
     break;
+  case MIXED_MIX:
+    if(*(float *)value < 0 || 1 < *(float *)value){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->mix = *(float *)value;
+    if(data->mix == 0){
+      bool bypass = 1;
+      return frequency_pass_segment_set(MIXED_BYPASS, &bypass, segment);
+    }else{
+      bool bypass = 0;
+      return frequency_pass_segment_set(MIXED_BYPASS, &bypass, segment);
+    }
+    break;
   case MIXED_BYPASS:
+    lowpass_reset(&data->lowpass);
     if(*(bool *)value){
       segment->mix = frequency_pass_segment_mix_bypass;
     }else if(data->pass == MIXED_PASS_LOW){
@@ -222,6 +243,7 @@ MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pas
   data->cutoff = cutoff;
   data->samplerate = samplerate;
   data->pass = pass;
+  data->mix = 1.0;
 
   lowpass_init(samplerate, cutoff, &data->lowpass);
   

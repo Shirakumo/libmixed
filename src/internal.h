@@ -25,6 +25,7 @@
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define LERP(a, b, x) ((a)*(1-(x)) + (b)*(x))
 
 #define IGNORE(...) __ignore(0, __VA_ARGS__)
 static inline void __ignore(char _, ...){(void)_;}
@@ -93,6 +94,7 @@ struct lowpass_data{
 };
 
 void lowpass_init(uint32_t samplerate, uint32_t cutoff, struct lowpass_data *data);
+void lowpass_reset(struct lowpass_data *data);
 float lowpass(float sample, struct lowpass_data *data);
 
 float hilbert(float input, float *delay, uint32_t delay_size, uint32_t delay_i);

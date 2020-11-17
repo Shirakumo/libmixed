@@ -267,6 +267,13 @@ extern "C" {
     MIXED_SPEED_FACTOR,
     // The number of quantization steps
     MIXED_QUANTIZE_STEPS,
+    // For an effects segment, how strongly to mix the effects
+    // output with the input. This allows smoothly transitioning
+    // effects. Has to be in [0,1] with 0 (dry) being no effect
+    // output and 1 being full effect output (wet).
+    // Setting this may also affect the MIXED_BYPASS value.
+    // The default is 1.0, should be a float.
+    MIXED_MIX,
   };
 
   // This enum descripbes the possible resampling quality options.

@@ -6,6 +6,7 @@ struct pitch_segment_data{
   struct pitch_data pitch_data;
   uint32_t samplerate;
   float pitch;
+  float mix;
 };
 
 int pitch_segment_free(struct mixed_segment *segment){
@@ -68,9 +69,13 @@ int pitch_segment_mix(struct mixed_segment *segment){
   }else{
     float *in, *out;
     uint32_t samples = UINT32_MAX;
+    float mix = data->mix;
     mixed_buffer_request_read(&in, &samples, data->in);
     mixed_buffer_request_write(&out, &samples, data->out);
     pitch_shift(data->pitch, in, out, samples, &data->pitch_data);
+    for(uint32_t i=0; i<samples; ++i){
+      out[i] = LERP(in[i], out[i], mix);
+    }
     mixed_buffer_finish_read(samples, data->in);
     mixed_buffer_finish_write(samples, data->out);
   }
@@ -106,6 +111,10 @@ int pitch_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
                  MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The samplerate at which the segment operates.");
 
+  set_info_field(field++, MIXED_MIX,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "How much of the output to mix with the input.");
+
   set_info_field(field++, MIXED_BYPASS,
                  MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "Bypass the segment's processing.");
@@ -119,6 +128,7 @@ int pitch_segment_get(uint32_t field, void *value, struct mixed_segment *segment
   switch(field){
   case MIXED_PITCH_SHIFT: *((float *)value) = data->pitch; break;
   case MIXED_SAMPLERATE: *((uint32_t *)value) = data->samplerate; break;
+  case MIXED_MIX: *((float *)value) = data->mix; break;
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == pitch_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
@@ -145,6 +155,20 @@ int pitch_segment_set(uint32_t field, void *value, struct mixed_segment *segment
       return 0;
     }
     data->pitch = *(float *)value;
+    break;
+  case MIXED_MIX:
+    if(*(float *)value < 0 || 1 < *(float *)value){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->mix = *(float *)value;
+    if(data->mix == 0){
+      bool bypass = 1;
+      return pitch_segment_set(MIXED_BYPASS, &bypass, segment);
+    }else{
+      bool bypass = 0;
+      return pitch_segment_set(MIXED_BYPASS, &bypass, segment);
+    }
     break;
   case MIXED_BYPASS:
     if(*(bool *)value){
@@ -174,6 +198,7 @@ MIXED_EXPORT int mixed_make_segment_pitch(float pitch, uint32_t samplerate, stru
 
   data->pitch = pitch;
   data->samplerate = samplerate;
+  data->mix = 1.0;
   
   segment->free = pitch_segment_free;
   segment->start = pitch_segment_start;

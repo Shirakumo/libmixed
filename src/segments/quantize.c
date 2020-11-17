@@ -4,6 +4,7 @@ struct quantize_segment_data{
   struct mixed_buffer *in;
   struct mixed_buffer *out;
   float steps;
+  float mix;
 };
 
 int quantize_segment_free(struct mixed_segment *segment){
@@ -60,8 +61,11 @@ int quantize_segment_mix(struct mixed_segment *segment){
   struct quantize_segment_data *data = (struct quantize_segment_data *)segment->data;
 
   float steps = data->steps;
+  float mix = data->mix;
   with_mixed_buffer_transfer(i, samples, in, data->in, out, data->out, {
-      out[i] = floor(in[i] * steps) / steps;
+      float s = in[i];
+      float o = floor(s * steps) / steps;
+      out[i] = LERP(s, o, mix);
     });
   return 1;
 }
@@ -86,6 +90,10 @@ int quantize_segment_info(struct mixed_segment_info *info, struct mixed_segment 
                  MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
                  "The buffer for audio data attached to the location.");
 
+  set_info_field(field++, MIXED_MIX,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "How much of the output to mix with the input.");
+
   set_info_field(field++, MIXED_BYPASS,
                  MIXED_BOOL, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "Bypass the segment's processing.");
@@ -97,6 +105,7 @@ int quantize_segment_info(struct mixed_segment_info *info, struct mixed_segment 
 int quantize_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct quantize_segment_data *data = (struct quantize_segment_data *)segment->data;
   switch(field){
+  case MIXED_MIX: *((float *)value) = data->mix; break;
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == quantize_segment_mix_bypass); break;
   case MIXED_QUANTIZE_STEPS: *((uint32_t *)value) = (uint32_t)data->steps; break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
@@ -107,6 +116,20 @@ int quantize_segment_get(uint32_t field, void *value, struct mixed_segment *segm
 int quantize_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct quantize_segment_data *data = (struct quantize_segment_data *)segment->data;
   switch(field){
+  case MIXED_MIX:
+    if(*(float *)value < 0 || 1 < *(float *)value){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->mix = *(float *)value;
+    if(data->mix == 0){
+      bool bypass = 1;
+      return quantize_segment_set(MIXED_BYPASS, &bypass, segment);
+    }else{
+      bool bypass = 0;
+      return quantize_segment_set(MIXED_BYPASS, &bypass, segment);
+    }
+    break;
   case MIXED_BYPASS:
     if(*(bool *)value){
       segment->mix = quantize_segment_mix_bypass;
@@ -132,6 +155,7 @@ MIXED_EXPORT int mixed_make_segment_quantize(uint32_t steps, struct mixed_segmen
   }
 
   data->steps = steps;
+  data->mix = 1.0;
   segment->free = quantize_segment_free;
   segment->start = quantize_segment_start;
   segment->mix = quantize_segment_mix;
