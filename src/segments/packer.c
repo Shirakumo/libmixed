@@ -7,6 +7,7 @@ struct pack_segment_data{
   SRC_STATE *resample_state;
   uint32_t samplerate;
   float volume;
+  float target_volume;
   int quality;
   float resample_in[512];
   float resample_out[512];
@@ -90,7 +91,7 @@ int source_segment_mix(struct mixed_segment *segment){
   struct mixed_pack *pack = data->pack;
 
   if(pack->samplerate == data->samplerate){
-    mixed_buffer_from_pack(data->pack, data->buffers, data->volume);
+    mixed_buffer_from_pack(data->pack, data->buffers, &data->volume, data->target_volume);
   }else{
     void *pack_data;
     float *target = data->resample_in;
@@ -112,7 +113,7 @@ int source_segment_mix(struct mixed_segment *segment){
       uint32_t bytes = UINT32_MAX;
       mixed_pack_request_read(&pack_data, &bytes, pack);
       frames = MIN(frames, bytes / frames_to_bytes);
-      decoder(pack_data, (float*)src_data.data_in, 1, frames*channels, data->volume);
+      data->volume = decoder(pack_data, (float*)src_data.data_in, 1, frames*channels, data->volume, data->target_volume);
       // Step 3: resample
       src_data.input_frames = frames;
       int e = src_process(data->resample_state, &src_data);
@@ -144,7 +145,7 @@ int drain_segment_mix(struct mixed_segment *segment){
   struct mixed_pack *pack = data->pack;
 
   if(pack->samplerate == data->samplerate){
-    mixed_buffer_to_pack(data->buffers, pack, data->volume);
+    mixed_buffer_to_pack(data->buffers, pack, &data->volume, data->target_volume);
   }else{
     void *pack_data;
     float *target = data->resample_in;
@@ -184,7 +185,7 @@ int drain_segment_mix(struct mixed_segment *segment){
       // Pack
       frames = src_data.input_frames_used;
       uint32_t out_frames = src_data.output_frames_gen;
-      encoder(src_data.data_out, pack_data, 1, out_frames*channels, data->volume);
+      data->volume = encoder(src_data.data_out, pack_data, 1, out_frames*channels, data->volume, data->target_volume);
       // Update consumed buffers
       mixed_pack_finish_write(out_frames * frames_to_bytes, pack);
       for(channel_t c=0; c<channels; ++c){
@@ -224,7 +225,7 @@ int source_segment_set(uint32_t field, void *value, struct mixed_segment *segmen
   }
     return 1;
   case MIXED_VOLUME:
-    data->volume = *((float *)value);
+    data->target_volume = *((float *)value);
     return 1;
   case MIXED_BYPASS:
     if(*(bool *)value){
@@ -264,7 +265,7 @@ int packer_segment_get(uint32_t field, void *value, struct mixed_segment *segmen
     *((int *)value) = data->quality;
     return 1;
   case MIXED_VOLUME:
-    *((float *)value) = data->volume;
+    *((float *)value) = data->target_volume;
     return 1;
   case MIXED_BYPASS:
     *(bool *)value = (segment->mix == mix_noop);
@@ -330,6 +331,7 @@ int make_pack_internal(struct mixed_pack *pack, uint32_t samplerate, int quality
   data->pack = pack;
   data->samplerate = samplerate;
   data->volume = 1.0;
+  data->target_volume = 1.0;
   data->quality = quality;
 
   segment->free = pack_segment_free;

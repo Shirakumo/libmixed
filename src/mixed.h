@@ -625,7 +625,7 @@ extern "C" {
   // pack, and will be set to the number of frames that have actually
   // been read from the packed buffer. This may be less if the
   // output buffers do not have enough space.
-  MIXED_EXPORT int mixed_buffer_from_pack(struct mixed_pack *in, struct mixed_buffer **outs, float volume);
+  MIXED_EXPORT int mixed_buffer_from_pack(struct mixed_pack *in, struct mixed_buffer **outs, float *volume, float target_volume);
 
   // Convert buffer data to the packed data.
   //
@@ -638,7 +638,7 @@ extern "C" {
   // pack, and will be set to the number of frames that have actually
   // been written to the pack. This may be less if the input buffers
   // do not have enough data available.
-  MIXED_EXPORT int mixed_buffer_to_pack(struct mixed_buffer **ins, struct mixed_pack *out, float volume);
+  MIXED_EXPORT int mixed_buffer_to_pack(struct mixed_buffer **ins, struct mixed_pack *out, float *volume, float target_volume);
 
   // Transfers data from one buffer to the other.
   //
@@ -1221,8 +1221,8 @@ extern "C" {
   // Return the size of a sample in the given encoding in bytes.
   MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding);
   
-  typedef void (*mixed_transfer_function_from)(void *in, float *out, uint8_t stride, uint32_t samples, float volume);
-  typedef void (*mixed_transfer_function_to)(float *in, void *out, uint8_t stride, uint32_t samples, float volume);
+  typedef float (*mixed_transfer_function_from)(void *in, float *out, uint8_t stride, uint32_t samples, float volume, float target_volume);
+  typedef float (*mixed_transfer_function_to)(float *in, void *out, uint8_t stride, uint32_t samples, float volume, float target_volume);
 
   // Retrieve a sample format converter function.
   MIXED_EXPORT mixed_transfer_function_from mixed_translator_from(enum mixed_encoding encoding);

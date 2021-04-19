@@ -20,19 +20,20 @@ define_test(single_channel, {
     struct mixed_pack pack = {0};
     struct mixed_buffer buffer = {0};
     struct mixed_buffer *barray[1];
+    float volume = 1.0;
     barray[0] = &buffer;
     // Create pack with random samples
     pass(make_pack(MIXED_INT8, 1, &pack));
     pass(mixed_make_buffer(16, &buffer));
     unsigned char *data = pack._data;
     // Convert from pack
-    pass(mixed_buffer_from_pack(&pack, barray, 1.0));
+    pass(mixed_buffer_from_pack(&pack, barray, &volume, 1.0));
     is(mixed_buffer_available_read(&buffer), pack.size);
     is(mixed_pack_available_read(&pack), 0);
     for(uint32_t i=0; i<pack.size; ++i)
       is(buffer._data[i], mixed_from_int8(data[i]));
     // Convert from buffers
-    pass(mixed_buffer_to_pack(barray, &pack, 1.0));
+    pass(mixed_buffer_to_pack(barray, &pack, &volume, 1.0));
     is(mixed_buffer_available_read(&buffer), 0);
     is(mixed_pack_available_read(&pack), pack.size);
     for(uint32_t i=0; i<pack.size; ++i)
@@ -47,6 +48,7 @@ define_test(dual_channel, {
     struct mixed_pack pack = {0};
     struct mixed_buffer buffers[2] = {0};
     struct mixed_buffer *barray[2];
+    float volume = 1.0;
     barray[0] = &buffers[0];
     barray[1] = &buffers[1];
     // Create pack with random samples
@@ -55,14 +57,14 @@ define_test(dual_channel, {
     pass(mixed_make_buffer(pack.size/2, &buffers[1]));
     unsigned char *data = pack._data;
     // Convert from pack
-    pass(mixed_buffer_from_pack(&pack, barray, 1.0));
+    pass(mixed_buffer_from_pack(&pack, barray, &volume, 1.0));
     is(mixed_buffer_available_read(&buffers[0]), buffers[0].size);
     is(mixed_buffer_available_read(&buffers[1]), buffers[1].size);
     is(mixed_pack_available_read(&pack), 0);
     for(uint32_t i=0; i<pack.size; ++i)
       is_f(buffers[i%2]._data[i/2], mixed_from_int8(data[i]));
     // Convert from buffers
-    pass(mixed_buffer_to_pack(barray, &pack, 1.0));
+    pass(mixed_buffer_to_pack(barray, &pack, &volume, 1.0));
     for(uint32_t i=0; i<pack.size; ++i)
       is(data[i], mixed_to_int8(buffers[i%2]._data[i/2]));
     is(mixed_buffer_available_read(&buffers[0]), 0);
@@ -79,6 +81,7 @@ define_test(dual_channel_uneven, {
     struct mixed_pack pack = {0};
     struct mixed_buffer buffers[2] = {0};
     struct mixed_buffer *barray[2];
+    float volume = 1.0;
     barray[0] = &buffers[0];
     barray[1] = &buffers[1];
     // Create pack with random samples
@@ -87,14 +90,14 @@ define_test(dual_channel_uneven, {
     pass(mixed_make_buffer(pack.size/2, &buffers[1]));
     unsigned char *data = pack._data;
     // Convert to buffers
-    pass(mixed_buffer_from_pack(&pack, barray, 1.0));
+    pass(mixed_buffer_from_pack(&pack, barray, &volume, 1.0));
     is(mixed_buffer_available_read(&buffers[0]), buffers[0].size);
     is(mixed_buffer_available_read(&buffers[1]), buffers[0].size);
     is(mixed_pack_available_read(&pack), pack.size-2*buffers[0].size);
     for(uint32_t i=0; i<8; ++i)
       is_f(buffers[i%2]._data[i/2], mixed_from_int8(data[i]));
     // Convert from buffers
-    pass(mixed_buffer_to_pack(barray, &pack, 1.0));
+    pass(mixed_buffer_to_pack(barray, &pack, &volume, 1.0));
     for(uint32_t i=0; i<8; ++i)
       is(data[i], mixed_to_int8(buffers[i%2]._data[i/2]));
     is(mixed_buffer_available_read(&buffers[0]), 0);
