@@ -154,7 +154,7 @@ if(BUILD_TESTER)
   target_compile_options(tester PRIVATE ${COMPILATION_FLAGS})
   target_link_libraries(tester mixed_shared pthread)
 
-  add_custom_target(test
+  add_custom_target(run_tests
     COMMAND "${CMAKE_BINARY_DIR}/tester"
     DEPENDS tester)
 endif()
