@@ -113,28 +113,30 @@ int source_segment_mix(struct mixed_segment *segment){
       uint32_t bytes = UINT32_MAX;
       mixed_pack_request_read(&pack_data, &bytes, pack);
       frames = MIN(frames, bytes / frames_to_bytes);
-      data->volume = decoder(pack_data, (float*)src_data.data_in, 1, frames*channels, data->volume, data->target_volume);
-      // Step 3: resample
-      src_data.input_frames = frames;
-      int e = src_process(data->resample_state, &src_data);
-      if(e){
-        fprintf(stderr, "libsamplerate: %s\n", src_strerror(e));
-        mixed_err(MIXED_RESAMPLE_FAILED);
-        return 0;
+      if(pack_data){
+        data->volume = decoder(pack_data, (float*)src_data.data_in, 1, frames*channels, data->volume, data->target_volume);
+        // Step 3: resample
+        src_data.input_frames = frames;
+        int e = src_process(data->resample_state, &src_data);
+        if(e){
+          fprintf(stderr, "libsamplerate: %s\n", src_strerror(e));
+          mixed_err(MIXED_RESAMPLE_FAILED);
+          return 0;
+        }
+        // Step 4: transfer from contigous to separate buffers
+        frames = src_data.input_frames_used;
+        float *source = src_data.data_out;
+        for(channel_t c=0; c<channels; ++c){
+          uint32_t out_frames = src_data.output_frames_gen;
+          mixed_buffer_request_write(&target, &out_frames, data->buffers[c]);
+          for(uint32_t i=0; i<out_frames; ++i)
+            target[i] = source[i*channels];
+          source++;
+          mixed_buffer_finish_write(out_frames, data->buffers[c]);
+        }
+        // Step 5: update consumed samples
+        mixed_pack_finish_read(frames * frames_to_bytes, pack);
       }
-      // Step 4: transfer from contigous to separate buffers
-      frames = src_data.input_frames_used;
-      float *source = src_data.data_out;
-      for(channel_t c=0; c<channels; ++c){
-        uint32_t out_frames = src_data.output_frames_gen;
-        mixed_buffer_request_write(&target, &out_frames, data->buffers[c]);
-        for(uint32_t i=0; i<out_frames; ++i)
-          target[i] = source[i*channels];
-        source++;
-        mixed_buffer_finish_write(out_frames, data->buffers[c]);
-      }
-      // Step 5: update consumed samples
-      mixed_pack_finish_read(frames * frames_to_bytes, pack);
     }while(frames);
   }
   return 1;
@@ -163,33 +165,35 @@ int drain_segment_mix(struct mixed_segment *segment){
       mixed_pack_request_write(&pack_data, &bytes, pack);
       src_data.output_frames = MIN(buffer_frames, bytes / frames_to_bytes);
       frames = MIN(buffer_frames, (src_data.output_frames*data->samplerate) / pack->samplerate);
-      // KLUDGE: this prevents us from running into samplerate problems
-      //         when there's only a sliver of space available.
-      if(0 < src_data.output_frames && frames == 0){
-        frames = 1;
-      }
-      for(channel_t c=0; c<channels; ++c){
-        float *source;
-        mixed_buffer_request_read(&source, &frames, data->buffers[c]);
-        for(uint32_t i=0; i<frames; ++i)
-          target[c+i*channels] = source[i];
-      }
-      // Resample
-      src_data.input_frames = frames;
-      int e = src_process(data->resample_state, &src_data);
-      if(e){
-        fprintf(stderr, "libsamplerate: %s\n", src_strerror(e));
-        mixed_error(MIXED_RESAMPLE_FAILED);
-        return 0;
-      }
-      // Pack
-      frames = src_data.input_frames_used;
-      uint32_t out_frames = src_data.output_frames_gen;
-      data->volume = encoder(src_data.data_out, pack_data, 1, out_frames*channels, data->volume, data->target_volume);
-      // Update consumed buffers
-      mixed_pack_finish_write(out_frames * frames_to_bytes, pack);
-      for(channel_t c=0; c<channels; ++c){
-        mixed_buffer_finish_read(frames, data->buffers[c]);
+      if(pack_data){
+        // KLUDGE: this prevents us from running into samplerate problems
+        //         when there's only a sliver of space available.
+        if(0 < src_data.output_frames && frames == 0){
+          frames = 1;
+        }
+        for(channel_t c=0; c<channels; ++c){
+          float *source;
+          mixed_buffer_request_read(&source, &frames, data->buffers[c]);
+          for(uint32_t i=0; i<frames; ++i)
+            target[c+i*channels] = source[i];
+        }
+        // Resample
+        src_data.input_frames = frames;
+        int e = src_process(data->resample_state, &src_data);
+        if(e){
+          fprintf(stderr, "libsamplerate: %s\n", src_strerror(e));
+          mixed_error(MIXED_RESAMPLE_FAILED);
+          return 0;
+        }
+        // Pack
+        frames = src_data.input_frames_used;
+        uint32_t out_frames = src_data.output_frames_gen;
+        data->volume = encoder(src_data.data_out, pack_data, 1, out_frames*channels, data->volume, data->target_volume);
+        // Update consumed buffers
+        mixed_pack_finish_write(out_frames * frames_to_bytes, pack);
+        for(channel_t c=0; c<channels; ++c){
+          mixed_buffer_finish_read(frames, data->buffers[c]);
+        }
       }
     }while(frames);
   }
