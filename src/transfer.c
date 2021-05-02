@@ -29,7 +29,7 @@ extern inline void mixed_transfer_sample_from_int24(void *in, uint32_t is, float
 }
 
 extern inline void mixed_transfer_sample_from_uint24(void *in, uint32_t is, float *out, uint32_t os, float volume) {
-  int8_t *data = (int8_t *)in;
+  uint8_t *data = (uint8_t *)in;
   uint24_t sample = (data[3*is] << 16) + (data[3*is+1] << 8) + (data[3*is+2]);
   out[os] = mixed_from_uint24(sample) * volume;
 }

@@ -51,7 +51,7 @@ MIXED_EXPORT inline float mixed_from_int24(int24_t sample){
 
 __attribute__((always_inline))
 MIXED_EXPORT inline float mixed_from_uint24(uint24_t sample){
-  return ((float)sample)/((float)UINT24_MAX/2)-1;
+  return ((double)sample)/((double)UINT24_MAX/2)-1;
 }
 
 __attribute__((always_inline))

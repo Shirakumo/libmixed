@@ -69,7 +69,7 @@ define_test(int24, {
     is_f(mixed_from_int24(INT24_MIN), -1.0);
     for(int i=0; i<RANDOMIZED_REPEAT; ++i){
       int24_t sample = (rand() % INT24_MAX*2)-INT24_MAX;
-      is_a(mixed_to_int16(mixed_from_int24(sample)), sample, 1);
+      is_a(mixed_to_int24(mixed_from_int24(sample)), sample, 1);
     }
   cleanup:;
   });
@@ -83,7 +83,7 @@ define_test(uint24, {
     is(mixed_from_uint24(UINT24_MAX), +1.0);
     for(int i=0; i<RANDOMIZED_REPEAT; ++i){
       uint24_t sample = rand() % UINT24_MAX;
-      is_ui(mixed_to_uint16(mixed_from_uint24(sample)), sample);
+      is_ui(mixed_to_uint24(mixed_from_uint24(sample)), sample);
     }
   cleanup:;
   });
