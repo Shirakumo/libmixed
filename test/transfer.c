@@ -110,4 +110,12 @@ define_test(dual_channel_uneven, {
     mixed_free_pack(&pack);
   })
 
+define_test(bounds_check, {
+    mixed_transfer_function_from decoder = mixed_translator_from(MIXED_INT16);
+    mixed_transfer_function_to encoder = mixed_translator_to(MIXED_INT16);
+    is_f(decoder(0, 0, 1, 0, 1.0, 1.0), 1.0);
+    is_f(encoder(0, 0, 1, 0, 1.0, 1.0), 1.0);
+  cleanup: {}
+  })
+
 #undef __TEST_SUITE
