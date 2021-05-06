@@ -163,14 +163,14 @@ int drain_segment_mix(struct mixed_segment *segment){
       uint32_t bytes = UINT32_MAX;
       // Interleave data, count frames
       mixed_pack_request_write(&pack_data, &bytes, pack);
+      // If we don't even have 2 frames worth of data remaining to write, clear.
+      if(bytes < 2*frames_to_bytes && mixed_pack_available_read(pack) == 0){
+        mixed_pack_clear(pack);
+        mixed_pack_request_write(&pack_data, &bytes, pack);
+      }
       src_data.output_frames = MIN(buffer_frames, bytes / frames_to_bytes);
       frames = MIN(buffer_frames, (src_data.output_frames*data->samplerate) / pack->samplerate);
       if(pack_data){
-        // KLUDGE: this prevents us from running into samplerate problems
-        //         when there's only a sliver of space available.
-        if(0 < src_data.output_frames && frames == 0){
-          frames = 1;
-        }
         for(channel_t c=0; c<channels; ++c){
           float *source;
           mixed_buffer_request_read(&source, &frames, data->buffers[c]);
