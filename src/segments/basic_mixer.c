@@ -7,6 +7,7 @@ struct basic_mixer_data{
   struct mixed_buffer **out;
   channel_t channels;
   float volume;
+  float target_volume;
 };
 
 int basic_mixer_free(struct mixed_segment *segment){
@@ -75,8 +76,8 @@ int basic_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
 VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
   channel_t channels = data->channels;
-  float volume = data->volume;
-  float div = volume;
+  float initial_volume = data->volume;
+  float target_volume = data->target_volume;
 
   for(channel_t c=0; c<channels; ++c){
     float *in=0, *out=0;
@@ -92,16 +93,32 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
       if(samples == 0) break;
     }
 
-    memset(out, 0, samples*sizeof(float));
-    for(uint32_t i=c; i<data->count; i+=channels){
-      struct mixed_buffer *buffer = data->in[i];
-      if(!buffer) continue;
+    if(samples != 0){
+      for(uint32_t i=c; i<data->count; i+=channels){
+        struct mixed_buffer *buffer = data->in[i];
+        if(!buffer) continue;
       
-      mixed_buffer_request_read(&in, &samples, buffer);
-      for(uint32_t j=0; j<samples; ++j){
-        out[j] += in[j] * div;
+        mixed_buffer_request_read(&in, &samples, buffer);
+        float volume = initial_volume;
+        float previous = in[0];
+        out[0] = previous * volume;
+        for(uint32_t j=1; j<samples; ++j){
+          float sample = in[j];
+          if(previous * sample < 0.0f){
+            volume = target_volume;
+          }
+          out[j] += sample * volume;
+          previous = sample;
+        }
+        // KLUDGE: This is not entirely correct, ideally we would
+        //         have to keep this check per input buffer. We make the
+        //         optimistic assumption here that if one buffer can make
+        //         the jump, we have enough samples that they all did.
+        if(volume != initial_volume){
+          data->volume = target_volume;
+        }
+        mixed_buffer_finish_read(samples, buffer);
       }
-      mixed_buffer_finish_read(samples, buffer);
     }
     mixed_buffer_finish_write(samples, data->out[c]);
   }
@@ -114,7 +131,7 @@ int basic_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
   
   switch(field){
   case MIXED_VOLUME:
-    data->volume = *((float *)value);
+    data->target_volume = *((float *)value);
     return 1;
   default:
     mixed_err(MIXED_INVALID_FIELD);
@@ -127,7 +144,7 @@ int basic_mixer_get(uint32_t field, void *value, struct mixed_segment *segment){
   
   switch(field){
   case MIXED_VOLUME:
-    *((float *)value) = data->volume;
+    *((float *)value) = data->target_volume;
     return 1;
   default:
     mixed_err(MIXED_INVALID_FIELD);
@@ -163,6 +180,7 @@ MIXED_EXPORT int mixed_make_segment_basic_mixer(channel_t channels, struct mixed
   }
 
   data->volume = 1.0f;
+  data->target_volume = 1.0f;
   data->channels = channels;
   data->out = calloc(channels, sizeof(struct mixed_buffer *));
   if(!data->out){
