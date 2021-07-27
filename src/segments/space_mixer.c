@@ -228,11 +228,18 @@ int space_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
       struct space_source *source = 0;
       if(location < data->count)
         source = data->sources[location];
-      if(!source)
-        source = calloc(1, sizeof(struct space_source));
       if(!source){
-        mixed_err(MIXED_OUT_OF_MEMORY);
-        return 0;
+        source = calloc(1, sizeof(struct space_source));
+        if(!source){
+          mixed_err(MIXED_OUT_OF_MEMORY);
+          return 0;
+        }
+        source->velocity[0] = data->velocity[0];
+        source->velocity[1] = data->velocity[1];
+        source->velocity[2] = data->velocity[2];
+        source->location[0] = data->location[0];
+        source->location[1] = data->location[1];
+        source->location[2] = data->location[2];
       }
       source->buffer = (struct mixed_buffer *)buffer;
       if(location < data->count) data->sources[location] = source;
