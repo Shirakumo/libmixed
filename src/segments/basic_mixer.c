@@ -78,6 +78,7 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
   channel_t channels = data->channels;
   float initial_volume = data->volume;
   float target_volume = data->target_volume;
+  bool changed = 0;
 
   for(channel_t c=0; c<channels; ++c){
     float *in=0, *out=0;
@@ -93,7 +94,8 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
       if(samples == 0) break;
     }
 
-    if(samples != 0){
+    if(0 < samples){
+      memset(out, 0, samples*sizeof(float));
       for(uint32_t i=c; i<data->count; i+=channels){
         struct mixed_buffer *buffer = data->in[i];
         if(!buffer) continue;
@@ -101,7 +103,7 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
         mixed_buffer_request_read(&in, &samples, buffer);
         float volume = initial_volume;
         float previous = in[0];
-        out[0] = previous * volume;
+        out[0] += previous * volume;
         for(uint32_t j=1; j<samples; ++j){
           float sample = in[j];
           if(previous * sample < 0.0f){
@@ -115,13 +117,14 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
         //         optimistic assumption here that if one buffer can make
         //         the jump, we have enough samples that they all did.
         if(volume != initial_volume){
-          data->volume = target_volume;
+          changed = 1;
         }
         mixed_buffer_finish_read(samples, buffer);
       }
     }
     mixed_buffer_finish_write(samples, data->out[c]);
   }
+  if(changed) data->volume = target_volume;
   return 1;
 }
 
