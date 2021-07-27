@@ -162,26 +162,28 @@ VECTORIZE int space_mixer_mix(struct mixed_segment *segment){
     mixed_buffer_request_read(&in, &samples, source->buffer);
     if(samples == 0) break;
   }
-  
-  memset(left, 0, samples*sizeof(float));
-  memset(right, 0, samples*sizeof(float));
-  for(uint32_t s=0; s<data->count; ++s){
-    struct space_source *source = data->sources[s];
-    if(!source) continue;
-  
-    float lvolume, rvolume;
-    mixed_buffer_request_read(&in, &samples, source->buffer);
-    calculate_volumes(&lvolume, &rvolume, source, data);
-    float pitch = clamp(0.5, calculate_pitch_shift(data, source), 2.0);
-    if(pitch != 1.0)
-      pitch_shift(pitch, in, in, samples, &data->pitch_data);
-    for(uint32_t i=0; i<samples; ++i){
-      left[i] += in[i] * lvolume;
-      right[i] += in[i] * rvolume;
+
+  if(0 < samples){
+    memset(left, 0, samples*sizeof(float));
+    memset(right, 0, samples*sizeof(float));
+    for(uint32_t s=0; s<data->count; ++s){
+      struct space_source *source = data->sources[s];
+      if(!source) continue;
+      
+      float lvolume, rvolume;
+      mixed_buffer_request_read(&in, &samples, source->buffer);
+      calculate_volumes(&lvolume, &rvolume, source, data);
+      float pitch = clamp(0.5, calculate_pitch_shift(data, source), 2.0);
+      if(pitch != 1.0)
+        pitch_shift(pitch, in, in, samples, &data->pitch_data);
+      for(uint32_t i=0; i<samples; ++i){
+        float sample = in[i];
+        left[i] += sample * lvolume;
+        right[i] += sample * rvolume;
+      }
+      mixed_buffer_finish_read(samples, source->buffer);
     }
-    mixed_buffer_finish_read(samples, source->buffer);
   }
-    
   mixed_buffer_finish_write(samples, data->left);
   mixed_buffer_finish_write(samples, data->right);
   return 1;
@@ -529,7 +531,7 @@ MIXED_EXPORT int mixed_make_segment_space_mixer(uint32_t samplerate, struct mixe
   data->direction[2] = 1.0;      // Facing in Z+ direction
   data->up[1] = 1.0;             // OpenGL-like. Y+ is up.
   data->soundspeed = 34330.0;    // Means units are in [cm].
-  data->doppler_factor = 1.0;
+  data->doppler_factor = 0.0;
   data->min_distance = 10.0;      // That's 10 centimetres.
   data->max_distance = 100000.0;  // That's a kilometre.
   data->rolloff = 0.5;
