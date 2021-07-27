@@ -274,6 +274,14 @@ extern "C" {
     // Setting this may also affect the MIXED_BYPASS value.
     // The default is 1.0, should be a float.
     MIXED_MIX,
+    // Access the location of the source or listener.
+    // The value should be an array of two floats.
+    // The default is 0,0.
+    MIXED_PLANE_LOCATION,
+    // Access the velocity of the source or listener.
+    // The value should be an array of two floats.
+    // The default is 0,0.
+    MIXED_PLANE_VELOCITY,
   };
 
   // This enum descripbes the possible resampling quality options.
@@ -1020,6 +1028,35 @@ extern "C" {
   // This segment does allow you to change fields and buffers while the
   // mixing has already been started.
   MIXED_EXPORT int mixed_make_segment_space_mixer(uint32_t samplerate, struct mixed_segment *segment);
+
+  // A planar (2D) processed mixer
+  //
+  // This segment is capable of mixing sources according to their position
+  // and movement in space. It thus simulates the behaviour of sound in a
+  // 2D environment. This segment takes an arbitrary number of mono inputs
+  // and has two outputs (left and right). Each input has two additional
+  // fields aside from the buffer:
+  //
+  // * MIXED_PLANE_LOCATION
+  // * MIXED_PLANE_VELOCITY
+  //
+  // The position, velocity, and general properties of the space mixing
+  // are configured through the general field set/get functions. The
+  // following flags are understood:
+  //
+  // * MIXED_PLANE_LOCATION
+  // * MIXED_PLANE_VELOCITY
+  // * MIXED_SPACE_SOUNDSPEED
+  // * MIXED_SPACE_DOPPLER_FACTOR
+  // * MIXED_SPACE_MIN_DISTANCE
+  // * MIXED_SPACE_MAX_DISTANCE
+  // * MIXED_SPACE_ROLLOFF
+  // * MIXED_SPACE_ATTENUATION
+  //
+  // See the MIXED_FIELDS enum for the documentation of each field.
+  // This segment does allow you to change fields and buffers while the
+  // mixing has already been started.
+  MIXED_EXPORT int mixed_make_segment_plane_mixer(uint32_t samplerate, struct mixed_segment *segment);
 
   // A delay segment
   //

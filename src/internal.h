@@ -93,6 +93,11 @@ struct lowpass_data{
   float k;
 };
 
+float attenuation_none(float min, float max, float dist, float roll);
+float attenuation_inverse(float min, float max, float dist, float roll);
+float attenuation_linear(float min, float max, float dist, float roll);
+float attenuation_exponential(float min, float max, float dist, float roll);
+
 void lowpass_init(uint32_t samplerate, uint32_t cutoff, struct lowpass_data *data);
 void lowpass_reset(struct lowpass_data *data);
 float lowpass(float sample, struct lowpass_data *data);
