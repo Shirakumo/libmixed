@@ -4,6 +4,9 @@ struct space_source{
   struct mixed_buffer *buffer;
   float location[3];
   float velocity[3];
+  float min_distance;
+  float max_distance;
+  float rolloff;
 };
 
 struct space_mixer_data{
@@ -112,9 +115,9 @@ static inline float calculate_phase(float S[3], float L[3], float D[3]){
 }
 
 VECTORIZE static inline void calculate_volumes(float *lvolume, float *rvolume, struct space_source *source, struct space_mixer_data *data){
-  float min = data->min_distance;
-  float max = data->max_distance;
-  float roll = data->rolloff;
+  float min = source->min_distance;
+  float max = source->max_distance;
+  float roll = source->rolloff;
   float div = data->volume;
   float distance = clamp(min, dist(source->location, data->location), max);
   float volume = div * data->attenuation(min, max, distance, roll);
@@ -236,6 +239,9 @@ int space_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
           mixed_err(MIXED_OUT_OF_MEMORY);
           return 0;
         }
+        source->min_distance = data->min_distance;
+        source->max_distance = data->max_distance;
+        source->rolloff = data->rolloff;
         source->velocity[0] = data->velocity[0];
         source->velocity[1] = data->velocity[1];
         source->velocity[2] = data->velocity[2];
@@ -255,6 +261,9 @@ int space_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
       data->sources[location] = 0;
     }
     return 1;
+  case MIXED_SPACE_MIN_DISTANCE:
+  case MIXED_SPACE_MAX_DISTANCE:
+  case MIXED_SPACE_ROLLOFF:
   case MIXED_SPACE_LOCATION:
   case MIXED_SPACE_VELOCITY:
     if(data->count <= location){
@@ -264,6 +273,15 @@ int space_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
     struct space_source *source = data->sources[location];
     float *value = (float *)buffer;
     switch(field){
+    case MIXED_SPACE_MIN_DISTANCE:
+      source->min_distance = *(float *)buffer;
+      break;
+    case MIXED_SPACE_MAX_DISTANCE:
+      source->max_distance = *(float *)buffer;
+      break;
+    case MIXED_SPACE_ROLLOFF:
+      source->rolloff = *(float *)buffer;
+      break;
     case MIXED_SPACE_LOCATION:
       source->location[0] = value[0];
       source->location[1] = value[1];
@@ -300,6 +318,15 @@ int space_mixer_get_in(uint32_t field, uint32_t location, void *buffer, struct m
   case MIXED_BUFFER:
     *(struct mixed_buffer **)buffer = source->buffer;
     return 1;
+  case MIXED_SPACE_MIN_DISTANCE:
+    *(float *)buffer = source->min_distance;
+    break;
+  case MIXED_SPACE_MAX_DISTANCE:
+    *(float *)buffer = source->max_distance;
+    break;
+  case MIXED_SPACE_ROLLOFF:
+    *(float *)buffer = source->rolloff;
+    break;
   case MIXED_SPACE_LOCATION:
   case MIXED_SPACE_VELOCITY:{
     float *value = (float *)buffer;
