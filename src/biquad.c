@@ -5,7 +5,7 @@
 
 inline float biquad_sample(float sample, struct biquad_data *state);
 
-void biquad_process(struct mixed_buffer *input, struct mixed_buffer *output, struct biquad_data *state){
+VECTORIZE void biquad_process(struct mixed_buffer *input, struct mixed_buffer *output, struct biquad_data *state){
   float b0 = state->b[0];
   float b1 = state->b[1];
   float b2 = state->b[2];
