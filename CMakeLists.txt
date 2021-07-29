@@ -98,6 +98,7 @@ add_library(mixed OBJECT
   "src/segments/biquad_filter.c"
   "src/segments/chain.c"
   "src/segments/channel.c"
+  "src/segments/compressor.c"
   "src/segments/delay.c"
   "src/segments/distribute.c"
   "src/segments/fade.c"

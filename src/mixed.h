@@ -288,6 +288,40 @@ extern "C" {
     // The value should be an array of two floats.
     // The default is 0,0.
     MIXED_PLANE_VELOCITY,
+    // The gain applied before compressing the signal, in dB.
+    // The default is 0.
+    MIXED_COMPRESSOR_PREGAIN,
+    // The threshold to activate compression, in dB.
+    // The default is -24.
+    MIXED_COMPRESSOR_THRESHOLD,
+    // The knee of the compressor curve.
+    // The default is 30.
+    MIXED_COMPRESSOR_KNEE,
+    // The compression ratio.
+    // The default is 12.
+    MIXED_COMPRESSOR_RATIO,
+    // The compressor's attack time in seconds.
+    // The default is 0.003.
+    MIXED_COMPRESSOR_ATTACK,
+    // The compressor's release time in seconds.
+    // The default is 0.25
+    MIXED_COMPRESSOR_RELEASE,
+    // The compressor's delay before compression, in seconds.
+    // The default is 0.006
+    MIXED_COMPRESSOR_PREDELAY,
+    // The compressor's release zone fields
+    // The value should be an array of four floats.
+    // The default is 0.09, 0.16, 0.42, 0.96
+    MIXED_COMPRESSOR_RELEASEZONE,
+    // The gain applied after compression, in dB.
+    // The default is 0.
+    MIXED_COMPRESSOR_POSTGAIN,
+    // The dry/wet mix applied for compression.
+    // The default is 1.
+    MIXED_COMPRESSOR_WET,
+    // The actual gain that was applied during compression.
+    // Can only be read.
+    MIXED_COMPRESSOR_GAIN,
   };
 
   // This enum descripbes the possible resampling quality options.
@@ -927,6 +961,10 @@ extern "C" {
   // be suitable for real-time behaviour. Aside from this caveat,
   // sources can be added or changed at any point in time.
   MIXED_EXPORT int mixed_make_segment_basic_mixer(channel_t channels, struct mixed_segment *segment);
+
+  // A dynamic compressor
+  // 
+  MIXED_EXPORT int mixed_make_segment_compressor(uint32_t samplerate, struct mixed_segment *segment);
 
   // A very basic volume control segment
   //
