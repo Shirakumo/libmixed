@@ -138,7 +138,7 @@ MIXED_EXPORT char *mixed_type_string(int code){
     return "segment sequence pointer";
   case MIXED_LOCATION_ENUM:
     return "location";
-  case MIXED_FREQUENCY_PASS_ENUM:
+  case MIXED_BIQUAD_FILTER_ENUM:
     return "frequency pass";
   case MIXED_REPEAT_MODE_ENUM:
     return "repeat mode";

@@ -85,22 +85,59 @@ void free_pitch_data(struct pitch_data *data);
 int make_pitch_data(uint32_t framesize, uint32_t oversampling, uint32_t samplerate, struct pitch_data *data);
 void pitch_shift(float pitch, float *in, float *out, uint32_t samples, struct pitch_data *data);
 
-struct lowpass_data{
-  float x[2];
-  float y[2];
-  float a[2];
-  float b[2];
-  float k;
-};
-
 float attenuation_none(float min, float max, float dist, float roll);
 float attenuation_inverse(float min, float max, float dist, float roll);
 float attenuation_linear(float min, float max, float dist, float roll);
 float attenuation_exponential(float min, float max, float dist, float roll);
 
-void lowpass_init(uint32_t samplerate, uint32_t cutoff, struct lowpass_data *data);
-void lowpass_reset(struct lowpass_data *data);
-float lowpass(float sample, struct lowpass_data *data);
+struct biquad_data{
+  float x[2];
+  float y[2];
+  float a[2];
+  float b[3];
+};
+
+void biquad_lowpass(uint32_t rate, float cutoff, float resonance, struct biquad_data *state);
+void biquad_highpass(uint32_t rate, float cutoff, float resonance, struct biquad_data *state);
+void biquad_bandpass(uint32_t rate, float freq, float Q, struct biquad_data *state);
+void biquad_notch(uint32_t rate, float freq, float Q, struct biquad_data *state);
+void biquad_peaking(uint32_t rate, float freq, float Q, float gain, struct biquad_data *state);
+void biquad_allpass(uint32_t rate, float freq, float Q, struct biquad_data *state);
+void biquad_lowshelf(uint32_t rate, float freq, float Q, float gain, struct biquad_data *state);
+void biquad_highshelf(uint32_t rate, float freq, float Q, float gain, struct biquad_data *state);
+void biquad_process(struct mixed_buffer *in, struct mixed_buffer *out, struct biquad_data *data);
+
+inline void biquad_reset(struct biquad_data *data){
+  data->x[0] = 0.0f;
+  data->x[1] = 0.0f;
+  data->y[0] = 0.0f;
+  data->y[1] = 0.0f;
+}
+
+inline float biquad_sample(float sample, struct biquad_data *data){
+  float b0 = data->b[0];
+  float b1 = data->b[1];
+  float b2 = data->b[2];
+  float a1 = data->a[0];
+  float a2 = data->a[1];
+  float xn1 = data->x[0];
+  float xn2 = data->x[1];
+  float yn1 = data->y[0];
+  float yn2 = data->y[1];
+
+  float L =
+    b0 * sample +
+    b1 * xn1 +
+    b2 * xn2 -
+    a1 * yn1 -
+    a2 * yn2;
+
+  data->x[0] = sample;
+  data->x[1] = xn1;
+  data->y[0] = L;
+  data->y[1] = yn1;
+  return L;
+}
 
 float hilbert(float input, float *delay, uint32_t delay_size, uint32_t delay_i);
 

@@ -27,7 +27,7 @@ int parse_arg(int type, void **target, char *in){
     DECODE_INT(uint32_t) break;
   case MIXED_SIZE_T:
     DECODE_INT(size_t) break;
-  case MIXED_FREQUENCY_PASS_ENUM:
+  case MIXED_BIQUAD_FILTER_ENUM:
   case MIXED_REPEAT_MODE_ENUM:
   case MIXED_NOISE_TYPE_ENUM:
   case MIXED_GENERATOR_TYPE_ENUM:

@@ -246,12 +246,18 @@ extern "C" {
     MIXED_REPEAT_TIME,
     // Access the current mode the repeater segment is in.
     MIXED_REPEAT_MODE,
-    // Access the frequency cutoff of the low/high-pass filter.
-    // This value is a uint32_t in Hertz.
-    MIXED_FREQUENCY_CUTOFF,
-    // Access whether to pass frequencies above or below the cutoff.
+    // Access the frequency cutoff of the filter.
+    // This value is a float in Hertz.
+    MIXED_FREQUENCY,
+    // Access the type of filter this is.
     // This value is an enum mixed_frequency_pass.
-    MIXED_FREQUENCY_PASS,
+    MIXED_BIQUAD_FILTER,
+    // Access the gain of the filter.
+    // This value is a float.
+    MIXED_GAIN,
+    // Access the Q or resonance factor of the filter.
+    // This value is a float.
+    MIXED_Q,
     // Access the number of input buffers the segment holds.
     // The value is a uint32_t.
     // The default is 2.
@@ -349,10 +355,16 @@ extern "C" {
     MIXED_PLAY
   };
 
-  // This enum describes the possible pass directions.
-  MIXED_EXPORT enum mixed_frequency_pass{
-    MIXED_PASS_LOW = 1,
-    MIXED_PASS_HIGH
+  // This enum describes the possible biquad filters.
+  MIXED_EXPORT enum mixed_biquad_filter{
+    MIXED_LOWPASS = 1,
+    MIXED_HIGHPASS,
+    MIXED_BANDPASS,
+    MIXED_NOTCH,
+    MIXED_PEAKING,
+    MIXED_ALLPASS,
+    MIXED_LOWSHELF,
+    MIXED_HIGHSHELF
   };
 
   // This enum holds property flags for segments.
@@ -428,7 +440,7 @@ extern "C" {
     MIXED_PACK_POINTER,
     MIXED_SEGMENT_SEQUENCE_POINTER,
     MIXED_LOCATION_ENUM,
-    MIXED_FREQUENCY_PASS_ENUM,
+    MIXED_BIQUAD_FILTER_ENUM,
     MIXED_REPEAT_MODE_ENUM,
     MIXED_NOISE_TYPE_ENUM,
     MIXED_GENERATOR_TYPE_ENUM,
@@ -1102,12 +1114,16 @@ extern "C" {
   // This segment can generate white, pink, and brown noise.
   MIXED_EXPORT int mixed_make_segment_noise(enum mixed_noise_type type, struct mixed_segment *segment);
 
-  // A frequency filter segment.
+  // A biquad filter segment.
   //
-  // The cutoff cannot be larger than the samplerate. Generally, if the cutoff
+  // This can implement a variety of different filter effects that are attuned
+  // to a certain frequency response. See the mixed_biquad_filter enum for 
+  // possible types.
+  //
+  // The frequency cannot be larger than the samplerate. Generally, if the frequency
   // frequency is larger than half of the samplerate, major distortion will
   // occur, so tread carefully.
-  MIXED_EXPORT int mixed_make_segment_frequency_pass(enum mixed_frequency_pass pass, uint32_t cutoff, uint32_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_biquad_filter(enum mixed_biquad_filter type, float frequency, uint32_t samplerate, struct mixed_segment *segment);
 
   // A speed change segment.
   //

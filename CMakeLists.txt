@@ -79,6 +79,7 @@ endif()
 
 ## Libmixed
 add_library(mixed OBJECT
+  "src/biquad.c"
   "src/buffer.c"
   "src/common.c"
   "src/encoding.c"
@@ -86,7 +87,6 @@ add_library(mixed OBJECT
   "src/hilbert.c"
   "src/internal.h"
   "src/ladspa.h"
-  "src/lowpass.c"
   "src/mixed.h"
   "src/pack.c"
   "src/pitch.c"
@@ -95,12 +95,12 @@ add_library(mixed OBJECT
   "src/transfer.c"
   "src/vector.c"
   "src/segments/basic_mixer.c"
+  "src/segments/biquad_filter.c"
   "src/segments/chain.c"
   "src/segments/channel.c"
   "src/segments/delay.c"
   "src/segments/distribute.c"
   "src/segments/fade.c"
-  "src/segments/frequency_pass.c"
   "src/segments/gate.c"
   "src/segments/generator.c"
   "src/segments/ladspa.c"

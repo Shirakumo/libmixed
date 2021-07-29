@@ -12,7 +12,7 @@ struct channel_data_2_to_7_1{
   struct mixed_buffer *out[14];
   channel_t in_channels;
   channel_t out_channels;
-  struct lowpass_data lp[3];
+  struct biquad_data lp[3];
   uint32_t delay_i;
   uint32_t delay_size;
   float *delay;
@@ -23,7 +23,7 @@ struct channel_data_2_to_5_1{
   struct mixed_buffer *out[14];
   channel_t in_channels;
   channel_t out_channels;
-  struct lowpass_data lp[3];
+  struct biquad_data lp[3];
   uint32_t delay_i;
   uint32_t delay_size;
   float *delay;
@@ -34,7 +34,7 @@ struct channel_data_2_to_4_0{
   struct mixed_buffer *out[14];
   channel_t in_channels;
   channel_t out_channels;
-  struct lowpass_data lp;
+  struct biquad_data lp;
   uint32_t delay_i;
   uint32_t delay_size;
   float *delay;
@@ -155,7 +155,7 @@ int channel_mix_stereo_4_0(struct mixed_segment *segment){
     float ri = r[i];
     float s = (li-ri)*invsqrt;
     // Surround low-pass 7kHz
-    float r = lowpass(s, &data->lp);
+    float r = biquad_sample(s, &data->lp);
     // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
     float rri = hilbert(r, data->delay, delay_size, delay_i);
     delay_i = (delay_i+1) % delay_size;
@@ -201,11 +201,11 @@ int channel_mix_stereo_5_1(struct mixed_segment *segment){
     float c = (li+ri)*invsqrt;
     float s = (li-ri)*invsqrt;
     // Center low-pass 4kHz
-    float ci = lowpass(c, &data->lp[0]);
+    float ci = biquad_sample(c, &data->lp[0]);
     // Subwoofer low-pass 200Hz
-    float lfei = lowpass(c, &data->lp[1]);
+    float lfei = biquad_sample(c, &data->lp[1]);
     // Surround low-pass 7kHz
-    float r = lowpass(s, &data->lp[2]);
+    float r = biquad_sample(s, &data->lp[2]);
     // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
     float rri = hilbert(r, data->delay, delay_size, delay_i);
     delay_i = (delay_i+1) % delay_size;
@@ -255,11 +255,11 @@ int channel_mix_stereo_7_1(struct mixed_segment *segment){
     float c = (li+ri)*invsqrt;
     float s = (li-ri)*invsqrt;
     // Center low-pass 4kHz
-    float ci = lowpass(c, &data->lp[0]);
+    float ci = biquad_sample(c, &data->lp[0]);
     // Subwoofer low-pass 200Hz
-    float lfei = lowpass(c, &data->lp[1]);
+    float lfei = biquad_sample(c, &data->lp[1]);
     // Surround low-pass 7kHz
-    float r = lowpass(s, &data->lp[2]);
+    float r = biquad_sample(s, &data->lp[2]);
     // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
     float rri = hilbert(r, data->delay, delay_size, delay_i);
     delay_i = (delay_i+1) % delay_size;
@@ -344,7 +344,7 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
       mixed_err(MIXED_OUT_OF_MEMORY);
       return 0;
     }
-    lowpass_init(samplerate, 7000, &data->lp);
+    biquad_lowpass(samplerate, 7000, 1, &data->lp);
     segment->mix = channel_mix_stereo_4_0;
     segment->data = data;
   }else if(in == 2 && out == 6){
@@ -363,9 +363,9 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
       mixed_err(MIXED_OUT_OF_MEMORY);
       return 0;
     }
-    lowpass_init(samplerate, 4000, &data->lp[0]);
-    lowpass_init(samplerate,  200, &data->lp[1]);
-    lowpass_init(samplerate, 7000, &data->lp[2]);
+    biquad_lowpass(samplerate, 4000, 1, &data->lp[0]);
+    biquad_lowpass(samplerate,  200, 1, &data->lp[1]);
+    biquad_lowpass(samplerate, 7000, 1, &data->lp[2]);
     segment->mix = channel_mix_stereo_5_1;
     segment->data = data;
   }else if(in == 2 && out == 8){
@@ -384,9 +384,9 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
       mixed_err(MIXED_OUT_OF_MEMORY);
       return 0;
     }
-    lowpass_init(samplerate, 4000, &data->lp[0]);
-    lowpass_init(samplerate,  200, &data->lp[1]);
-    lowpass_init(samplerate, 7000, &data->lp[2]);
+    biquad_lowpass(samplerate, 4000, 1, &data->lp[0]);
+    biquad_lowpass(samplerate,  200, 1, &data->lp[1]);
+    biquad_lowpass(samplerate, 7000, 1, &data->lp[2]);
     segment->mix = channel_mix_stereo_7_1;
     segment->data = data;
   }else{
