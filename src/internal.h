@@ -21,7 +21,7 @@
 #  define thread_local
 # endif
 #endif
-#define BASE_VECTOR_SIZE 32
+#define BASE_VECTOR_SIZE 128
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
