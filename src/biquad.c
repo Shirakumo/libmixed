@@ -3,7 +3,7 @@
 
 // Adapted from https://github.com/velipso/sndfilter/blob/master/src/biquad.c
 
-inline float biquad_sample(float sample, struct biquad_data *state);
+extern inline float biquad_sample(float sample, struct biquad_data *state);
 
 VECTORIZE void biquad_process(struct mixed_buffer *input, struct mixed_buffer *output, struct biquad_data *state){
   float b0 = state->b[0];
@@ -38,7 +38,7 @@ VECTORIZE void biquad_process(struct mixed_buffer *input, struct mixed_buffer *o
   state->y[1] = yn2;
 }
 
-inline void biquad_reset(struct biquad_data *state);
+extern inline void biquad_reset(struct biquad_data *state);
 
 static inline void state_scale(struct biquad_data *state, float amt){
   state->b[0] = amt;

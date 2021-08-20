@@ -131,7 +131,7 @@ VECTORIZE static inline void calculate_volumes(float *lvolume, float *rvolume, s
   }
 }
 
-VECTORIZE float calculate_pitch_shift(struct space_mixer_data *listener, struct space_source *source){
+VECTORIZE static inline float calculate_pitch_shift(struct space_mixer_data *listener, struct space_source *source){
   if(listener->doppler_factor <= 0.0) return 1.0;
   // See OpenAL1.1 specification §3.5.2
   float SL[3] = {listener->location[0] - source->location[0],
