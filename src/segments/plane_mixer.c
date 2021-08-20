@@ -77,9 +77,11 @@ VECTORIZE static inline void calculate_volumes(float *lvolume, float *rvolume, s
   float *dst = data->location;
   float distance = clamp(min, dist(src, dst), max);
   float volume = div * data->attenuation(min, max, distance, roll);
-  float pan = (distance <= min)
+  float xdiff = src[0]-dst[0];
+  float xdist = fabs(xdiff);
+  float pan = (xdist <= min)
     ? 0.0
-    : copysignf((distance-min)/(max-min), src[0]-dst[0]);
+    : copysignf((xdist-min)/(max-min), xdiff);
   *lvolume = volume * ((0.0<pan)?(1.0f-pan):1.0f);
   *rvolume = volume * ((pan<0.0)?(1.0f+pan):1.0f);
 }
