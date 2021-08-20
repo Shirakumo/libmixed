@@ -69,19 +69,19 @@ static inline float clamp(float l, float v, float r){
 }
 
 VECTORIZE static inline void calculate_volumes(float *lvolume, float *rvolume, struct plane_source *source, struct plane_mixer_data *data){
-  float min = source->min_distance;
-  float max = source->max_distance;
+  float min_dist = source->min_distance;
+  float max_dist = source->max_distance;
   float roll = source->rolloff;
   float div = data->volume;
   float *src = source->location;
   float *dst = data->location;
-  float distance = clamp(min, dist(src, dst), max);
-  float volume = div * data->attenuation(min, max, distance, roll);
+  float distance = clamp(min_dist, dist(src, dst), max_dist);
+  float volume = div * data->attenuation(min_dist, max_dist, distance, roll);
   float xdiff = src[0]-dst[0];
   float xdist = fabs(xdiff);
-  float pan = (xdist <= min)
+  float pan = (xdist <= min_dist)
     ? 0.0
-    : copysignf((xdist-min)/(max-min), xdiff);
+    : copysignf((min(max_dist,xdist)-min_dist)/(max_dist-min_dist), xdiff);
   *lvolume = volume * ((0.0<pan)?(1.0f-pan):1.0f);
   *rvolume = volume * ((pan<0.0)?(1.0f+pan):1.0f);
 }
@@ -475,7 +475,7 @@ MIXED_EXPORT int mixed_make_segment_plane_mixer(uint32_t samplerate, struct mixe
   data->doppler_factor = 0.0;
   data->min_distance = 10.0;      // That's 10 centimetres.
   data->max_distance = 10000.0;  // That's a kilometre.
-  data->rolloff = 0.5;
+  data->rolloff = 1.0;
   data->attenuation = attenuation_linear;
   data->volume = 1.0;
   
