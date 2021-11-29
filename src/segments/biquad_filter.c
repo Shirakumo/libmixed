@@ -4,6 +4,7 @@ struct biquad_filter_segment_data{
   struct mixed_buffer *in;
   struct mixed_buffer *out;
   struct biquad_data data;
+  struct biquad_data data_2;
   uint32_t samplerate;
   float frequency;
   float Q;
@@ -12,16 +13,15 @@ struct biquad_filter_segment_data{
 };
 
 static int biquad_reinit(struct biquad_filter_segment_data *data){
-  biquad_reset(&data->data);
   switch(data->type){
-  case MIXED_LOWPASS: biquad_lowpass(data->samplerate, data->frequency, data->Q, &data->data); break;
-  case MIXED_HIGHPASS: biquad_highpass(data->samplerate, data->frequency, data->Q, &data->data); break;
-  case MIXED_BANDPASS: biquad_bandpass(data->samplerate, data->frequency, data->Q, &data->data); break;
-  case MIXED_NOTCH: biquad_notch(data->samplerate, data->frequency, data->Q, &data->data); break;
-  case MIXED_PEAKING: biquad_peaking(data->samplerate, data->frequency, data->Q, data->gain, &data->data); break;
-  case MIXED_ALLPASS: biquad_allpass(data->samplerate, data->frequency, data->Q, &data->data); break;
-  case MIXED_LOWSHELF: biquad_lowshelf(data->samplerate, data->frequency, data->Q, data->gain, &data->data); break;
-  case MIXED_HIGHSHELF: biquad_highshelf(data->samplerate, data->frequency, data->Q, data->gain, &data->data); break;
+  case MIXED_LOWPASS: biquad_lowpass(data->samplerate, data->frequency, data->Q, &data->data_2); break;
+  case MIXED_HIGHPASS: biquad_highpass(data->samplerate, data->frequency, data->Q, &data->data_2); break;
+  case MIXED_BANDPASS: biquad_bandpass(data->samplerate, data->frequency, data->Q, &data->data_2); break;
+  case MIXED_NOTCH: biquad_notch(data->samplerate, data->frequency, data->Q, &data->data_2); break;
+  case MIXED_PEAKING: biquad_peaking(data->samplerate, data->frequency, data->Q, data->gain, &data->data_2); break;
+  case MIXED_ALLPASS: biquad_allpass(data->samplerate, data->frequency, data->Q, &data->data_2); break;
+  case MIXED_LOWSHELF: biquad_lowshelf(data->samplerate, data->frequency, data->Q, data->gain, &data->data_2); break;
+  case MIXED_HIGHSHELF: biquad_highshelf(data->samplerate, data->frequency, data->Q, data->gain, &data->data_2); break;
   default:
     mixed_err(MIXED_INVALID_VALUE);
     return 0;
@@ -39,6 +39,7 @@ int biquad_filter_segment_free(struct mixed_segment *segment){
 
 int biquad_filter_segment_start(struct mixed_segment *segment){
   struct biquad_filter_segment_data *data = (struct biquad_filter_segment_data *)segment->data;
+  memcpy(&data->data, &data->data_2, sizeof(struct biquad_data));
   biquad_reset(&data->data);
 
   if(data->in == 0 || data->out == 0){
@@ -85,6 +86,14 @@ int biquad_filter_segment_set_out(uint32_t field, uint32_t location, void *buffe
 int biquad_segment_mix(struct mixed_segment *segment){
   struct biquad_filter_segment_data *data = (struct biquad_filter_segment_data *)segment->data;
   biquad_process(data->in, data->out, &data->data);
+  float a = 0.99f;
+  float b = 1.f - a;
+
+  data->data.a[0] = (data->data_2.a[0] * b) + (data->data.a[0] * a);
+  data->data.a[1] = (data->data_2.a[1] * b) + (data->data.a[1] * a);
+  data->data.b[0] = (data->data_2.b[0] * b) + (data->data.b[0] * a);
+  data->data.b[1] = (data->data_2.b[1] * b) + (data->data.b[1] * a);
+  data->data.b[2] = (data->data_2.b[2] * b) + (data->data.b[2] * a);
   return 1;
 }
 
