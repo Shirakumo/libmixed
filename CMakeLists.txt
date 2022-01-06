@@ -32,10 +32,10 @@ message(STATUS "Building ${MIXED_VERSION_MAJOR}.${MIXED_VERSION_MINOR}.${MIXED_V
 ## Optimize for target architecture
 include(TargetArch)
 target_architecture(ARCH)
-if(ARCH MATCHES "x86_64" OR ARG MATCHES "i386")
-  ## Minimum supported platform is SSE4.2
-  message(STATUS "Enabling SSE4.2")
-  set(CPU_EXTENSION_FLAGS "-msse4.2" "-mrdrnd")
+if(ARCH MATCHES "x86_64" OR ARCH MATCHES "i386")
+  ## Minimum supported platform is SSE4
+  message(STATUS "Enabling SSE4")
+  set(CPU_EXTENSION_FLAGS "-msse4" "-mrdrnd")
 endif()
 
 set(COMPILATION_FLAGS -fvisibility=hidden -g ${CPU_EXTENSION_FLAGS})
