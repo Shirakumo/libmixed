@@ -240,45 +240,30 @@ void *load_symbol(void *handle, char *name){
 #endif
 }
 
-float mixed_random_rdrand();
-float mixed_random_m(){
-  return (float)rand()/(float)RAND_MAX;
+int hash_rng_pos = 1;
+unsigned int hash_rng_seed = 0x42574223;
+
+unsigned int mixed_random_int(){
+  const unsigned int BIT_NOISE1 = 0x68E31DA4;
+  const unsigned int BIT_NOISE2 = 0xB5297A4D;
+  const unsigned int BIT_NOISE3 = 0x1B56C4E9;
+  unsigned int mangled = (unsigned int) hash_rng_pos;
+  mangled *= BIT_NOISE1;
+  mangled += hash_rng_seed;
+  mangled ^= (mangled >> 8);
+  mangled += BIT_NOISE2;
+  mangled ^= (mangled << 8);
+  mangled *= BIT_NOISE3;
+  mangled ^= (mangled >> 8);
+  hash_rng_pos++;
+  return mangled;
 }
 
-float (*mixed_random)() = mixed_random_m;
-
-#ifdef __RDRND__
-uint8_t rdrand_available(){
-  const unsigned int flag_RDRAND = (1 << 30);
-
-  unsigned int eax, ebx, ecx, edx;
-  __cpuid(1, eax, ebx, ecx, edx);
-
-  return ((ecx & flag_RDRAND) == flag_RDRAND);
+float mixed_random(){
+  return ((float)mixed_random_int())/((float)0xFFFFFFFF);
 }
-
-float mixed_random_rdrand(){
-  int retries = 10;
-  uint32_t random;
-  while(retries--){
-    if (_rdrand32_step(&random)) {
-      return (float)(random/UINT32_MAX);
-    }
-  }
-  return mixed_random_m();
-}
-#else
-uint8_t rdrand_available(){
-  return 0;
-}
-float mixed_random_rdrand(){
-  return 0.0f;
-}
-#endif
 
 static void init() __attribute__((constructor));
 void init(){
-  srand(time(NULL));
-  if(rdrand_available())
-    mixed_random = mixed_random_rdrand;
+  hash_rng_seed = time(NULL);
 }

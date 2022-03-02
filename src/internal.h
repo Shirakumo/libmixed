@@ -154,7 +154,8 @@ void *load_symbol(void *handle, char *name);
 void set_info_field(struct mixed_segment_field_info *info, uint32_t field, enum mixed_segment_field_type type, uint32_t count, enum mixed_segment_info_flags flags, char*description);
 void clear_info_field(struct mixed_segment_field_info *info);
 
-extern float (*mixed_random)();
+float mixed_random();
+unsigned int mixed_random_int();
 
 #define ARG(type, id) *(((type**)args)[id])
 #define REGISTER_SEGMENT(name, function, count, ...)                    \
