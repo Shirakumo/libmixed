@@ -40,7 +40,7 @@ int distribute_set_out(uint32_t field, uint32_t location, void *buffer, struct m
         mixed_err(MIXED_BUFFER_ALLOCATED);
         return 0;
       }
-      ((struct mixed_buffer *)buffer)->virtual = 1;
+      ((struct mixed_buffer *)buffer)->is_virtual = 1;
       if(location < data->count){
         data->out[location] = (struct mixed_buffer *)buffer;
       }else{

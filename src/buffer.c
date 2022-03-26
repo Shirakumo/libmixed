@@ -3,7 +3,7 @@
 
 MIXED_EXPORT int mixed_make_buffer(uint32_t size, struct mixed_buffer *buffer){
   mixed_err(MIXED_NO_ERROR);
-  if(buffer->_data && !buffer->virtual){
+  if(buffer->_data && !buffer->is_virtual){
     mixed_err(MIXED_BUFFER_ALLOCATED);
     return 0;
   }
@@ -12,17 +12,17 @@ MIXED_EXPORT int mixed_make_buffer(uint32_t size, struct mixed_buffer *buffer){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
-  buffer->virtual = 0;
+  buffer->is_virtual = 0;
   buffer->size = size;
   return 1;
 }
 
 MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer){
-  if(buffer->_data && !buffer->virtual)
+  if(buffer->_data && !buffer->is_virtual)
     free(buffer->_data);
   buffer->_data = 0;
   buffer->size = 0;
-  buffer->virtual = 0;
+  buffer->is_virtual = 0;
   mixed_buffer_clear(buffer);
 }
 
