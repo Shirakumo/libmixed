@@ -107,12 +107,13 @@ VECTORIZE static inline float calculate_pitch_shift(struct plane_mixer_data *lis
 VECTORIZE int plane_mixer_mix(struct mixed_segment *segment){
   struct plane_mixer_data *data = (struct plane_mixer_data *)segment->data;
   float *left, *right, *in;
+  uint32_t count = data->count;
   uint32_t samples = UINT32_MAX;
   
   // Compute sample counts
   mixed_buffer_request_write(&left, &samples, data->left);
   mixed_buffer_request_write(&right, &samples, data->right);
-  for(uint32_t s=0; s<data->count; ++s){
+  for(uint32_t s=0; s<count; ++s){
     struct plane_source *source = data->sources[s];
     if(!source) continue;
 
@@ -123,7 +124,7 @@ VECTORIZE int plane_mixer_mix(struct mixed_segment *segment){
   if(0 < samples){
     memset(left, 0, samples*sizeof(float));
     memset(right, 0, samples*sizeof(float));
-    for(uint32_t s=0; s<data->count; ++s){
+    for(uint32_t s=0; s<count; ++s){
       struct plane_source *source = data->sources[s];
       if(!source) continue;
       
@@ -209,8 +210,8 @@ int plane_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
         mixed_err(MIXED_INVALID_LOCATION);
         return 0;
       }
-      free(data->sources[location]);
       data->sources[location] = 0;
+      free(data->sources[location]);
     }
     return 1;
   case MIXED_SPACE_MIN_DISTANCE:

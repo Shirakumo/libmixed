@@ -78,6 +78,7 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
   channel_t channels = data->channels;
   float initial_volume = data->volume;
   float target_volume = data->target_volume;
+  uint32_t count = data->count;
   bool changed = 0;
 
   for(channel_t c=0; c<channels; ++c){
@@ -86,7 +87,7 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
     
     // Compute how much we can mix on this channel.
     mixed_buffer_request_write(&out, &samples, data->out[c]);
-    for(uint32_t i=c; i<data->count; i+=channels){
+    for(uint32_t i=c; i<count; i+=channels){
       struct mixed_buffer *buffer = data->in[i];
       if(!buffer) continue;
       
@@ -96,7 +97,7 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
 
     if(0 < samples){
       memset(out, 0, samples*sizeof(float));
-      for(uint32_t i=c; i<data->count; i+=channels){
+      for(uint32_t i=c; i<count; i+=channels){
         struct mixed_buffer *buffer = data->in[i];
         if(!buffer) continue;
       
