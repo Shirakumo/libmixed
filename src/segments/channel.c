@@ -137,7 +137,7 @@ int channel_mix_stereo_4_0(struct mixed_segment *segment){
     // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
     float rri = hilbert(r, data->delay, delay_size, delay_i);
     delay_i = (delay_i+1) % delay_size;
-    float rli = 1.0f-rri;
+    float rli = -rri;
 
     fl[i] = li;
     fr[i] = ri;
@@ -187,7 +187,7 @@ int channel_mix_stereo_5_1(struct mixed_segment *segment){
     // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
     float rri = hilbert(r, data->delay, delay_size, delay_i);
     delay_i = (delay_i+1) % delay_size;
-    float rli = 1.0f-rri;
+    float rli = -rri;
 
     fl[i] = li;
     fr[i] = ri;
@@ -241,7 +241,7 @@ int channel_mix_stereo_7_1(struct mixed_segment *segment){
     // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
     float rri = hilbert(r, data->delay, delay_size, delay_i);
     delay_i = (delay_i+1) % delay_size;
-    float rli = 1.0f-rri;
+    float rli = -rri;
 
     fl[i] = li;
     fr[i] = ri;
