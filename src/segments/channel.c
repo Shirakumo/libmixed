@@ -114,6 +114,34 @@ int channel_mix_mono_stereo(struct mixed_segment *segment){
   return 1;
 }
 
+int channel_mix_stereo_3_0(struct mixed_segment *segment){
+  struct channel_data *data = (struct channel_data *)segment->data;
+  
+  uint32_t frames = UINT32_MAX;
+  float *l, *r, *fl, *fr, *fc;
+  mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
+  mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
+  mixed_buffer_request_write(&fl, &frames, data->out[MIXED_LEFT_FRONT]);
+  mixed_buffer_request_write(&fr, &frames, data->out[MIXED_RIGHT_FRONT]);
+  mixed_buffer_request_write(&fc, &frames, data->out[2]);
+  for(uint32_t i=0; i<frames; ++i){
+    float li = l[i];
+    float ri = r[i];
+    float c = (li+ri)*0.5f;
+
+    fl[i] = li;
+    fr[i] = ri;
+    fc[i] = c;
+  }
+  mixed_buffer_finish_read(frames, data->in[MIXED_LEFT]);
+  mixed_buffer_finish_read(frames, data->in[MIXED_RIGHT]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_LEFT_FRONT]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_FRONT]);
+  mixed_buffer_finish_write(frames, data->out[2]);
+
+  return 1;
+}
+
 int channel_mix_stereo_4_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
@@ -144,6 +172,43 @@ int channel_mix_stereo_4_0(struct mixed_segment *segment){
   mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_REAR]);
   data->delay_i = delay_i;
 
+  return 1;
+}
+
+int channel_mix_stereo_5_0(struct mixed_segment *segment){
+  struct channel_data *data = (struct channel_data *)segment->data;
+
+  uint32_t frames = UINT32_MAX;
+  float *l, *r, *fl, *fr, *rl, *rr, *ce;
+  mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
+  mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
+  mixed_buffer_request_write(&fl, &frames, data->out[MIXED_LEFT_FRONT]);
+  mixed_buffer_request_write(&fr, &frames, data->out[MIXED_RIGHT_FRONT]);
+  mixed_buffer_request_write(&rl, &frames, data->out[MIXED_LEFT_REAR]);
+  mixed_buffer_request_write(&rr, &frames, data->out[MIXED_RIGHT_REAR]);
+  mixed_buffer_request_write(&ce, &frames, data->out[MIXED_CENTER]);
+  for(uint32_t i=0; i<frames; ++i){
+    float li = l[i];
+    float ri = r[i];
+
+    float c = (li+ri)*0.5f;
+    float ci = biquad_sample(c, &data->lp[0]);
+    float rli = 0.571f * (li + (li - 0.5f * c));
+    float rri = 0.571f * (ri + (ri - 0.5f * c));
+
+    fl[i] = li;
+    fr[i] = ri;
+    rl[i] = rli;
+    rr[i] = rri;
+    ce[i] = ci;
+  }
+  mixed_buffer_finish_read(frames, data->in[MIXED_LEFT]);
+  mixed_buffer_finish_read(frames, data->in[MIXED_RIGHT]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_LEFT_FRONT]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_FRONT]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_LEFT_REAR]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_REAR]);
+  mixed_buffer_finish_write(frames, data->out[MIXED_CENTER]);
   return 1;
 }
 
@@ -259,7 +324,9 @@ static int channel_update(struct mixed_segment *segment){
   if(data->in_channels == data->out_channels)                segment->mix = channel_mix_transfer;
   else if(data->in_channels == 1 && data->out_channels == 2) segment->mix = channel_mix_mono_stereo;
   else if(data->in_channels == 2 && data->out_channels == 1) segment->mix = channel_mix_stereo_mono;
+  else if(data->in_channels == 2 && data->out_channels == 3) segment->mix = channel_mix_stereo_3_0;
   else if(data->in_channels == 2 && data->out_channels == 4) segment->mix = channel_mix_stereo_4_0;
+  else if(data->in_channels == 2 && data->out_channels == 5) segment->mix = channel_mix_stereo_5_0;
   else if(data->in_channels == 2 && data->out_channels == 6) segment->mix = channel_mix_stereo_5_1;
   else if(data->in_channels == 2 && data->out_channels == 8) segment->mix = channel_mix_stereo_7_1;
   else{
