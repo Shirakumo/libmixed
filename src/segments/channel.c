@@ -116,7 +116,6 @@ int channel_mix_mono_stereo(struct mixed_segment *segment){
 
 int channel_mix_stereo_4_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
-  const float invsqrt = 1.0/sqrt(2);
   
   uint32_t frames = UINT32_MAX;
   uint32_t delay_i = data->delay_i;
@@ -131,18 +130,11 @@ int channel_mix_stereo_4_0(struct mixed_segment *segment){
   for(uint32_t i=0; i<frames; ++i){
     float li = l[i];
     float ri = r[i];
-    float s = (li-ri)*invsqrt;
-    // Surround low-pass 7kHz
-    float r = biquad_sample(s, &data->lp[2]);
-    // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
-    float rri = hilbert(r, data->delay, delay_size, delay_i);
-    delay_i = (delay_i+1) % delay_size;
-    float rli = -rri;
 
     fl[i] = li;
     fr[i] = ri;
-    rl[i] = rli;
-    rr[i] = rri;
+    rl[i] = li;
+    rr[i] = ri;
   }
   mixed_buffer_finish_read(frames, data->in[MIXED_LEFT]);
   mixed_buffer_finish_read(frames, data->in[MIXED_RIGHT]);
@@ -159,11 +151,11 @@ int channel_mix_stereo_4_0(struct mixed_segment *segment){
 //   https://core.ac.uk/download/pdf/25789335.pdf
 int channel_mix_stereo_5_1(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
-  const float invsqrt = 1.0/sqrt(2);
-  
+
   uint32_t frames = UINT32_MAX;
   uint32_t delay_i = data->delay_i;
   const uint32_t delay_size = data->delay_size;
+  float *delay = data->delay;
   float *l, *r, *fl, *fr, *rl, *rr, *ce, *lfe;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
@@ -176,18 +168,19 @@ int channel_mix_stereo_5_1(struct mixed_segment *segment){
   for(uint32_t i=0; i<frames; ++i){
     float li = l[i];
     float ri = r[i];
-    float c = (li+ri)*invsqrt;
-    float s = (li-ri)*invsqrt;
-    // Center low-pass 4kHz
+
+    float c = (li+ri)*0.5f;
     float ci = biquad_sample(c, &data->lp[0]);
-    // Subwoofer low-pass 200Hz
     float lfei = biquad_sample(c, &data->lp[1]);
-    // Surround low-pass 7kHz
-    float r = biquad_sample(s, &data->lp[2]);
-    // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
-    float rri = hilbert(r, data->delay, delay_size, delay_i);
-    delay_i = (delay_i+1) % delay_size;
-    float rli = -rri;
+    float rli = 0.571f * (li + (li - 0.5f * c));
+    float rri = 0.571f * (ri + (ri - 0.5f * c));
+
+    // FIXME: Hilbert is fucked. Reinstate when it works again.
+    /* float r = biquad_sample(s, &data->lp[2]); */
+    /* // 90 deg hilbert phase shift. This "automatically" induces a delay as well. */
+    /* float rri = hilbert(r, delay, delay_size, delay_i); */
+    /* delay_i = (delay_i+1) % delay_size; */
+    /* float rli = -rri; */
 
     fl[i] = li;
     fr[i] = ri;
@@ -211,7 +204,6 @@ int channel_mix_stereo_5_1(struct mixed_segment *segment){
 
 int channel_mix_stereo_7_1(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
-  const float invsqrt = 1.0/sqrt(2);
   
   uint32_t frames = UINT32_MAX;
   uint32_t delay_i = data->delay_i;
@@ -230,23 +222,17 @@ int channel_mix_stereo_7_1(struct mixed_segment *segment){
   for(uint32_t i=0; i<frames; ++i){
     float li = l[i];
     float ri = r[i];
-    float c = (li+ri)*invsqrt;
-    float s = (li-ri)*invsqrt;
-    // Center low-pass 4kHz
+
+    float c = (li+ri)*0.5f;
     float ci = biquad_sample(c, &data->lp[0]);
-    // Subwoofer low-pass 200Hz
     float lfei = biquad_sample(c, &data->lp[1]);
-    // Surround low-pass 7kHz
-    float r = biquad_sample(s, &data->lp[2]);
-    // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
-    float rri = hilbert(r, data->delay, delay_size, delay_i);
-    delay_i = (delay_i+1) % delay_size;
-    float rli = -rri;
+    float rli = 0.571f * (li + (li - 0.5f * c));
+    float rri = 0.571f * (ri + (ri - 0.5f * c));
 
     fl[i] = li;
     fr[i] = ri;
-    sl[i] = (li+rli)/2;
-    sr[i] = (ri+rri)/2;
+    sl[i] = (li+rli)*0.5f;
+    sr[i] = (ri+rri)*0.5f;
     rl[i] = rli;
     rr[i] = rri;
     ce[i] = ci;
