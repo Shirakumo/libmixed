@@ -5,36 +5,7 @@ struct channel_data{
   struct mixed_buffer *out[14];
   channel_t in_channels;
   channel_t out_channels;
-};
-
-struct channel_data_2_to_7_1{
-  struct mixed_buffer *in[14];
-  struct mixed_buffer *out[14];
-  channel_t in_channels;
-  channel_t out_channels;
   struct biquad_data lp[3];
-  uint32_t delay_i;
-  uint32_t delay_size;
-  float *delay;
-};
-
-struct channel_data_2_to_5_1{
-  struct mixed_buffer *in[14];
-  struct mixed_buffer *out[14];
-  channel_t in_channels;
-  channel_t out_channels;
-  struct biquad_data lp[3];
-  uint32_t delay_i;
-  uint32_t delay_size;
-  float *delay;
-};
-
-struct channel_data_2_to_4_0{
-  struct mixed_buffer *in[14];
-  struct mixed_buffer *out[14];
-  channel_t in_channels;
-  channel_t out_channels;
-  struct biquad_data lp;
   uint32_t delay_i;
   uint32_t delay_size;
   float *delay;
@@ -99,6 +70,13 @@ int channel_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed
   }
 }
 
+int channel_mix_transfer(struct mixed_segment *segment){
+  struct channel_data *data = (struct channel_data *)segment->data;
+  for(channel_t c=0; c<data->in_channels; ++c)
+    mixed_buffer_transfer(data->in[c], data->out[c]);
+  return 1;
+}
+
 int channel_mix_stereo_mono(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
@@ -137,7 +115,7 @@ int channel_mix_mono_stereo(struct mixed_segment *segment){
 }
 
 int channel_mix_stereo_4_0(struct mixed_segment *segment){
-  struct channel_data_2_to_4_0 *data = (struct channel_data_2_to_4_0 *)segment->data;
+  struct channel_data *data = (struct channel_data *)segment->data;
   const float invsqrt = 1.0/sqrt(2);
   
   uint32_t frames = UINT32_MAX;
@@ -155,7 +133,7 @@ int channel_mix_stereo_4_0(struct mixed_segment *segment){
     float ri = r[i];
     float s = (li-ri)*invsqrt;
     // Surround low-pass 7kHz
-    float r = biquad_sample(s, &data->lp);
+    float r = biquad_sample(s, &data->lp[2]);
     // 90 deg hilbert phase shift. This "automatically" induces a delay as well.
     float rri = hilbert(r, data->delay, delay_size, delay_i);
     delay_i = (delay_i+1) % delay_size;
@@ -180,7 +158,7 @@ int channel_mix_stereo_4_0(struct mixed_segment *segment){
 // Based on Real-Time Conversion of Stereo Audio to 5.1 Channel Audio for Providing Realistic Sounds by Chan Jun Chun et al.
 //   https://core.ac.uk/download/pdf/25789335.pdf
 int channel_mix_stereo_5_1(struct mixed_segment *segment){
-  struct channel_data_2_to_5_1 *data = (struct channel_data_2_to_5_1 *)segment->data;
+  struct channel_data *data = (struct channel_data *)segment->data;
   const float invsqrt = 1.0/sqrt(2);
   
   uint32_t frames = UINT32_MAX;
@@ -232,7 +210,7 @@ int channel_mix_stereo_5_1(struct mixed_segment *segment){
 }
 
 int channel_mix_stereo_7_1(struct mixed_segment *segment){
-  struct channel_data_2_to_7_1 *data = (struct channel_data_2_to_7_1 *)segment->data;
+  struct channel_data *data = (struct channel_data *)segment->data;
   const float invsqrt = 1.0/sqrt(2);
   
   uint32_t frames = UINT32_MAX;
@@ -289,6 +267,65 @@ int channel_mix_stereo_7_1(struct mixed_segment *segment){
   return 1;
 }
 
+static int channel_update(struct mixed_segment *segment){
+  struct channel_data *data = (struct channel_data *)segment->data;
+
+  if(data->in_channels == data->out_channels)                segment->mix = channel_mix_transfer;
+  else if(data->in_channels == 1 && data->out_channels == 2) segment->mix = channel_mix_mono_stereo;
+  else if(data->in_channels == 2 && data->out_channels == 1) segment->mix = channel_mix_stereo_mono;
+  else if(data->in_channels == 2 && data->out_channels == 4) segment->mix = channel_mix_stereo_4_0;
+  else if(data->in_channels == 2 && data->out_channels == 6) segment->mix = channel_mix_stereo_5_1;
+  else if(data->in_channels == 2 && data->out_channels == 8) segment->mix = channel_mix_stereo_7_1;
+  else{
+    mixed_err(MIXED_BAD_CHANNEL_CONFIGURATION);
+    return 0;
+  }
+  return 1;
+}
+
+int channel_get(uint32_t field, void *value, struct mixed_segment *segment){
+  struct channel_data *data = (struct channel_data *)segment->data;
+  switch(field){
+  case MIXED_CHANNEL_COUNT_IN:
+    *((channel_t *)value) = data->in_channels;
+    break;
+  case MIXED_CHANNEL_COUNT_OUT:
+    *((channel_t *)value) = data->out_channels;
+    break;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
+  }
+  return 1;
+}
+
+int channel_set(uint32_t field, void *value, struct mixed_segment *segment){
+  struct channel_data *data = (struct channel_data *)segment->data;
+  channel_t channels = 0;
+  switch(field){
+  case MIXED_CHANNEL_COUNT_IN:
+    channels = data->in_channels;
+    data->in_channels = *((channel_t *)value);
+    if(!channel_update(segment)){
+      data->in_channels = channels;
+      return 0;
+    }
+    break;
+  case MIXED_CHANNEL_COUNT_OUT:
+    channels = data->out_channels;
+    data->out_channels = *((channel_t *)value);
+    if(!channel_update(segment)){
+      data->out_channels = channels;
+      return 0;
+    }
+    break;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
+  }
+  return 1;
+}
+
 int channel_info(struct mixed_segment_info *info, struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   info->name = "channel_convert";
@@ -301,101 +338,52 @@ int channel_info(struct mixed_segment_info *info, struct mixed_segment *segment)
   set_info_field(field++, MIXED_BUFFER,
                  MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
                  "The buffer for audio data attached to the location.");
+
+  set_info_field(field++, MIXED_CHANNEL_COUNT_IN,
+                 MIXED_CHANNEL_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The number of input channels.");
+
+  set_info_field(field++, MIXED_CHANNEL_COUNT_OUT,
+                 MIXED_CHANNEL_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 "The number of output channels.");
+
   clear_info_field(field++);
   return 1;
 }
 
 MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out, uint32_t samplerate, struct mixed_segment *segment){
-  if(in == 1 && out == 2){
-    struct channel_data *data = calloc(1, sizeof(struct channel_data));
-    if(!data){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    
-    data->in_channels = in;
-    data->out_channels = out;
-    segment->mix = channel_mix_mono_stereo;
-    segment->data = data;
-  }else if(in == 2 && out == 1){
-    struct channel_data *data = calloc(1, sizeof(struct channel_data));
-    if(!data){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
+  struct channel_data *data = calloc(1, sizeof(struct channel_data));
+  if(!data){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  }
 
-    data->in_channels = in;
-    data->out_channels = out;
-    segment->mix = channel_mix_stereo_mono;
-    segment->data = data;
-  }else if(in == 2 && out == 4){
-    struct channel_data_2_to_4_0 *data = calloc(1, sizeof(struct channel_data_2_to_4_0));
-    if(!data){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    
-    data->in_channels = in;
-    data->out_channels = out;
-    data->delay_size = (samplerate*12)/1000;
-    data->delay = calloc(data->delay_size, sizeof(float));
-    if(!data->delay){
-      free(data);
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    biquad_lowpass(samplerate, 7000, 1, &data->lp);
-    segment->mix = channel_mix_stereo_4_0;
-    segment->data = data;
-  }else if(in == 2 && out == 6){
-    struct channel_data_2_to_5_1 *data = calloc(1, sizeof(struct channel_data_2_to_5_1));
-    if(!data){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    
-    data->in_channels = in;
-    data->out_channels = out;
-    data->delay_size = (samplerate*12)/1000;
-    data->delay = calloc(data->delay_size, sizeof(float));
-    if(!data->delay){
-      free(data);
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    biquad_lowpass(samplerate, 4000, 1, &data->lp[0]);
-    biquad_lowpass(samplerate,  200, 1, &data->lp[1]);
-    biquad_lowpass(samplerate, 7000, 1, &data->lp[2]);
-    segment->mix = channel_mix_stereo_5_1;
-    segment->data = data;
-  }else if(in == 2 && out == 8){
-    struct channel_data_2_to_7_1 *data = calloc(1, sizeof(struct channel_data_2_to_7_1));
-    if(!data){
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    
-    data->in_channels = in;
-    data->out_channels = out;
-    data->delay_size = (samplerate*12)/1000;
-    data->delay = calloc(data->delay_size, sizeof(float));
-    if(!data->delay){
-      free(data);
-      mixed_err(MIXED_OUT_OF_MEMORY);
-      return 0;
-    }
-    biquad_lowpass(samplerate, 4000, 1, &data->lp[0]);
-    biquad_lowpass(samplerate,  200, 1, &data->lp[1]);
-    biquad_lowpass(samplerate, 7000, 1, &data->lp[2]);
-    segment->mix = channel_mix_stereo_7_1;
-    segment->data = data;
-  }else{
+  data->in_channels = in;
+  data->out_channels = out;
+  data->delay_size = (samplerate*12)/1000;
+  data->delay = calloc(data->delay_size, sizeof(float));
+  if(!data->delay){
+    free(data);
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  }
+  biquad_lowpass(samplerate, 4000, 1, &data->lp[0]);
+  biquad_lowpass(samplerate,  200, 1, &data->lp[1]);
+  biquad_lowpass(samplerate, 7000, 1, &data->lp[2]);
+
+  segment->data = data;
+  if(!channel_update(segment)){
+    free(data->delay);
+    free(data);
+    segment->data = 0;
     mixed_err(MIXED_BAD_CHANNEL_CONFIGURATION);
     return 0;
   }
 
   segment->free = channel_free;
   segment->start = channel_start;
+  segment->set = channel_set;
+  segment->get = channel_get;
   segment->set_in = channel_set_in;
   segment->set_out = channel_set_out;
   segment->info = channel_info;

@@ -322,6 +322,10 @@ extern "C" {
     // The actual gain that was applied during compression.
     // Can only be read.
     MIXED_COMPRESSOR_GAIN,
+    // The number of channels that the upmixer should convert from.
+    MIXED_CHANNEL_COUNT_IN,
+    // The number of channels that the upmixer should convert to.
+    MIXED_CHANNEL_COUNT_OUT
   };
 
   // This enum descripbes the possible resampling quality options.
@@ -483,6 +487,7 @@ extern "C" {
     MIXED_ENCODING_ENUM,
     MIXED_ERROR_ENUM,
     MIXED_RESAMPLE_TYPE_ENUM,
+    MIXED_CHANNEL_T
   };
 
   typedef uint8_t channel_t;
