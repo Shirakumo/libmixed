@@ -77,7 +77,7 @@ int channel_mix_transfer(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_stereo_mono(struct mixed_segment *segment){
+int channel_mix_2_0_to_1_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   uint32_t frames = UINT32_MAX;
@@ -95,7 +95,7 @@ int channel_mix_stereo_mono(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_mono_stereo(struct mixed_segment *segment){
+int channel_mix_1_0_to_2_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   uint32_t frames = UINT32_MAX;
@@ -114,7 +114,7 @@ int channel_mix_mono_stereo(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_stereo_3_0(struct mixed_segment *segment){
+int channel_mix_2_0_to_3_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
   uint32_t frames = UINT32_MAX;
@@ -142,7 +142,7 @@ int channel_mix_stereo_3_0(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_stereo_4_0(struct mixed_segment *segment){
+int channel_mix_2_0_to_4_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
   uint32_t frames = UINT32_MAX;
@@ -175,7 +175,7 @@ int channel_mix_stereo_4_0(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_stereo_5_0(struct mixed_segment *segment){
+int channel_mix_2_0_to_5_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   uint32_t frames = UINT32_MAX;
@@ -214,7 +214,7 @@ int channel_mix_stereo_5_0(struct mixed_segment *segment){
 
 // Based on Real-Time Conversion of Stereo Audio to 5.1 Channel Audio for Providing Realistic Sounds by Chan Jun Chun et al.
 //   https://core.ac.uk/download/pdf/25789335.pdf
-int channel_mix_stereo_5_1(struct mixed_segment *segment){
+int channel_mix_2_0_to_5_1(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   uint32_t frames = UINT32_MAX;
@@ -267,7 +267,7 @@ int channel_mix_stereo_5_1(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_stereo_7_1(struct mixed_segment *segment){
+int channel_mix_2_0_to_7_1(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
   uint32_t frames = UINT32_MAX;
@@ -322,13 +322,13 @@ static int channel_update(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   if(data->in_channels == data->out_channels)                segment->mix = channel_mix_transfer;
-  else if(data->in_channels == 1 && data->out_channels == 2) segment->mix = channel_mix_mono_stereo;
-  else if(data->in_channels == 2 && data->out_channels == 1) segment->mix = channel_mix_stereo_mono;
-  else if(data->in_channels == 2 && data->out_channels == 3) segment->mix = channel_mix_stereo_3_0;
-  else if(data->in_channels == 2 && data->out_channels == 4) segment->mix = channel_mix_stereo_4_0;
-  else if(data->in_channels == 2 && data->out_channels == 5) segment->mix = channel_mix_stereo_5_0;
-  else if(data->in_channels == 2 && data->out_channels == 6) segment->mix = channel_mix_stereo_5_1;
-  else if(data->in_channels == 2 && data->out_channels == 8) segment->mix = channel_mix_stereo_7_1;
+  else if(data->in_channels == 1 && data->out_channels == 2) segment->mix = channel_mix_1_0_to_2_0;
+  else if(data->in_channels == 2 && data->out_channels == 1) segment->mix = channel_mix_2_0_to_1_0;
+  else if(data->in_channels == 2 && data->out_channels == 3) segment->mix = channel_mix_2_0_to_3_0;
+  else if(data->in_channels == 2 && data->out_channels == 4) segment->mix = channel_mix_2_0_to_4_0;
+  else if(data->in_channels == 2 && data->out_channels == 5) segment->mix = channel_mix_2_0_to_5_0;
+  else if(data->in_channels == 2 && data->out_channels == 6) segment->mix = channel_mix_2_0_to_5_1;
+  else if(data->in_channels == 2 && data->out_channels == 8) segment->mix = channel_mix_2_0_to_7_1;
   else{
     mixed_err(MIXED_BAD_CHANNEL_CONFIGURATION);
     return 0;
