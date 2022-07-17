@@ -23,8 +23,8 @@ int ladspa_segment_free(struct mixed_segment *segment){
     if(data->descriptor->cleanup)
       data->descriptor->cleanup(data->handle);
     if(data->ports)
-      free(data->ports);
-    free(segment->data);
+      mixed_free(data->ports);
+    mixed_free(segment->data);
   }
   segment->data = 0;
   return 1;
@@ -235,7 +235,7 @@ int ladspa_load_descriptor(char *file, uint32_t index, LADSPA_Descriptor **_desc
 MIXED_EXPORT int mixed_make_segment_ladspa(char *file, uint32_t index, uint32_t samplerate, struct mixed_segment *segment){
   struct ladspa_segment_data *data = 0;
 
-  data = calloc(1, sizeof(struct ladspa_segment_data));
+  data = mixed_calloc(1, sizeof(struct ladspa_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
@@ -245,7 +245,7 @@ MIXED_EXPORT int mixed_make_segment_ladspa(char *file, uint32_t index, uint32_t 
     goto cleanup;
   }
 
-  data->ports = calloc(data->descriptor->PortCount, sizeof(struct ladspa_port));
+  data->ports = mixed_calloc(data->descriptor->PortCount, sizeof(struct ladspa_port));
   if(!data->ports){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
@@ -277,8 +277,8 @@ MIXED_EXPORT int mixed_make_segment_ladspa(char *file, uint32_t index, uint32_t 
  cleanup:
   if(data){
     if(data->ports)
-      free(data->ports);
-    free(data);
+      mixed_free(data->ports);
+    mixed_free(data);
   }
   
   return 0;

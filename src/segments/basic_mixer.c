@@ -177,7 +177,7 @@ int basic_mixer_info(struct mixed_segment_info *info, struct mixed_segment *segm
 }
 
 MIXED_EXPORT int mixed_make_segment_basic_mixer(channel_t channels, struct mixed_segment *segment){
-  struct basic_mixer_data *data = calloc(1, sizeof(struct basic_mixer_data));
+  struct basic_mixer_data *data = mixed_calloc(1, sizeof(struct basic_mixer_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
@@ -186,10 +186,10 @@ MIXED_EXPORT int mixed_make_segment_basic_mixer(channel_t channels, struct mixed
   data->volume = 1.0f;
   data->target_volume = 1.0f;
   data->channels = channels;
-  data->out = calloc(channels, sizeof(struct mixed_buffer *));
+  data->out = mixed_calloc(channels, sizeof(struct mixed_buffer *));
   if(!data->out){
     mixed_err(MIXED_OUT_OF_MEMORY);
-    free(data);
+    mixed_free(data);
     return 0;
   }
   

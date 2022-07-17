@@ -18,7 +18,7 @@ int pack_segment_free(struct mixed_segment *segment){
   if(data){
     if(data->resample_state)
       src_delete(data->resample_state);
-    free(data);
+    mixed_free(data);
   }
   segment->data = 0;
   return 1;
@@ -326,7 +326,7 @@ int make_pack_internal(struct mixed_pack *pack, uint32_t samplerate, int quality
     goto cleanup;
   }
 
-  data = calloc(1, sizeof(struct pack_segment_data));
+  data = mixed_calloc(1, sizeof(struct pack_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
@@ -347,7 +347,7 @@ int make_pack_internal(struct mixed_pack *pack, uint32_t samplerate, int quality
 
  cleanup:
   if(data)
-    free(data);
+    mixed_free(data);
   return 0;
 }
 

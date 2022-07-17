@@ -2,7 +2,7 @@
 
 void free_vector(struct vector *vector){
   if(vector->data)
-    free(vector->data);
+    mixed_free(vector->data);
   vector->data = 0;
 }
 
@@ -24,7 +24,7 @@ int vector_add_pos(uint32_t i, void *element, struct vector *vector){
   // Not yet initialised
   if(!data){
     if(vector->size == 0) vector->size = BASE_VECTOR_SIZE;
-    data = calloc(vector->size, sizeof(void *));
+    data = mixed_calloc(vector->size, sizeof(void *));
     vector->count = 0;
   }
   // Too small

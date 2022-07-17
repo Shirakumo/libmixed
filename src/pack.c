@@ -3,7 +3,7 @@
 
 MIXED_EXPORT int mixed_make_pack(uint32_t frames, struct mixed_pack *pack){
   mixed_err(MIXED_NO_ERROR);
-  pack->_data = calloc(frames*pack->channels, mixed_samplesize(pack->encoding));
+  pack->_data = mixed_calloc(frames*pack->channels, mixed_samplesize(pack->encoding));
   if(!pack->_data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
@@ -14,7 +14,7 @@ MIXED_EXPORT int mixed_make_pack(uint32_t frames, struct mixed_pack *pack){
 
 MIXED_EXPORT void mixed_free_pack(struct mixed_pack *pack){
   if(pack->_data)
-    free(pack->_data);
+    mixed_free(pack->_data);
   pack->_data = 0;
   pack->size = 0;
   mixed_pack_clear(pack);

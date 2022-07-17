@@ -31,8 +31,8 @@ int plane_mixer_free(struct mixed_segment *segment){
   struct plane_mixer_data *data = (struct plane_mixer_data *)segment->data;
   if(data){
     free_pitch_data(&data->pitch_data);
-    free(data->sources);
-    free(data);
+    mixed_free(data->sources);
+    mixed_free(data);
   }
   segment->data = 0;
   return 1;
@@ -189,7 +189,7 @@ int plane_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
       if(location < data->count)
         source = data->sources[location];
       if(!source){
-        source = calloc(1, sizeof(struct plane_source));
+        source = mixed_calloc(1, sizeof(struct plane_source));
         if(!source){
           mixed_err(MIXED_OUT_OF_MEMORY);
           return 0;
@@ -211,7 +211,7 @@ int plane_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
         return 0;
       }
       data->sources[location] = 0;
-      free(data->sources[location]);
+      mixed_free(data->sources[location]);
     }
     return 1;
   case MIXED_SPACE_MIN_DISTANCE:
@@ -460,7 +460,7 @@ int plane_mixer_info(struct mixed_segment_info *info, struct mixed_segment *segm
 }
 
 MIXED_EXPORT int mixed_make_segment_plane_mixer(uint32_t samplerate, struct mixed_segment *segment){
-  struct plane_mixer_data *data = calloc(1, sizeof(struct plane_mixer_data));
+  struct plane_mixer_data *data = mixed_calloc(1, sizeof(struct plane_mixer_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
@@ -468,7 +468,7 @@ MIXED_EXPORT int mixed_make_segment_plane_mixer(uint32_t samplerate, struct mixe
 
   // These factors might need tweaking for efficiency/quality.
   if(!make_pitch_data(2048, 4, samplerate, &data->pitch_data)){
-    free(data);
+    mixed_free(data);
     return 0;
   }
 

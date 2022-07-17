@@ -15,7 +15,7 @@ int speed_segment_free(struct mixed_segment *segment){
     if(data->resample_state){
       src_delete(data->resample_state);
     }
-    free(data);
+    mixed_free(data);
   }
   segment->data = 0;
   return 1;
@@ -179,7 +179,7 @@ MIXED_EXPORT int mixed_make_segment_speed_change(double speed, struct mixed_segm
     return 0;
   }
 
-  struct speed_segment_data *data = calloc(1, sizeof(struct speed_segment_data));
+  struct speed_segment_data *data = mixed_calloc(1, sizeof(struct speed_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;

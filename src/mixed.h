@@ -1342,6 +1342,41 @@ extern "C" {
   // Returns the version string of the library.
   MIXED_EXPORT char *mixed_version();
 
+  //// Allow customising how libmixed allocates things.
+  
+  // Allocates a new block of memory.
+  // 
+  // mixed_calloc must return either 0 or a pointer to a memory region
+  // that is num*size octets large. It may only return 0 if the allocation
+  // failed for some reason, such as an out of memory condition.
+  // The returned memory region must be cleared, meaning all addressable
+  // octets within the region must be 0. The memory region also must not
+  // overlap with any other allocated memory regions.
+  MIXED_EXPORT extern void *(*mixed_calloc)(size_t num, size_t size);
+
+  // Releases a previously allocated region of memory.
+  //
+  // The behaviour is undefined if a pointer is passed to this function
+  // that was not returned by a prior call to mixed_calloc, or if the pointer
+  // was already passed to mixed_free before being returned by another call
+  // to mixed_calloc.
+  MIXED_EXPORT extern void (*mixed_free)(void *ptr);
+
+  // Resizes the allocated block of memory.
+  //
+  // Must return a pointer to a memory region that is size octets large.
+  // It may return 0 if the allocation failed for some reason, such as an
+  // out of memory condition. The returned memory region must contain the
+  // same octets as the passed ptr region, up to min(size, old_size).
+  // The content outside of this range is unspecified.
+  // The returned pointer may be the same as the one passed in.
+  // If the returned pointer is not the same as the one passed in, the
+  // behaviour should be as if the passed pointer had been passed to
+  // mixed_free.
+  // If the realloc operation fails and zero is returned, the original
+  // pointer must still be allocated and its memory intact.
+  MIXED_EXPORT extern void *(*mixed_realloc)(void *ptr, size_t size);
+
 #ifdef __cplusplus
 }
 #endif

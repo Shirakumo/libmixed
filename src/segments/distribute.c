@@ -121,7 +121,7 @@ int distribute_info(struct mixed_segment_info *info, struct mixed_segment *segme
 }
 
 MIXED_EXPORT int mixed_make_segment_distribute(struct mixed_segment *segment){
-  struct distribute_data *data = calloc(1, sizeof(struct distribute_data));
+  struct distribute_data *data = mixed_calloc(1, sizeof(struct distribute_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;

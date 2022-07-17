@@ -23,7 +23,7 @@ MIXED_EXPORT int mixed_chain_remove_at(uint32_t i, struct mixed_segment *chain){
 int chain_segment_free(struct mixed_segment *segment){
   if(segment->data){
     free_vector(segment->data);
-    free(segment->data);
+    mixed_free(segment->data);
   }
   segment->data = 0;
   return 1;
@@ -169,7 +169,7 @@ int chain_segment_set(uint32_t field, void *value, struct mixed_segment *segment
 }
 
 MIXED_EXPORT int mixed_make_segment_chain(struct mixed_segment *segment){
-  struct vector *data = calloc(1, sizeof(struct vector));
+  struct vector *data = mixed_calloc(1, sizeof(struct vector));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;

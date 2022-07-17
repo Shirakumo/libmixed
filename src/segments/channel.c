@@ -13,7 +13,7 @@ struct channel_data{
 
 int channel_free(struct mixed_segment *segment){
   if(segment->data){
-    free(segment->data);
+    mixed_free(segment->data);
   }
   segment->data = 0;
   return 1;
@@ -405,7 +405,7 @@ int channel_info(struct mixed_segment_info *info, struct mixed_segment *segment)
 }
 
 MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out, uint32_t samplerate, struct mixed_segment *segment){
-  struct channel_data *data = calloc(1, sizeof(struct channel_data));
+  struct channel_data *data = mixed_calloc(1, sizeof(struct channel_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
@@ -414,9 +414,9 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
   data->in_channels = in;
   data->out_channels = out;
   data->delay_size = (samplerate*12)/1000;
-  data->delay = calloc(data->delay_size, sizeof(float));
+  data->delay = mixed_calloc(data->delay_size, sizeof(float));
   if(!data->delay){
-    free(data);
+    mixed_free(data);
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
@@ -426,8 +426,8 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
 
   segment->data = data;
   if(!channel_update(segment)){
-    free(data->delay);
-    free(data);
+    mixed_free(data->delay);
+    mixed_free(data);
     segment->data = 0;
     mixed_err(MIXED_BAD_CHANNEL_CONFIGURATION);
     return 0;

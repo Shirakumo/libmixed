@@ -31,7 +31,7 @@ static int biquad_reinit(struct biquad_filter_segment_data *data){
 
 int biquad_filter_segment_free(struct mixed_segment *segment){
   if(segment->data){
-    free(segment->data);
+    mixed_free(segment->data);
   }
   segment->data = 0;
   return 1;
@@ -216,7 +216,7 @@ MIXED_EXPORT int mixed_make_segment_biquad_filter(enum mixed_biquad_filter type,
     return 0;
   }
   
-  struct biquad_filter_segment_data *data = calloc(1, sizeof(struct biquad_filter_segment_data));
+  struct biquad_filter_segment_data *data = mixed_calloc(1, sizeof(struct biquad_filter_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
@@ -229,7 +229,7 @@ MIXED_EXPORT int mixed_make_segment_biquad_filter(enum mixed_biquad_filter type,
   data->type = type;
 
   if(!biquad_reinit(data)){
-    free(data);
+    mixed_free(data);
     return 0;
   }
   

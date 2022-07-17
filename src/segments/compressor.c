@@ -506,7 +506,7 @@ int compressor_segment_info(struct mixed_segment_info *info, struct mixed_segmen
 }
 
 MIXED_EXPORT int mixed_make_segment_compressor(uint32_t samplerate, struct mixed_segment *segment){
-  struct compressor_segment_data *data = calloc(1, sizeof(struct compressor_segment_data));
+  struct compressor_segment_data *data = mixed_calloc(1, sizeof(struct compressor_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;

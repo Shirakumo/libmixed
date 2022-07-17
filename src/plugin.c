@@ -31,7 +31,7 @@ MIXED_EXPORT int mixed_load_plugin(char *file){
   struct plugin_entry *entry = 0;
   void *handle = 0;
 
-  entry = calloc(1, sizeof(struct plugin_entry));
+  entry = mixed_calloc(1, sizeof(struct plugin_entry));
   if(!entry){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
@@ -59,8 +59,8 @@ MIXED_EXPORT int mixed_load_plugin(char *file){
  cleanup:
   if(entry){
     if(entry->file)
-      free(entry->file);
-    free(entry);
+      mixed_free(entry->file);
+    mixed_free(entry);
   }
   close_library(handle);
   return 0;
@@ -80,8 +80,8 @@ MIXED_EXPORT int mixed_close_plugin(char *file){
         return 0;
       }
       close_library(entry->handle);
-      free(entry->file);
-      free(entry);
+      mixed_free(entry->file);
+      mixed_free(entry);
       return vector_remove_pos(i, (struct vector *)&plugins);
     }
   }
@@ -91,13 +91,13 @@ MIXED_EXPORT int mixed_close_plugin(char *file){
 MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function){
   struct segment_entry *entry = 0;
 
-  entry = calloc(1, sizeof(struct segment_entry));
+  entry = mixed_calloc(1, sizeof(struct segment_entry));
   if(!entry){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
 
-  entry->args = calloc(argc, sizeof(struct mixed_segment_field_info));
+  entry->args = mixed_calloc(argc, sizeof(struct mixed_segment_field_info));
   if(!entry->args){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
@@ -124,10 +124,10 @@ MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_
  cleanup:
   if(entry){
     if(entry->name)
-      free(entry->name);
+      mixed_free(entry->name);
     if(entry->args)
-      free(entry->args);
-    free(entry);
+      mixed_free(entry->args);
+    mixed_free(entry);
   }
   return 0;
 }
@@ -136,9 +136,9 @@ MIXED_EXPORT int mixed_deregister_segment(char *name){
   for(uint32_t i=0; i<segments.count; ++i){
     struct segment_entry *entry = segments.entries[i];
     if(strcmp(entry->name, name) == 0){
-      free(entry->name);
-      free(entry->args);
-      free(entry);
+      mixed_free(entry->name);
+      mixed_free(entry->args);
+      mixed_free(entry);
       return vector_remove_pos(i, (struct vector *)&segments);
     }
   }

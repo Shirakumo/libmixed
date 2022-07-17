@@ -12,7 +12,7 @@ struct queue_segment_data{
 
 int queue_segment_free(struct mixed_segment *segment){
   if(segment->data){
-    free(segment->data);
+    mixed_free(segment->data);
   }
   segment->data = 0;
   return 1;
@@ -163,7 +163,7 @@ int queue_segment_get(uint32_t field, void *value, struct mixed_segment *segment
 int queue_resize_buffers(struct mixed_buffer ***buffers, uint32_t *count, uint32_t new){
   if(new == *count) return 1;
   if(new == 0){
-    free(*buffers);
+    mixed_free(*buffers);
     *buffers = 0;
   }else{
     *buffers = crealloc(*buffers, *count, new, sizeof(struct mixed_buffer *));
@@ -196,15 +196,15 @@ int queue_segment_set(uint32_t field, void *value, struct mixed_segment *segment
 }
 
 MIXED_EXPORT int mixed_make_segment_queue(struct mixed_segment *segment){
-  struct queue_segment_data *data = calloc(1, sizeof(struct queue_segment_data));
+  struct queue_segment_data *data = mixed_calloc(1, sizeof(struct queue_segment_data));
   if(!data){ goto cleanup; }
 
   data->in_count = 2;
-  data->in = calloc(2, sizeof(struct mixed_segment *));
+  data->in = mixed_calloc(2, sizeof(struct mixed_segment *));
   if(!data->in){ goto cleanup; }
 
   data->out_count = 2;
-  data->out = calloc(2, sizeof(struct mixed_segment *));
+  data->out = mixed_calloc(2, sizeof(struct mixed_segment *));
   if(!data->out){ goto cleanup; }
   
   segment->free = queue_segment_free;
@@ -220,9 +220,9 @@ MIXED_EXPORT int mixed_make_segment_queue(struct mixed_segment *segment){
  cleanup:
   mixed_err(MIXED_OUT_OF_MEMORY);
   if(data){
-    if(data->in) free(data->in);
-    if(data->out) free(data->out);
-    free(data);
+    if(data->in) mixed_free(data->in);
+    if(data->out) mixed_free(data->out);
+    mixed_free(data);
   }
   return 0;
 }

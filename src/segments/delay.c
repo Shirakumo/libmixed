@@ -11,7 +11,7 @@ struct delay_segment_data{
 int delay_segment_free(struct mixed_segment *segment){
   if(segment->data){
     mixed_free_buffer(&((struct delay_segment_data *)segment->data)->buffer);
-    free(segment->data);
+    mixed_free(segment->data);
   }
   segment->data = 0;
   return 1;
@@ -160,14 +160,14 @@ int delay_segment_set(uint32_t field, void *value, struct mixed_segment *segment
 }
 
 MIXED_EXPORT int mixed_make_segment_delay(float time, uint32_t samplerate, struct mixed_segment *segment){
-  struct delay_segment_data *data = calloc(1, sizeof(struct delay_segment_data));
+  struct delay_segment_data *data = mixed_calloc(1, sizeof(struct delay_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
 
   if(!mixed_make_buffer(ceil(time * samplerate), &data->buffer)){
-    free(data);
+    mixed_free(data);
     return 0;
   }
 

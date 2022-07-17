@@ -11,7 +11,7 @@ struct generator_segment_data{
 
 int generator_segment_free(struct mixed_segment *segment){
   if(segment->data)
-    free(segment->data);
+    mixed_free(segment->data);
   segment->data = 0;
   return 1;
 }
@@ -163,7 +163,7 @@ int generator_segment_set(uint32_t field, void *value, struct mixed_segment *seg
 }
 
 MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, uint32_t frequency, uint32_t samplerate, struct mixed_segment *segment){
-  struct generator_segment_data *data = calloc(1, sizeof(struct generator_segment_data));
+  struct generator_segment_data *data = mixed_calloc(1, sizeof(struct generator_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
