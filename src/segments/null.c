@@ -94,7 +94,7 @@ int __make_zero(void *args, struct mixed_segment *segment){
   return mixed_make_segment_zero(segment);
 }
 
-REGISTER_SEGMENT(zero, __make_zero, 0, {0});
+REGISTER_SEGMENT(zero, __make_zero, 0, {0})
 
 MIXED_EXPORT int mixed_make_segment_zero(struct mixed_segment *segment){
   segment->free = null_segment_free;
@@ -111,4 +111,4 @@ int __make_void(void *args, struct mixed_segment *segment){
   return mixed_make_segment_void(segment);
 }
 
-REGISTER_SEGMENT(void, __make_void, 0, {0});
+REGISTER_SEGMENT(void, __make_void, 0, {0})

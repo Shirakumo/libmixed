@@ -271,13 +271,13 @@ int plane_mixer_get_in(uint32_t field, uint32_t location, void *buffer, struct m
     return 1;
   case MIXED_SPACE_MIN_DISTANCE:
     *(float *)buffer = source->min_distance;
-    break;
+    return 1;
   case MIXED_SPACE_MAX_DISTANCE:
     *(float *)buffer = source->max_distance;
-    break;
+    return 1;
   case MIXED_SPACE_ROLLOFF:
     *(float *)buffer = source->rolloff;
-    break;
+    return 1;
   case MIXED_PLANE_LOCATION:
   case MIXED_PLANE_VELOCITY:{
     float *value = (float *)buffer;

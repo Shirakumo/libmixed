@@ -192,4 +192,4 @@ int __make_delay(void *args, struct mixed_segment *segment){
 
 REGISTER_SEGMENT(delay, __make_delay, 2, {
     {.description = "time", .type = MIXED_FLOAT},
-    {.description = "samplerate", .type = MIXED_UINT32}});
+    {.description = "samplerate", .type = MIXED_UINT32}})

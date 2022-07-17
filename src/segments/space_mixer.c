@@ -110,7 +110,7 @@ static inline float calculate_pan(float S[3], float L[3], float D[3], float U[3]
 }
 
 static inline float calculate_phase(float S[3], float L[3], float D[3]){
-  float t1[3] = {D[0], D[1], D[2]}, t2[3] = {S[0] - L[0], S[1] - L[1], S[2] - L[2]};
+  float t2[3] = {S[0] - L[0], S[1] - L[1], S[2] - L[2]};
   return dot(norm(D), norm(t2));
 }
 
@@ -320,13 +320,13 @@ int space_mixer_get_in(uint32_t field, uint32_t location, void *buffer, struct m
     return 1;
   case MIXED_SPACE_MIN_DISTANCE:
     *(float *)buffer = source->min_distance;
-    break;
+    return 1;
   case MIXED_SPACE_MAX_DISTANCE:
     *(float *)buffer = source->max_distance;
-    break;
+    return 1;
   case MIXED_SPACE_ROLLOFF:
     *(float *)buffer = source->rolloff;
-    break;
+    return 1;
   case MIXED_SPACE_LOCATION:
   case MIXED_SPACE_VELOCITY:{
     float *value = (float *)buffer;

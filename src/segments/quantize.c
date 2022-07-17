@@ -173,4 +173,4 @@ int __make_quantize(void *args, struct mixed_segment *segment){
 }
 
 REGISTER_SEGMENT(quantize, __make_quantize, 1, {
-    {.description = "steps", .type = MIXED_UINT32}});
+    {.description = "steps", .type = MIXED_UINT32}})

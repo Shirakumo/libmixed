@@ -146,8 +146,6 @@ int channel_mix_2_0_to_4_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
   uint32_t frames = UINT32_MAX;
-  uint32_t delay_i = data->delay_i;
-  const uint32_t delay_size = data->delay_size;
   float *l, *r, *fl, *fr, *rl, *rr;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
@@ -170,7 +168,6 @@ int channel_mix_2_0_to_4_0(struct mixed_segment *segment){
   mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_FRONT]);
   mixed_buffer_finish_write(frames, data->out[MIXED_LEFT_REAR]);
   mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_REAR]);
-  data->delay_i = delay_i;
 
   return 1;
 }
@@ -218,9 +215,6 @@ int channel_mix_2_0_to_5_1(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   uint32_t frames = UINT32_MAX;
-  uint32_t delay_i = data->delay_i;
-  const uint32_t delay_size = data->delay_size;
-  float *delay = data->delay;
   float *l, *r, *fl, *fr, *rl, *rr, *ce, *lfe;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
@@ -262,7 +256,6 @@ int channel_mix_2_0_to_5_1(struct mixed_segment *segment){
   mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_REAR]);
   mixed_buffer_finish_write(frames, data->out[MIXED_CENTER]);
   mixed_buffer_finish_write(frames, data->out[MIXED_SUBWOOFER]);
-  data->delay_i = delay_i;
 
   return 1;
 }
@@ -271,8 +264,6 @@ int channel_mix_2_0_to_7_1(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
   uint32_t frames = UINT32_MAX;
-  uint32_t delay_i = data->delay_i;
-  const uint32_t delay_size = data->delay_size;
   float *l, *r, *fl, *fr, *sl, *sr, *rl, *rr, *ce, *lfe;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
@@ -313,7 +304,6 @@ int channel_mix_2_0_to_7_1(struct mixed_segment *segment){
   mixed_buffer_finish_write(frames, data->out[MIXED_RIGHT_REAR]);
   mixed_buffer_finish_write(frames, data->out[MIXED_CENTER]);
   mixed_buffer_finish_write(frames, data->out[MIXED_SUBWOOFER]);
-  data->delay_i = delay_i;
 
   return 1;
 }

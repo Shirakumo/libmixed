@@ -545,4 +545,4 @@ int __make_compressor(void *args, struct mixed_segment *segment){
 }
 
 REGISTER_SEGMENT(compressor, __make_compressor, 1, {
-    {.description = "samplerate", .type = MIXED_UINT32}});
+    {.description = "samplerate", .type = MIXED_UINT32}})

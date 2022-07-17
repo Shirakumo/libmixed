@@ -37,6 +37,8 @@ int chain_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct
     if(0 < data->count){
       return mixed_segment_set_in(field, location, buffer, data->data[0]);
     }
+    mixed_err(MIXED_INVALID_LOCATION);
+    return 0;
   default:
     mixed_err(MIXED_INVALID_FIELD);
     return 0;
@@ -51,6 +53,8 @@ int chain_segment_set_out(uint32_t field, uint32_t location, void *buffer, struc
     if(0 < data->count){
       return mixed_segment_set_out(field, location, buffer, data->data[data->count-1]);
     }
+    mixed_err(MIXED_INVALID_LOCATION);
+    return 0;
   default:
     mixed_err(MIXED_INVALID_FIELD);
     return 0;
@@ -193,4 +197,4 @@ int __make_chain(void *args, struct mixed_segment *segment){
   return mixed_make_segment_chain(segment);
 }
 
-REGISTER_SEGMENT(chain, __make_chain, 0, {0});
+REGISTER_SEGMENT(chain, __make_chain, 0, {0})

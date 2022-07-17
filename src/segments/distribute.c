@@ -142,4 +142,4 @@ int __make_distribute(void *args, struct mixed_segment *segment){
   return mixed_make_segment_distribute(segment);
 }
 
-REGISTER_SEGMENT(distribute, __make_distribute, 0, {0});
+REGISTER_SEGMENT(distribute, __make_distribute, 0, {0})

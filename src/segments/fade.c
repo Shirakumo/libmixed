@@ -102,6 +102,7 @@ int fade_segment_mix(struct mixed_segment *segment){
   case MIXED_CUBIC_IN: ease = fade_cubic_in; break;
   case MIXED_CUBIC_OUT: ease = fade_cubic_out; break;
   case MIXED_CUBIC_IN_OUT: ease = fade_cubic_in_out; break;
+  default: ease = fade_linear; break;
   }
   
   // NOTE: You could probably get away with having the same fade factor
@@ -255,4 +256,4 @@ REGISTER_SEGMENT(fade, __make_fade, 5, {
     {.description = "to", .type = MIXED_FLOAT},
     {.description = "time", .type = MIXED_FLOAT},
     {.description = "type", .type = MIXED_FADE_TYPE_ENUM},
-    {.description = "samplerate", .type = MIXED_UINT32}});
+    {.description = "samplerate", .type = MIXED_UINT32}})
