@@ -8,6 +8,7 @@ option(BUILD_SHARED "Build the shared library" ON)
 option(BUILD_EXAMPLES "Build the example applications" ON)
 option(BUILD_TESTER "Build the tester application" ON)
 option(BUILD_SIMD "Build with SIMD as minimum requirement" ON)
+option(BUILD_DOCS "Build the doxygen documentation files" ON)
 set(BUILD_SIMD_VERSION "SSE4" CACHE STRING "Which SIMD version to require")
 
 ## Generate version
@@ -202,4 +203,21 @@ if(BUILD_EXAMPLES)
   else()
     message(STATUS "Cannot build examples")
   endif()
+endif()
+
+## Doxygen
+if(BUILD_DOCS)
+  find_package(Doxygen)
+  if(DOXYGEN_FOUND)
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+    add_custom_target(docs ALL
+      COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Generating API documentation with Doxygen"
+      VERBATIM)
+  else(DOXYGEN_FOUND)
+    message(STATUS "Cannot build documentation")
+  endif(DOXYGEN_FOUND)
 endif()
