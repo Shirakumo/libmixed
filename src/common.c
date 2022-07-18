@@ -244,14 +244,20 @@ void *load_symbol(void *handle, char *name){
 #endif
 }
 
-int hash_rng_pos = 1;
+unsigned int hash_rng_pos = 1;
 unsigned int hash_rng_seed = 0x42574223;
 
 unsigned int mixed_random_int(){
   const unsigned int BIT_NOISE1 = 0x68E31DA4;
   const unsigned int BIT_NOISE2 = 0xB5297A4D;
   const unsigned int BIT_NOISE3 = 0x1B56C4E9;
-  unsigned int mangled = (unsigned int) hash_rng_pos;
+  unsigned int mangled;
+
+ retry:
+  mangled = hash_rng_pos;
+  if(!atomic_cas(hash_rng_pos, mangled, mangled+1))
+    goto retry;
+  
   mangled *= BIT_NOISE1;
   mangled += hash_rng_seed;
   mangled ^= (mangled >> 8);
@@ -259,7 +265,6 @@ unsigned int mixed_random_int(){
   mangled ^= (mangled << 8);
   mangled *= BIT_NOISE3;
   mangled ^= (mangled >> 8);
-  hash_rng_pos++;
   return mangled;
 }
 
