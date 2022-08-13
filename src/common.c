@@ -165,9 +165,9 @@ MIXED_EXPORT char *mixed_version(){
   return MIXED_VERSION;
 }
 
-void *(*mixed_calloc)(size_t num, size_t size) = 0;
-void (*mixed_free)(void *ptr) = 0;
-void *(*mixed_realloc)(void *ptr, size_t size) = 0;
+void *(*mixed_calloc)(size_t num, size_t size) = calloc;
+void (*mixed_free)(void *ptr) = free;
+void *(*mixed_realloc)(void *ptr, size_t size) = realloc;
 
 void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   size_t newsize = newcount*size;
@@ -275,7 +275,4 @@ float mixed_random(){
 static void init() __attribute__((constructor));
 void init(){
   hash_rng_seed = time(NULL);
-  if(mixed_calloc == 0) mixed_calloc = calloc;
-  if(mixed_free == 0) mixed_free = free;
-  if(mixed_realloc == 0) mixed_realloc = realloc;
 }
