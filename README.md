@@ -4,7 +4,7 @@ Libmixed is a library for real-time audio processing pipelines for use in audio/
 ## How To
 Libmixed will not do any audio file reading or audio playback for you. To do that, see other kinds of libraries like [mpg123](https://www.mpg123.de/) and its associated out123. There's a whole heap of audio backend and format libraries out there though and you should pick whichever you find suitable. Libmixed is independent to your choice.
 
-There's a set of example applications in the [example](example/) directory that you can look at to see how a fully working application would be put together. For the purposes of this documentation, and for the sake of brevity, we're going to look at the process in a more disconnected manner.
+There's a set of example applications in the [examples](examples/) directory that you can look at to see how a fully working application would be put together. For the purposes of this documentation, and for the sake of brevity, we're going to look at the process in a more disconnected manner.
 
 The first step involves allocating space for a `struct mixed_segment` for each of the segments in the pipeline that you would like. For each of those segments you might also need a set of `struct mixed_buffer` instances to hold the audio data.
 
