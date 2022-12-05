@@ -9,7 +9,7 @@ option(BUILD_EXAMPLES "Build the example applications" ON)
 option(BUILD_TESTER "Build the tester application" ON)
 option(BUILD_SIMD "Build with SIMD as minimum requirement" ON)
 option(BUILD_DOCS "Build the doxygen documentation files" ON)
-set(BUILD_SIMD_VERSION "SSE4" CACHE STRING "Which SIMD version to require")
+set(BUILD_SIMD_VERSION "SSE" CACHE STRING "Which SIMD version to require")
 
 ## Generate version
 find_program(GIT_SCM git DOC "Git version control")
