@@ -177,7 +177,11 @@ if(BUILD_TESTER)
   add_dependencies(tester mixed_shared)
   set_property(TARGET tester PROPERTY C_STANDARD 99)
   target_compile_options(tester PRIVATE ${COMPILATION_FLAGS})
-  target_link_libraries(tester mixed_shared pthread)
+  if (${CMAKE_SYSTEM_NAME} STREQUAL "Android")
+    target_link_libraries(tester mixed_shared)
+  else()
+    target_link_libraries(tester mixed_shared pthread)
+  endif()
 
   add_custom_target(run_tests
     COMMAND "${CMAKE_BINARY_DIR}/tester"
