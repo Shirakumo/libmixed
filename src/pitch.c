@@ -55,11 +55,11 @@ int make_pitch_data(uint32_t framesize, uint32_t oversampling, uint32_t samplera
 
   data->in_fifo = mem;
   mem += (framesize); data->out_fifo = mem;
-  mem += (framesize*2); data->fft_workspace = mem;
-  mem += (framesize/2+1); data->last_phase = mem;
+  mem += (framesize); data->fft_workspace = mem;
+  mem += (framesize*2); data->last_phase = mem;
   mem += (framesize/2+1); data->phase_sum = mem;
-  mem += (framesize*2); data->output_accumulator = mem;
-  mem += (framesize); data->analyzed_frequency = mem;
+  mem += (framesize/2+1); data->output_accumulator = mem;
+  mem += (framesize*2); data->analyzed_frequency = mem;
   mem += (framesize); data->analyzed_magnitude = mem;
   mem += (framesize); data->synthesized_frequency = mem;
   mem += (framesize); data->synthesized_magnitude = mem;
