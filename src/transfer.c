@@ -17,15 +17,11 @@ DEF_MIXED_TRANSFER_SAMPLE_FROM(float, float)
 DEF_MIXED_TRANSFER_SAMPLE_FROM(double, double)
 
 extern inline void mixed_transfer_sample_from_int24(void *in, uint32_t is, float *out, uint32_t os, float volume) {
-  int8_t *data = (int8_t *)in;
-  // Read in as uint
-  uint32_t temp = (data[3*is+2] << 16) + (data[3*is+1] << 8) + (data[3*is]);
-  // Shift up to fill 32 bit range
-  temp = temp << 8;
-  // Convert to signed, this is actually not standards compliant.
-  int32_t sample = (int32_t)temp;
-  // Shift down again to get back to 24 bit range.
-  out[os] = mixed_from_int24(sample >> 8) * volume;
+  // Read MSB as int8, others as uint8
+  int32_t sample = (((int8_t *)in)[3*is+2] << 16) + \
+                  (((uint8_t *)in)[3*is+1] << 8 ) + \
+                  (((uint8_t *)in)[3*is]);
+  out[os] = mixed_from_int24(sample) * volume;
 }
 
 extern inline void mixed_transfer_sample_from_uint24(void *in, uint32_t is, float *out, uint32_t os, float volume) {
