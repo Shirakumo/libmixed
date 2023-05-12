@@ -1,3 +1,5 @@
+#include <math.h>
+
 #define INT24_MAX 8388607
 #define INT24_MIN -8388608
 #define UINT24_MAX 16777215
@@ -118,7 +120,7 @@ MIXED_EXPORT inline int24_t mixed_to_int24(float sample){
 __attribute__((always_inline))
 MIXED_EXPORT inline uint24_t mixed_to_uint24(float sample){
   return (1.0f<=sample)? UINT24_MAX
-    : (-1.0f<=sample)? (sample+1)*0x800000
+    : (-1.0f<=sample)? round((sample+1)*((float)UINT24_MAX/2))
     : 0;
 }
 
