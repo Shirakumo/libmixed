@@ -50,16 +50,16 @@ DEF_MIXED_TRANSFER_SAMPLE_TO(double, double)
 
 extern inline void mixed_transfer_sample_to_int24(float *in, uint32_t is, void *out, uint32_t os, float volume){
   int24_t sample = mixed_to_int24(in[is] * volume);
-  ((uint8_t *)out)[os+2] = (sample >> 16) & 0xFF;
-  ((uint8_t *)out)[os+1] = (sample >>  8) & 0xFF;
-  ((uint8_t *)out)[os+0] = (sample >>  0) & 0xFF;
+  ((uint8_t *)out)[3*os+2] = (sample >> 16) & 0xFF;
+  ((uint8_t *)out)[3*os+1] = (sample >>  8) & 0xFF;
+  ((uint8_t *)out)[3*os+0] = (sample >>  0) & 0xFF;
 }
 
 extern inline void mixed_transfer_sample_to_uint24(float *in, uint32_t is, void *out, uint32_t os, float volume){
   uint24_t sample = mixed_to_uint24(in[is] * volume);
-  ((uint8_t *)out)[os+2] = (sample >> 16) & 0xFF;
-  ((uint8_t *)out)[os+1] = (sample >>  8) & 0xFF;
-  ((uint8_t *)out)[os+0] = (sample >>  0) & 0xFF;
+  ((uint8_t *)out)[3*os+2] = (sample >> 16) & 0xFF;
+  ((uint8_t *)out)[3*os+1] = (sample >>  8) & 0xFF;
+  ((uint8_t *)out)[3*os+0] = (sample >>  0) & 0xFF;
 }
 
 //// Array transfer functions
