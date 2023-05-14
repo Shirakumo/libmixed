@@ -435,7 +435,8 @@ extern "C" {
   /// 
   MIXED_EXPORT enum mixed_repeat_mode{
     MIXED_RECORD = 1,
-    MIXED_PLAY
+    MIXED_PLAY,
+    MIXED_RECORD_ONCE
   };
 
   /// This enum describes the possible biquad filters.
