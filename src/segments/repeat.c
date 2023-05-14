@@ -305,7 +305,6 @@ int __make_repeat(void *args, struct mixed_segment *segment){
   return mixed_make_segment_repeat(ARG(float, 0), ARG(uint32_t, 1), segment);
 }
 
-REGISTER_SEGMENT(repeat, __make_repeat, 3, {
+REGISTER_SEGMENT(repeat, __make_repeat, 2, {
     {.description = "time", .type = MIXED_FLOAT},
-    {.description = "samplerate", .type = MIXED_UINT32},
-    {.description = "mode", .type = MIXED_REPEAT_MODE}})
+    {.description = "samplerate", .type = MIXED_UINT32}})
