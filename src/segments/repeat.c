@@ -192,6 +192,7 @@ int repeat_segment_set(uint32_t field, void *value, struct mixed_segment *segmen
     case MIXED_RECORD: segment->mix = repeat_segment_mix_record; break;
     case MIXED_PLAY: segment->mix = repeat_segment_mix_play; break;
     }
+    break;
   case MIXED_BYPASS:
     if(*(bool *)value){
       segment->mix = repeat_segment_mix_bypass;
