@@ -19,6 +19,7 @@ int repeat_segment_data_resize_buffer(struct repeat_segment_data *data, uint32_t
   }
   data->buffer = new_buffer;
   data->buffer_size = new_size;
+  data->buffer_index = 0;
   return 1;
 }
 
