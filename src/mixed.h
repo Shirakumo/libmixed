@@ -1067,7 +1067,7 @@ extern "C" {
   /// frequency and wave form type. You may change the frequency and
   /// wave form type at any time. Potentially this could be used to
   /// create a very primitive synthesizer.
-  MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, uint32_t frequency, uint32_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_generator(enum mixed_generator_type type, float frequency, uint32_t samplerate, struct mixed_segment *segment);
 
   /// A LADSPA plugin segment
   /// 
