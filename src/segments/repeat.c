@@ -220,7 +220,7 @@ int repeat_segment_set(uint32_t field, void *value, struct mixed_segment *segmen
     data->samplerate = samplerate;
     break;
   case MIXED_REPEAT_TIME:
-    if(*(float *)value < 0.0){
+    if(*(float *)value <= 0.0f){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
@@ -271,6 +271,11 @@ int repeat_segment_set(uint32_t field, void *value, struct mixed_segment *segmen
 }
 
 MIXED_EXPORT int mixed_make_segment_repeat(float time, uint32_t samplerate, struct mixed_segment *segment){
+  if(time <= 0.0f){
+    mixed_err(MIXED_INVALID_VALUE);
+    return 0;
+  }
+
   struct repeat_segment_data *data = mixed_calloc(1, sizeof(struct repeat_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
