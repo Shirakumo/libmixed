@@ -197,6 +197,7 @@ int repeat_segment_get(uint32_t field, void *value, struct mixed_segment *segmen
   switch(field){
   case MIXED_REPEAT_TIME: *((float *)value) = data->time; break;
   case MIXED_REPEAT_MODE: *((enum mixed_repeat_mode *)value) = data->mode; break;
+  case MIXED_REPEAT_POSITION: *((float *)value) = data->buffer_index/(float)data->samplerate; break;
   case MIXED_SAMPLERATE: *((uint32_t *)value) = data->samplerate; break;
   case MIXED_BYPASS: *((bool *)value) = (segment->mix == repeat_segment_mix_bypass); break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
@@ -242,6 +243,14 @@ int repeat_segment_set(uint32_t field, void *value, struct mixed_segment *segmen
     case MIXED_PLAY: segment->mix = repeat_segment_mix_play; break;
     case MIXED_RECORD_ONCE: segment->mix = repeat_segment_mix_record_once; break;
     }
+    break;
+  case MIXED_REPEAT_POSITION:
+    uint32_t index = ceil((*(float *)value) * data->samplerate);
+    if(index >= data->buffer_size || index < 0){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    data->buffer_index = index;
     break;
   case MIXED_BYPASS:
     if(*(bool *)value){
