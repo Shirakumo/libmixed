@@ -9,6 +9,8 @@ struct repeat_segment_data{
   float time;
   uint32_t samplerate;
   enum mixed_repeat_mode mode;
+  uint32_t fade_position;
+  uint32_t fade_length;
 };
 
 int repeat_segment_data_resize_buffer(struct repeat_segment_data *data, uint32_t new_size) {
@@ -88,7 +90,10 @@ int repeat_segment_mix_record(struct mixed_segment *segment){
   mixed_buffer_request_read(&in, &samples, data->in);
   mixed_buffer_request_write(&out, &samples, data->out);
   for(uint32_t i=0; i<samples; ++i){
-    buf[index] = in[i];
+    buf[index] = LERP(buf[index], in[i], data->fade_position/(float)data->fade_length);
+    if (data->fade_position < data->fade_length) {
+      data->fade_position++;
+    }
     out[i] = buf[index];
     index = (index+1)%repeat_samples;
   }
@@ -111,6 +116,10 @@ int repeat_segment_mix_play(struct mixed_segment *segment){
   mixed_buffer_request_read(&in, &samples, data->in);
   mixed_buffer_request_write(&out, &samples, data->out);
   for(uint32_t i=0; i<samples; ++i){
+    buf[index] = LERP(buf[index], in[i], data->fade_position/(float)data->fade_length);
+    if (data->fade_position > 0) {
+      data->fade_position--;
+    }
     out[i] = buf[index];
     index = (index+1)%repeat_samples;
   }
@@ -133,7 +142,10 @@ int repeat_segment_mix_record_once(struct mixed_segment *segment){
   mixed_buffer_request_read(&in, &samples, data->in);
   mixed_buffer_request_write(&out, &samples, data->out);
   for(uint32_t i=0; i<samples; ++i){
-    buf[index] = in[i];
+    buf[index] = LERP(buf[index], in[i], data->fade_position/(float)data->fade_length);
+    if (data->fade_position < data->fade_length) {
+      data->fade_position++;
+    }
     out[i] = buf[index];
     index = index+1;
   }
@@ -298,6 +310,8 @@ MIXED_EXPORT int mixed_make_segment_repeat(float time, uint32_t samplerate, stru
   data->mode = MIXED_RECORD;
   data->time = time;
   data->samplerate = samplerate;
+  data->fade_position = 0;
+  data->fade_length = 100;
 
   segment->free = repeat_segment_free;
   segment->start = repeat_segment_start;
