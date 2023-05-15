@@ -365,7 +365,10 @@ extern "C" {
     MIXED_CHANNEL_COUNT_IN,
     /// The number of channels that the upmixer should convert to.
     /// 
-    MIXED_CHANNEL_COUNT_OUT
+    MIXED_CHANNEL_COUNT_OUT,
+    /// Access the current position of the repeater buffer.
+    /// 
+    MIXED_REPEAT_POSITION
   };
 
   /// This enum descripbes the possible resampling quality options.
@@ -435,7 +438,8 @@ extern "C" {
   /// 
   MIXED_EXPORT enum mixed_repeat_mode{
     MIXED_RECORD = 1,
-    MIXED_PLAY
+    MIXED_PLAY,
+    MIXED_RECORD_ONCE
   };
 
   /// This enum describes the possible biquad filters.
