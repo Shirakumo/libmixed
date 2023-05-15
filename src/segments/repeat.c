@@ -245,8 +245,13 @@ int repeat_segment_set(uint32_t field, void *value, struct mixed_segment *segmen
     }
     break;
   case MIXED_REPEAT_POSITION:
-    uint32_t index = ceil((*(float *)value) * data->samplerate);
-    if(index >= data->buffer_size || index < 0){
+    float position = (*(float *)value);
+    if(position < 0.0f){
+      mixed_err(MIXED_INVALID_VALUE);
+      return 0;
+    }
+    uint32_t index = ceil(position * data->samplerate);
+    if(index >= data->buffer_size){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
