@@ -32,7 +32,7 @@ void mixed_err(int code){
   errorcode = code;
 }
 
-MIXED_EXPORT int mixed_error(){
+MIXED_EXPORT int mixed_error(void){
   return errorcode;
 }
 
@@ -161,7 +161,7 @@ MIXED_EXPORT char *mixed_type_string(int code){
   }
 }
 
-MIXED_EXPORT char *mixed_version(){
+MIXED_EXPORT char *mixed_version(void){
   return MIXED_VERSION;
 }
 
@@ -272,7 +272,7 @@ float mixed_random(){
   return ((float)mixed_random_int())/((float)0xFFFFFFFF);
 }
 
-static void init() __attribute__((constructor));
-void init(){
+static void init(void) __attribute__((constructor));
+void init(void){
   hash_rng_seed = time(NULL);
 }

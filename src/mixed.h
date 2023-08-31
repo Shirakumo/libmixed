@@ -1424,7 +1424,7 @@ extern "C" {
   ///
   /// The error code is thread-local in order to allow multiple operations
   /// at the same time.
-  MIXED_EXPORT int mixed_error();
+  MIXED_EXPORT int mixed_error(void);
 
   /// Return the error string for the given error code.
   ///
@@ -1438,7 +1438,7 @@ extern "C" {
 
   /// Returns the version string of the library.
   ///
-  MIXED_EXPORT char *mixed_version();
+  MIXED_EXPORT char *mixed_version(void);
 
   //// Allow customising how libmixed allocates things.
   
