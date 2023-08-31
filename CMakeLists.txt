@@ -173,22 +173,26 @@ endif()
 
 ## Tester
 if(BUILD_TESTER)
-  add_executable(tester
-    "test/tester.h"
-    "test/tester.c"
-    "test/buffer.c"
-    "test/encoding.c"
-    "test/pack.c"
-    "test/transfer.c"
-    "test/packer.c"
-    "test/distribute.c")
-  add_dependencies(tester mixed_shared)
-  set_property(TARGET tester PROPERTY C_STANDARD 99)
-  target_compile_options(tester PRIVATE ${COMPILATION_FLAGS})
-  if (${CMAKE_SYSTEM_NAME} STREQUAL "Android")
+  find_library(PTHREAD_LIB pthread)
+  if(PTHREAD_LIB)
+    add_executable(tester
+      "test/tester.h"
+      "test/tester.c"
+      "test/buffer.c"
+      "test/encoding.c"
+      "test/pack.c"
+      "test/transfer.c"
+      "test/packer.c"
+      "test/distribute.c")
+    add_dependencies(tester mixed_shared)
+    set_property(TARGET tester PROPERTY C_STANDARD 99)
+    target_compile_options(tester PRIVATE ${COMPILATION_FLAGS})
     target_link_libraries(tester mixed_shared)
+    if(PTHREAD_LIB)
+      target_link_libraries(tester pthread)
+    endif()
   else()
-    target_link_libraries(tester mixed_shared pthread)
+    message(STATUS "Cannot build tester")
   endif()
 
   add_custom_target(run_tests
