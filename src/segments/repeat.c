@@ -206,7 +206,7 @@ int repeat_segment_set(uint32_t field, void *value, struct mixed_segment *segmen
     }
     data->mode = *(enum mixed_repeat_mode *)value;
     break;
-  case MIXED_REPEAT_POSITION:
+  case MIXED_REPEAT_POSITION: {
     float position = (*(float *)value);
     if(position < 0.0f){
       mixed_err(MIXED_INVALID_VALUE);
@@ -225,7 +225,7 @@ int repeat_segment_set(uint32_t field, void *value, struct mixed_segment *segmen
     }else{
       segment->mix = repeat_segment_mix;
     }
-    break;
+    break;}
   default:
     mixed_err(MIXED_INVALID_FIELD);
     return 0;
