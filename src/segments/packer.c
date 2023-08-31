@@ -182,7 +182,7 @@ int drain_segment_mix(struct mixed_segment *segment){
         int e = src_process(data->resample_state, &src_data);
         if(e){
           fprintf(stderr, "libsamplerate: %s\n", src_strerror(e));
-          mixed_error(MIXED_RESAMPLE_FAILED);
+          mixed_err(MIXED_RESAMPLE_FAILED);
           return 0;
         }
         // Pack

@@ -159,8 +159,8 @@ unsigned int mixed_random_int(void);
 
 #define ARG(type, id) *(((type**)args)[id])
 #define REGISTER_SEGMENT(name, function, count, ...)                    \
-  static void __register_ ## name () __attribute__((constructor));      \
-  void __register_ ## name(){                                           \
+  static void __register_ ## name (void) __attribute__((constructor));  \
+  void __register_ ## name(void){                                       \
     struct mixed_segment_field_info __args[count+1] = __VA_ARGS__;      \
     mixed_register_segment(#name, count, __args, function);             \
   }
