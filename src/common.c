@@ -247,7 +247,7 @@ void *load_symbol(void *handle, char *name){
 unsigned int hash_rng_pos = 1;
 unsigned int hash_rng_seed = 0x42574223;
 
-unsigned int mixed_random_int(){
+unsigned int mixed_random_int(void){
   const unsigned int BIT_NOISE1 = 0x68E31DA4;
   const unsigned int BIT_NOISE2 = 0xB5297A4D;
   const unsigned int BIT_NOISE3 = 0x1B56C4E9;
@@ -268,7 +268,7 @@ unsigned int mixed_random_int(){
   return mangled;
 }
 
-float mixed_random(){
+float mixed_random(void){
   return ((float)mixed_random_int())/((float)0xFFFFFFFF);
 }
 

@@ -79,7 +79,7 @@ int speed_segment_mix(struct mixed_segment *segment){
     int e = src_process(data->resample_state, &src_data);
     if(e){
       printf("%s\n", src_strerror(e));
-      mixed_error(MIXED_RESAMPLE_FAILED);
+      mixed_err(MIXED_RESAMPLE_FAILED);
       return 0;
     }
     mixed_buffer_finish_read(src_data.input_frames_used, data->in);
