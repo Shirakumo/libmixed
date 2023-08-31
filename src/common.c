@@ -1,7 +1,10 @@
-#ifndef _WIN32
-#  include <dlfcn.h>
-#else
+#ifdef _WIN32
 #  include <windows.h>
+#elif MIXED_DL
+#  include <dlfcn.h>
+#endif
+#ifndef MIXED_VERSION
+#  define MIXED_VERSION "unknown"
 #endif
 #include "internal.h"
 
@@ -203,7 +206,7 @@ void *open_library(char *file){
     return 0;
   }
   return lib;
-#else
+#elif MIXED_DL
   void *lib = dlopen(file, RTLD_NOW);
   if(!lib){
     fprintf(stderr, "MIXED: DYLD error: %s\n", dlerror());
@@ -212,6 +215,10 @@ void *open_library(char *file){
   }
   dlerror();
   return lib;
+#else
+  IGNORE(file);
+  mixed_err(MIXED_DYNAMIC_OPEN_FAILED);
+  return 0;
 #endif
 }
 
@@ -219,8 +226,10 @@ void close_library(void *handle){
   if(handle)
 #ifdef _WIN32
     FreeLibrary(handle);
-#else
+#elif MIXED_DL
     dlclose(handle);
+#else
+    return;
 #endif
 }
 
@@ -232,7 +241,7 @@ void *load_symbol(void *handle, char *name){
     return 0;
   }
   return function;
-#else
+#elif MIXED_DL
   void *function = dlsym(handle, name);
   char *error = dlerror();
   if(error != 0){
@@ -241,6 +250,10 @@ void *load_symbol(void *handle, char *name){
     return 0;
   }
   return function;
+#else
+  IGNORE(handle, name);
+  mixed_err(MIXED_BAD_DYNAMIC_LIBRARY);
+  return 0;
 #endif
 }
 
