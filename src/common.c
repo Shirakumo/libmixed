@@ -7,6 +7,7 @@
 #  define MIXED_VERSION "unknown"
 #endif
 #include "internal.h"
+#include "spiral_fft.h"
 
 MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
   switch(encoding){
@@ -27,6 +28,39 @@ MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
 int mix_noop(struct mixed_segment *segment){
   IGNORE(segment);
   return 1;
+}
+
+
+MIXED_EXPORT int mixed_fwd_fft(uint16_t framesize, float *in, float *out){
+  switch(spiral_fft_float(framesize, -1, in, out)){
+  case SPIRAL_OK:
+    return 1;
+  case SPIRAL_SIZE_NOT_SUPPORTED:
+  case SPIRAL_INVALID_PARAM:
+    mixed_err(MIXED_INVALID_VALUE);
+    return 0;
+  case SPIRAL_OUT_OF_MEMORY:
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  default:
+    return 0;
+  }
+}
+
+MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out){
+  switch(spiral_fft_float(framesize, +1, in, out)){
+  case SPIRAL_OK:
+    return 1;
+  case SPIRAL_SIZE_NOT_SUPPORTED:
+  case SPIRAL_INVALID_PARAM:
+    mixed_err(MIXED_INVALID_VALUE);
+    return 0;
+  case SPIRAL_OUT_OF_MEMORY:
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
+  default:
+    return 0;
+  }
 }
 
 thread_local int errorcode = 0;

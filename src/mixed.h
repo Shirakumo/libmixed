@@ -1420,6 +1420,14 @@ extern "C" {
   ///
   MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding encoding);
 
+  // Perform a fast fourier transform on a buffer of samples.
+  //
+  // framesize must be a power of two between [2^1, 2^13]
+  // in and out may be the same buffers, both with framesize number of
+  // elements.
+  MIXED_EXPORT int mixed_fwd_fft(uint16_t framesize, float *in, float *out);
+  MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out);
+
   /// Return the current error code.
   ///
   /// The error code is thread-local in order to allow multiple operations
