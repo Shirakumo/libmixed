@@ -14,8 +14,8 @@ struct plugin_vector{
 struct segment_entry{
   char *name;
   uint32_t argc;
-  struct mixed_segment_field_info *args;
   mixed_make_segment_function function;
+  struct mixed_segment_field_info args[MIXED_MAX_MAKE_ARG_COUNT];
 };
 
 struct segment_vector{
@@ -91,14 +91,13 @@ MIXED_EXPORT int mixed_close_plugin(char *file){
 MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function){
   struct segment_entry *entry = 0;
 
-  entry = mixed_calloc(1, sizeof(struct segment_entry));
-  if(!entry){
-    mixed_err(MIXED_OUT_OF_MEMORY);
+  if(MIXED_MAX_MAKE_ARG_COUNT < argc){
+    mixed_err(MIXED_BAD_ARGUMENT_COUNT);
     goto cleanup;
   }
 
-  entry->args = mixed_calloc(argc, sizeof(struct mixed_segment_field_info));
-  if(!entry->args){
+  entry = mixed_calloc(1, sizeof(struct segment_entry));
+  if(!entry){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
@@ -125,8 +124,6 @@ MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_
   if(entry){
     if(entry->name)
       mixed_free(entry->name);
-    if(entry->args)
-      mixed_free(entry->args);
     mixed_free(entry);
   }
   return 0;
@@ -137,7 +134,6 @@ MIXED_EXPORT int mixed_deregister_segment(char *name){
     struct segment_entry *entry = segments.entries[i];
     if(strcmp(entry->name, name) == 0){
       mixed_free(entry->name);
-      mixed_free(entry->args);
       mixed_free(entry);
       return vector_remove_pos(i, (struct vector *)&segments);
     }

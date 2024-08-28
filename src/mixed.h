@@ -126,7 +126,9 @@ extern "C" {
     MIXED_DUPLICATE_SEGMENT,
     /// A segment with the requested name is not registered.
     /// 
-    MIXED_BAD_SEGMENT
+    MIXED_BAD_SEGMENT,
+    /// A function was specified with a bad number of arguments.
+    MIXED_BAD_ARGUMENT_COUNT
   };
 
   /// This enum describes the possible sample encodings.
@@ -1378,6 +1380,8 @@ extern "C" {
   /// via mixed_make_segment.
   /// The name and args are copied and may be deallocated again after this
   /// function has been called.
+  /// The argc must be <= MIXED_MAX_MAKE_ARG_COUNT.
+#define MIXED_MAX_MAKE_ARG_COUNT 32
   MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
 
   /// Remove a globally registered segment constructor.
