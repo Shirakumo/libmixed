@@ -73,6 +73,10 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set(COMPILATION_FLAGS ${COMPILATION_FLAGS} -mmacosx-version-min=10.9)
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "NX")
+  set(COMPILATION_FLAGS ${COMPILATION_FLAGS} -DMIXED_NO_CUSTOM_ALLOCATOR)
+endif()
+
 ## Libsamplerate
 add_library(samplerate OBJECT
   "libsamplerate/samplerate.c"
