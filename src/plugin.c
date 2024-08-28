@@ -19,9 +19,8 @@ struct segment_entry{
 };
 
 struct segment_vector{
-  struct segment_entry **entries;
+  struct segment_entry entries[MIXED_MAX_SEGMENT_COUNT];
   uint32_t count;
-  uint32_t size;
 };
 
 struct plugin_vector plugins = {0};
@@ -96,21 +95,22 @@ MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_
     goto cleanup;
   }
 
-  entry = mixed_calloc(1, sizeof(struct segment_entry));
-  if(!entry){
   uint32_t name_length = strlen(name);
   if(MIXED_MAX_SEGMENT_NAME_LENGTH < name_length){
     mixed_err(MIXED_BAD_NAME);
     goto cleanup;
   }
 
+  if(MIXED_MAX_SEGMENT_COUNT <= segments.count){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
 
   for(uint32_t i=0; i<segments.count; ++i){
-    struct segment_entry *entry = segments.entries[i];
-    if(strcmp(entry->name, name) == 0){
+    struct segment_entry *cur_entry = &segments.entries[i];
+    if(cur_entry->function == 0 && !entry){
+      entry = cur_entry;
+    }else if(strcmp(cur_entry->name, name) == 0){
       mixed_err(MIXED_DUPLICATE_SEGMENT);
       goto cleanup;
     }
@@ -120,25 +120,21 @@ MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_
   entry->argc = argc;
   memcpy(entry->args, args, argc*sizeof(struct mixed_segment_field_info));
   entry->function = function;
-  if(!vector_add(entry, (struct vector *)&segments)){
-    goto cleanup;
-  }
+  segments.count++;
 
   return 1;
   
  cleanup:
-  if(entry){
-    mixed_free(entry);
-  }
   return 0;
 }
 
 MIXED_EXPORT int mixed_deregister_segment(char *name){
   for(uint32_t i=0; i<segments.count; ++i){
-    struct segment_entry *entry = segments.entries[i];
-    if(strcmp(entry->name, name) == 0){
-      mixed_free(entry);
-      return vector_remove_pos(i, (struct vector *)&segments);
+    struct segment_entry *entry = &segments.entries[i];
+    if(entry->function && strcmp(entry->name, name) == 0){
+      entry->function = 0;
+      segments.count--;
+      return 1;
     }
   }
   mixed_err(MIXED_BAD_SEGMENT);
@@ -148,8 +144,11 @@ MIXED_EXPORT int mixed_deregister_segment(char *name){
 MIXED_EXPORT int mixed_list_segments(uint32_t *count, char **names){
   *count = segments.count;
   if(names){
-    for(uint32_t i=0; i<segments.count; ++i){
-      names[i] = segments.entries[i].name;
+    for(uint32_t i=0,j=0; j<segments.count; ++i){
+      struct segment_entry *entry = &segments.entries[i];
+      if(!entry->function) continue;
+      names[j] = entry->name;
+      ++j;
     }
   }
   return 1;
@@ -157,8 +156,8 @@ MIXED_EXPORT int mixed_list_segments(uint32_t *count, char **names){
 
 MIXED_EXPORT int mixed_make_segment_info(char *name, uint32_t *argc, const struct mixed_segment_field_info **args){
   for(uint32_t i=0; i<segments.count; ++i){
-    struct segment_entry *entry = segments.entries[i];
-    if(strcmp(entry->name, name) == 0){
+    struct segment_entry *entry = &segments.entries[i];
+    if(entry->function && strcmp(entry->name, name) == 0){
       *argc = entry->argc;
       *args = entry->args;
       return 1;
@@ -170,8 +169,8 @@ MIXED_EXPORT int mixed_make_segment_info(char *name, uint32_t *argc, const struc
 
 MIXED_EXPORT int mixed_make_segment(char *name, void *args, struct mixed_segment *segment){
   for(uint32_t i=0; i<segments.count; ++i){
-    struct segment_entry *entry = segments.entries[i];
-    if(strcmp(entry->name, name) == 0){
+    struct segment_entry *entry = &segments.entries[i];
+    if(entry->function && strcmp(entry->name, name) == 0){
       return entry->function(args, segment);
     }
   }

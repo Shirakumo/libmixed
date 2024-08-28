@@ -1386,7 +1386,10 @@ extern "C" {
   /// is errored.
   /// If the name is longer than MIXED_MAX_SEGMENT_NAME_LENGTH, MIXED_BAD_NAME
   /// is errored.
+  /// If there are no more free segments available to register, MIXED_OUT_OF_MEMORY
+  /// is errored.
 #define MIXED_MAX_MAKE_ARG_COUNT 32
+#define MIXED_MAX_SEGMENT_COUNT 1024
 #define MIXED_MAX_SEGMENT_NAME_LENGTH 64
   MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
 
