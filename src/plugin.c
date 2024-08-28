@@ -29,9 +29,16 @@ struct segment_vector segments = {0};
 MIXED_EXPORT int mixed_load_plugin(char *file){
   struct plugin_entry *entry = 0;
   void *handle = 0;
+  uint32_t length = strlen(file);
 
   entry = mixed_calloc(1, sizeof(struct plugin_entry));
   if(!entry){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+  
+  entry->file = mixed_calloc(length+1, 1);
+  if(!entry->file){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
@@ -47,7 +54,7 @@ MIXED_EXPORT int mixed_load_plugin(char *file){
     goto cleanup;
   }
 
-  entry->file = strdup(file);
+  memcpy(entry->file, file, length);
   entry->handle = handle;
   if(!vector_add(entry, (struct vector *)&plugins)){
     goto cleanup;
