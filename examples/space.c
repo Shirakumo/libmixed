@@ -102,9 +102,9 @@ int main(int argc, char **argv){
   size_t read = 0, played = 0;
   do{
     void *buffer;
-    read = UINT32_MAX;
-    mixed_pack_request_write(&buffer, &read, &mp3->pack);
-    if(mpg123_read(mp3->handle, buffer, read, &read) != MPG123_OK){
+    uint32_t read2 = UINT32_MAX;
+    mixed_pack_request_write(&buffer, &read2, &mp3->pack);
+    if(mpg123_read(mp3->handle, buffer, read2, &read) != MPG123_OK){
       fprintf(stderr, "Failure during MP3 decoding: %s\n", mpg123_strerror(mp3->handle));
       goto cleanup;
     }
@@ -116,7 +116,7 @@ int main(int argc, char **argv){
       goto cleanup;
     }
     
-    size_t bytes = UINT32_MAX;
+    uint32_t bytes = UINT32_MAX;
     mixed_pack_request_read(&buffer, &bytes, &out->pack);
     played = out123_play(out->handle, buffer, bytes);
     mixed_pack_finish_read(played, &out->pack);

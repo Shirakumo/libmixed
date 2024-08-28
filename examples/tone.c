@@ -83,7 +83,7 @@ int main(int argc, char **argv){
     }
 
     void *buffer;
-    size_t bytes = UINT32_MAX;
+    uint32_t bytes = UINT32_MAX;
     mixed_pack_request_read(&buffer, &bytes, &out->pack);
     played = out123_play(out->handle, buffer, bytes);
     mixed_pack_finish_read(played, &out->pack);
