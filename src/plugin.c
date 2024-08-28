@@ -92,18 +92,18 @@ MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_
 
   if(MIXED_MAX_MAKE_ARG_COUNT < argc){
     mixed_err(MIXED_BAD_ARGUMENT_COUNT);
-    goto cleanup;
+    return 0;
   }
 
   uint32_t name_length = strlen(name);
   if(MIXED_MAX_SEGMENT_NAME_LENGTH < name_length){
     mixed_err(MIXED_BAD_NAME);
-    goto cleanup;
+    return 0;
   }
 
   if(MIXED_MAX_SEGMENT_COUNT <= segments.count){
     mixed_err(MIXED_OUT_OF_MEMORY);
-    goto cleanup;
+    return 0;
   }
 
   for(uint32_t i=0; i<segments.count; ++i){
@@ -112,8 +112,13 @@ MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_
       entry = cur_entry;
     }else if(strcmp(cur_entry->name, name) == 0){
       mixed_err(MIXED_DUPLICATE_SEGMENT);
-      goto cleanup;
+      return 0;
     }
+  }
+
+  if(!entry){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    return 0;
   }
 
   memcpy(entry->name, name, name_length);
@@ -123,9 +128,6 @@ MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_
   segments.count++;
 
   return 1;
-  
- cleanup:
-  return 0;
 }
 
 MIXED_EXPORT int mixed_deregister_segment(char *name){

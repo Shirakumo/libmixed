@@ -126,6 +126,10 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "A segment with the requested name had already been registered.";
   case MIXED_BAD_SEGMENT:
     return "A segment with the requested name is not registered.";
+  case MIXED_BAD_ARGUMENT_COUNT:
+    return "A bad number of arguments was specified.";
+  case MIXED_BAD_NAME:
+    return "A bad name was specified.";
   default:
     return "Unknown error code.";
   }

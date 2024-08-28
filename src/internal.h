@@ -162,7 +162,9 @@ unsigned int mixed_random_int(void);
   static void __register_ ## name (void) __attribute__((constructor));  \
   void __register_ ## name(void){                                       \
     struct mixed_segment_field_info __args[count+1] = __VA_ARGS__;      \
-    mixed_register_segment(#name, count, __args, function);             \
+    if(!mixed_register_segment(#name, count, __args, function)){        \
+      fprintf(stderr, "libmixed: Failed to register segment %s: %s\n", #name, mixed_error_string(-1)); \
+    }                                                                   \
   }
 
 #define atomic_read(PLACE) __atomic_load_n(&PLACE, __ATOMIC_SEQ_CST)
