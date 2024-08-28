@@ -19,8 +19,8 @@ struct segment_entry{
 };
 
 struct segment_vector{
-  struct segment_entry entries[MIXED_MAX_SEGMENT_COUNT];
   uint32_t count;
+  struct segment_entry entries[MIXED_MAX_SEGMENT_COUNT];
 };
 
 struct plugin_vector plugins = {0};
@@ -108,7 +108,7 @@ MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_
 
   for(uint32_t i=0; i<segments.count; ++i){
     struct segment_entry *cur_entry = &segments.entries[i];
-    if(cur_entry->function == 0 && !entry){
+    if(!entry && !cur_entry->function){
       entry = cur_entry;
     }else if(strcmp(cur_entry->name, name) == 0){
       mixed_err(MIXED_DUPLICATE_SEGMENT);
@@ -117,8 +117,7 @@ MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_
   }
 
   if(!entry){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    return 0;
+    entry = &segments.entries[segments.count];
   }
 
   memcpy(entry->name, name, name_length);
