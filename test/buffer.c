@@ -394,7 +394,7 @@ define_test(async_read_write, {
     uint32_t *status = 0;
     pass(mixed_make_buffer(size, &buffer));
 
-    if(pthread_create(&reader, 0, async_reader, &buffer) != 0){
+    if(pthread_create(&reader, 0, (void *(*)(void *))async_reader, &buffer) != 0){
       fail_test("Failed to spawn thread.");
     }
 
@@ -409,7 +409,7 @@ define_test(async_read_write, {
       pass(mixed_buffer_finish_write(write, &buffer));
     }
 
-    pthread_join(reader, &status);
+    pthread_join(reader, (void **)&status);
     reader = 0;
     if(*status != 0){
       fail_test("Reader thread failed with exit code %i", *status);
