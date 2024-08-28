@@ -202,9 +202,11 @@ MIXED_EXPORT char *mixed_version(void){
   return MIXED_VERSION;
 }
 
+#ifndef MIXED_NO_CUSTOM_ALLOCATOR
 void *(*mixed_calloc)(size_t num, size_t size) = calloc;
 void (*mixed_free)(void *ptr) = free;
 void *(*mixed_realloc)(void *ptr, size_t size) = realloc;
+#endif
 
 void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   size_t newsize = newcount*size;

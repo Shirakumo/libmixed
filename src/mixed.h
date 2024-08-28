@@ -1449,7 +1449,11 @@ extern "C" {
   MIXED_EXPORT char *mixed_version(void);
 
   //// Allow customising how libmixed allocates things.
-  
+#ifdef MIXED_NO_CUSTOM_ALLOCATOR
+#define mixed_calloc calloc
+#define mixed_free free
+#define mixed_realloc realloc
+#else
   /// Allocates a new block of memory.
   /// 
   /// mixed_calloc must return either 0 or a pointer to a memory region
@@ -1482,6 +1486,7 @@ extern "C" {
   /// If the realloc operation fails and zero is returned, the original
   /// pointer must still be allocated and its memory intact.
   MIXED_EXPORT extern void *(*mixed_realloc)(void *ptr, size_t size);
+#endif
 
 #ifdef __cplusplus
 }
