@@ -10,7 +10,9 @@
 #include <immintrin.h>
 #endif
 #ifndef thread_local
-# if __STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__
+# if defined NN_NINTENDO_SDK
+#  define thread_local
+# elif __STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__
 #  define thread_local _Thread_local
 # elif defined _WIN32 && ( defined _MSC_VER || defined __ICL || defined __DMC__ || defined __BORLANDC__ )
 #  define thread_local __declspec(thread)
