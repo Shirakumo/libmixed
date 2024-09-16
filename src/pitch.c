@@ -37,32 +37,32 @@ void free_pitch_data(struct pitch_data *data){
 int make_pitch_data(uint32_t framesize, uint32_t oversampling, uint32_t samplerate, struct pitch_data *data){
   // FIXME: determine which of these can be static and which actually
   //        need to be retained for processing over contiguous buffers
-  float *mem = (float *)mixed_calloc(framesize
-                                     +framesize
-                                     +framesize*2
-                                     +framesize/2+1
-                                     +framesize/2+1
-                                     +framesize*2
-                                     +framesize
-                                     +framesize
-                                     +framesize
-                                     +framesize, sizeof(float));
+  float *mem = calloc(framesize+
+                      framesize+
+                      framesize*2+
+                      framesize/2+1+
+                      framesize/2+1+
+                      framesize*2+
+                      framesize+
+                      framesize+
+                      framesize+
+                      framesize, sizeof(float));
+
   if(!mem){
     mixed_err(MIXED_OUT_OF_MEMORY);
-    free_pitch_data(data);
     return 0;
   }
 
-  data->in_fifo = mem;
-  mem += (framesize); data->out_fifo = mem;
-  mem += (framesize); data->fft_workspace = mem;
-  mem += (framesize*2); data->last_phase = mem;
-  mem += (framesize/2+1); data->phase_sum = mem;
-  mem += (framesize/2+1); data->output_accumulator = mem;
-  mem += (framesize*2); data->analyzed_frequency = mem;
-  mem += (framesize); data->analyzed_magnitude = mem;
-  mem += (framesize); data->synthesized_frequency = mem;
-  mem += (framesize); data->synthesized_magnitude = mem;
+  data->in_fifo = mem; mem += framesize;
+  data->out_fifo = mem; mem += framesize;
+  data->fft_workspace = mem; mem += framesize*2;
+  data->last_phase = mem; mem += framesize/2+1;
+  data->phase_sum = mem; mem += framesize/2+1;
+  data->output_accumulator = mem; mem += framesize*2;
+  data->analyzed_frequency = mem; mem += framesize;
+  data->analyzed_magnitude = mem; mem += framesize;
+  data->synthesized_frequency = mem; mem += framesize;
+  data->synthesized_magnitude = mem; mem += framesize;
 
   data->framesize = framesize;
   data->oversampling = oversampling;
