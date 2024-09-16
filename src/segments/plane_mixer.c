@@ -52,7 +52,7 @@ static inline float dot(float a[2], float b[2]){
 }
 
 static inline float mag(float a[2]){
-  return sqrt(a[0]*a[0] + a[1]*a[1]);
+  return sqrtf(a[0]*a[0] + a[1]*a[1]);
 }
 
 static inline float dist(float a[2], float b[2]){
