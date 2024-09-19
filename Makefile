@@ -1,11 +1,36 @@
+CMAKE ?= cmake
 PREFIX ?= build
+BUILD_TYPE ?= ReleaseWithDebug
+CMAKEFLAGS ?= -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
 
-release:
+native:
 	mkdir -p $(PREFIX)
-	cmake . -B $(PREFIX) -DCMAKE_BUILD_TYPE=ReleaseWithDebug
-	make -C $(PREFIX)
+	$(CMAKE) . -B $(PREFIX) $(CMAKEFLAGS)
+	$(MAKE) -C $(PREFIX)
 
-debug:
-	mkdir -p $(PREFIX)
-	cmake . -B $(PREFIX) -DCMAKE_BUILD_TYPE=Debug
-	make -C $(PREFIX)
+win32-amd64:
+	mkdir -p $(PREFIX)-$@
+	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/x86_64-w64-mingw32-toolchain.cmake
+	$(MAKE) -C $(PREFIX)-$@
+
+win32-i686:
+	mkdir -p $(PREFIX)-$@
+	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/i686-w64-mingw32-toolchain.cmake
+	$(MAKE) -C $(PREFIX)-$@
+
+linux-aarch64:
+	mkdir -p $(PREFIX)-$@
+	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-gcc-toolchain.cmake
+	$(MAKE) -C $(PREFIX)-$@
+
+android-aarch64:
+	mkdir -p $(PREFIX)-$@
+	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/android-toolchain.cmake
+	$(MAKE) -C $(PREFIX)-$@
+
+all:
+	$(MAKE) native
+	$(MAKE) win32-amd64
+	$(MAKE) win32-i686
+	$(MAKE) linux-aarch64
+	$(MAKE) android-aarch64
