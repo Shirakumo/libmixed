@@ -372,7 +372,13 @@ extern "C" {
     MIXED_CHANNEL_COUNT_OUT,
     /// Access the current position of the repeater buffer.
     /// 
-    MIXED_REPEAT_POSITION
+    MIXED_REPEAT_POSITION,
+    /// The frame size of the FFT, must be a powerof two in [2^1, 2^13]
+    /// The default is 2048
+    MIXED_FRAMESIZE,
+    /// The oversampling rate between FFT frames.
+    /// The default is 4.
+    MIXED_OVERSAMPLING
   };
 
   /// This enum descripbes the possible resampling quality options.
@@ -1254,6 +1260,24 @@ extern "C" {
   /// not be allocated, and should instead be empty structs. The segment will
   /// handle initialisation.
   MIXED_EXPORT int mixed_make_segment_distribute(struct mixed_segment *segment);
+
+  /// A segment to perform a continuous Fast Fourier Transform.
+  ///
+  /// Unlike the raw mixed_fwd_fft/inv_fft functions, these segments perform the
+  /// necessary input windowing logic to properly process continuous streams of
+  /// samples.
+  /// 
+  /// For the FWD segment, the output buffer will be filled with framesize number
+  /// of values, with interleaved frequency and magnitude bins. If processing of
+  /// the output buffer is too slow, multiple frames may be written into the output
+  /// buffer in one mixing step.
+  /// 
+  /// For the INV segment, the input buffer must be filled with framesize number
+  /// of values, with interleaved frequency and magnitude bins.
+  /// 
+  /// In order to control the framesize, use the MIXED_FRAMESIZE field.
+  MIXED_EXPORT int mixed_make_segment_fwd_fft(uint32_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_inv_fft(uint32_t samplerate, struct mixed_segment *segment);
 
   /// A queue segment for inner segments.
   ///

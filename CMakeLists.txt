@@ -131,6 +131,7 @@ add_library(mixed OBJECT
   "src/segments/delay.c"
   "src/segments/distribute.c"
   "src/segments/fade.c"
+  "src/segments/fft.c"
   "src/segments/gate.c"
   "src/segments/generator.c"
   "src/segments/ladspa.c"

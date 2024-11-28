@@ -172,3 +172,4 @@ unsigned int mixed_random_int(void);
 #define atomic_read(PLACE) __atomic_load_n(&PLACE, __ATOMIC_SEQ_CST)
 #define atomic_write(PLACE, VAL) __atomic_store_n(&PLACE, VAL, __ATOMIC_SEQ_CST)
 #define atomic_cas(PLACE, OLD, NEW) __sync_bool_compare_and_swap(&PLACE, OLD, NEW)
+#define FREE(PLACE) if(PLACE){mixed_free(PLACE); PLACE=0;}
