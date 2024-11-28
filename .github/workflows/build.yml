@@ -1,0 +1,77 @@
+name: Build Library
+on: [create, workflow_dispatch]
+
+jobs:
+  build-posix:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, macOS-12]
+      fail-fast: false
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v2
+      - name: Install Doxygen
+        if: runner.os == 'linux'
+        run: |
+          sudo apt-get install -yy doxygen graphviz
+      - name: Compile
+        run: |
+          CMAKEFLAGS="-DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=ReleaseWithDebug" make install
+      - name: Bundle
+        run: |
+          cd install
+          zip -r ~/libmixed-${{ runner.os }}.zip *
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libmixed-${{ runner.os }}
+          path: ~/libmixed-${{ runner.os }}.zip
+      - name: Create release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        continue-on-error: true
+        with:
+          allowUpdates: true
+          name: Release ${{ github.ref_name }}
+          artifacts: ~/libmixed-${{ runner.os }}.zip
+  build-windows:
+    runs-on: [windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          install: >-
+            git
+            curl
+            make
+          pacboy: >-
+            toolchain:p
+            cmake:p
+      - name: Compile
+        shell: msys2 {0}
+        run: |
+          CMAKEFLAGS='-G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=ReleaseWithDebug' make install
+      - name: Bundle
+        shell: powershell
+        run: |
+          cd install
+          Compress-Archive -Path * -Destination $HOME/libmixed-${{ runner.os }}.zip
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libmixed-${{ runner.os }}
+          path: ~/libmixed-${{ runner.os }}.zip
+      - name: Create release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        continue-on-error: true
+        with:
+          allowUpdates: true
+          name: Release ${{ github.ref_name }}
+          artifacts: ~/libmixed-${{ runner.os }}.zip
