@@ -205,7 +205,7 @@ int fft_segment_inv(struct mixed_segment *segment){
 
       for(k=framesize+2; k<2*framesize; k++) fft_workspace[k] = 0.;
 
-      spiral_fft_float(framesize, +1, fft_workspace, fft_workspace);3
+      spiral_fft_float(framesize, +1, fft_workspace, fft_workspace);
 
       for(k=0; k<framesize; k++){
         window = -.5*cos(2.*M_PI*(double)k/(double)framesize)+.5;
@@ -329,14 +329,14 @@ MIXED_EXPORT int mixed_make_segment_inv_fft(uint32_t samplerate, struct mixed_se
   return ret;
 }
 
-int __make_fft_fwd(void *args, struct mixed_segment *segment){
+int __make_fwd_fft(void *args, struct mixed_segment *segment){
   return mixed_make_segment_fwd_fft(ARG(uint32_t, 1), segment);
 }
 
 REGISTER_SEGMENT(fwd_fft, __make_fwd_fft, 1, {
     {.description = "samplerate", .type = MIXED_UINT32}})
 
-int __make_fft_inv(void *args, struct mixed_segment *segment){
+int __make_inv_fft(void *args, struct mixed_segment *segment){
   return mixed_make_segment_inv_fft(ARG(uint32_t, 1), segment);
 }
 
