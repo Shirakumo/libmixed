@@ -1,0 +1,24 @@
+name: Build Docs
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - name: Compile
+        run: |
+          sudo apt-get install -yy doxygen graphviz cmake
+          make docs
+      - name: Upload Github Pages Artefact
+        uses: actions/upload-pages-artifact@v3.0.1
+        with:
+          path: ./build/docs/html
+      - name: Write to Github Pages
+        uses: actions/deploy-pages@v4
