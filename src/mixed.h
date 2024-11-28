@@ -23,7 +23,7 @@ extern "C" {
 #endif
 #include <stdint.h>
 #include <stdlib.h>
-#include "encoding.h"
+#include "mixed_encoding.h"
 
   /// Note that while this API deals with sound and you will probably
   /// want to use threads to handle the playback, it is in itself not

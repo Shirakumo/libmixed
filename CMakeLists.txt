@@ -112,7 +112,7 @@ add_library(mixed OBJECT
   "src/buffer.c"
   "src/common.c"
   "src/encoding.c"
-  "src/encoding.h"
+  "src/mixed_encoding.h"
   "src/hilbert.c"
   "src/internal.h"
   "src/ladspa.h"
