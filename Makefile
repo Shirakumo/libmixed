@@ -3,11 +3,6 @@ PREFIX ?= build
 BUILD_TYPE ?= ReleaseWithDebug
 CMAKEFLAGS ?= -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
 
-docs:
-	mkdir -p $(PREFIX)
-	$(CMAKE) . -B $(PREFIX) $(CMAKEFLAGS) -DBUILD_DOCS=ON
-	$(MAKE) -C $(PREFIX) docs
-
 native:
 	mkdir -p $(PREFIX)
 	$(CMAKE) . -B $(PREFIX) $(CMAKEFLAGS)
@@ -39,3 +34,12 @@ all:
 	$(MAKE) win32-i686
 	$(MAKE) linux-aarch64
 	$(MAKE) android-aarch64
+
+docs:
+	mkdir -p $(PREFIX)
+	$(CMAKE) . -B $(PREFIX) $(CMAKEFLAGS) -DBUILD_DOCS=ON
+	$(MAKE) -C $(PREFIX) docs
+
+install:
+	$(MAKE) native
+	$(MAKE) -C $(PREFIX) install
