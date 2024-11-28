@@ -37,16 +37,16 @@ void free_pitch_data(struct pitch_data *data){
 int make_pitch_data(uint32_t framesize, uint32_t oversampling, uint32_t samplerate, struct pitch_data *data){
   // FIXME: determine which of these can be static and which actually
   //        need to be retained for processing over contiguous buffers
-  float *mem = calloc(framesize+
-                      framesize+
-                      framesize*2+
-                      framesize/2+1+
-                      framesize/2+1+
-                      framesize*2+
-                      framesize+
-                      framesize+
-                      framesize+
-                      framesize, sizeof(float));
+  float *mem = mixed_calloc(framesize+
+                            framesize+
+                            framesize*2+
+                            framesize/2+1+
+                            framesize/2+1+
+                            framesize*2+
+                            framesize+
+                            framesize+
+                            framesize+
+                            framesize, sizeof(float));
 
   if(!mem){
     mixed_err(MIXED_OUT_OF_MEMORY);
