@@ -1399,6 +1399,13 @@ extern "C" {
   /// function fails for some reason.
   MIXED_EXPORT int mixed_close_plugin(char *file);
 
+  /// The maximum number of arguments that can be passed to a segment constructor
+#define MIXED_MAX_MAKE_ARG_COUNT 32
+  /// The maximum number of segment types that can be registered globally
+#define MIXED_MAX_SEGMENT_COUNT 1024
+  /// The maximum length of a segment's name
+#define MIXED_MAX_SEGMENT_NAME_LENGTH 64
+
   /// Register a segment constructor globally.
   ///
   /// If successful, the segment constructor information is later retrievable
@@ -1412,9 +1419,6 @@ extern "C" {
   /// is errored.
   /// If there are no more free segments available to register, MIXED_OUT_OF_MEMORY
   /// is errored.
-#define MIXED_MAX_MAKE_ARG_COUNT 32
-#define MIXED_MAX_SEGMENT_COUNT 1024
-#define MIXED_MAX_SEGMENT_NAME_LENGTH 64
   MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
 
   /// Remove a globally registered segment constructor.
@@ -1446,7 +1450,10 @@ extern "C" {
   /// 
   MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding);
   
+  /// A function to decode a packed sample array to the standardised float buffer format.
   typedef float (*mixed_transfer_function_from)(void *in, float *out, uint8_t stride, uint32_t samples, float volume, float target_volume);
+
+  /// A function to encode a standardised float sample buffer to a packed array format.
   typedef float (*mixed_transfer_function_to)(float *in, void *out, uint8_t stride, uint32_t samples, float volume, float target_volume);
 
   /// Retrieve a sample format converter function that converts from a type to floats.
@@ -1457,12 +1464,18 @@ extern "C" {
   ///
   MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding encoding);
 
-  // Perform a fast fourier transform on a buffer of samples.
+  // Perform a fast fourier forward transform on a buffer of samples.
   //
   // framesize must be a power of two between [2^1, 2^13]
   // in and out may be the same buffers, both with framesize number of
   // elements.
   MIXED_EXPORT int mixed_fwd_fft(uint16_t framesize, float *in, float *out);
+
+  // Performa a fast fourier inverse transform on a buffer of samples.
+  //
+  // framesize must be a power of two between [2^1, 2^13]
+  // in and out may be the same buffers, both with framesize number of
+  // elements.
   MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out);
 
   /// Return the current error code.

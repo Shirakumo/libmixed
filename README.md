@@ -8,15 +8,15 @@ There's a set of example applications in the [examples](examples/) directory tha
 
 The first step involves allocating space for a `struct mixed_segment` for each of the segments in the pipeline that you would like. For each of those segments you might also need a set of `struct mixed_buffer` instances to hold the audio data.
 
-Once you have the space allocated, either on stack or on heap, you instantiate the segments with their respective `make` functions. For example, to create an unpack segment you would call `mixed_make_segment_unpacker`.
+Once you have the space allocated, either on stack or on heap, you instantiate the segments with their respective `make` functions. For example, to create an unpack segment you would call `mixed_make_segment_unpacker()`.
 
-When the segments have been instantiated successfully, the next step is to set their inputs and outputs using `mixed_segment_set_in` and `mixed_segment_set_out` respectively. Usually the field you will want to set for an in/out is the `MIXED_BUFFER`, where the value is a pointer to a `struct mixed_buffer`. You will have to connect a buffer to each of the inputs and outputs of each segment as they are required. Failure to connect a required buffer will lead to crashes.
+When the segments have been instantiated successfully, the next step is to set their inputs and outputs using `mixed_segment_set_in()` and `mixed_segment_set_out()` respectively. Usually the field you will want to set for an in/out is the `MIXED_BUFFER`, where the value is a pointer to a `struct mixed_buffer`. You will have to connect a buffer to each of the inputs and outputs of each segment as they are required. Failure to connect a required buffer will lead to crashes.
 
-Once all the buffers are connected, you will want to add them to a chain to manage them easily. A chain is created using `mixed_make_segment_chain`, and you can add segments using `mixed_chain_add`.
+Once all the buffers are connected, you will want to add them to a chain to manage them easily. A chain is created using `mixed_make_segment_chain()`, and you can add segments using `mixed_chain_add()`.
 
-After that, your system is fully assembled and ready to process audio. Before you enter the main mixing loop though, you will need to call `mixed_segment_start` on the chain, as some segments need some additional steps to prepare after their settings have been configured. Within the mixing loop you'll then want to cause your sources to read in the necessary audio data, then call `mixed_segment_mix` to process the chain, and finally make your drains play back or consume the processed audio somehow. On exit from the mixing loop, you'll want to call `mixed_segment_end` to finalise the segments and ready them for reconfiguration.
+After that, your system is fully assembled and ready to process audio. Before you enter the main mixing loop though, you will need to call `mixed_segment_start()` on the chain, as some segments need some additional steps to prepare after their settings have been configured. Within the mixing loop you'll then want to cause your sources to read in the necessary audio data, then call `mixed_segment_mix()` to process the chain, and finally make your drains play back or consume the processed audio somehow. On exit from the mixing loop, you'll want to call `mixed_segment_end()` to finalise the segments and ready them for reconfiguration.
 
-The [mixed header](src/mixed.h) should describe the public API and the available segments in sufficient detail for you to be able to figure out how to put together your own systems as desired.
+The [mixed header](@ref src/mixed.h) should describe the public API and the available segments in sufficient detail for you to be able to figure out how to put together your own systems as desired.
 
 In "short", omitting error checking, your usual procedure will look as follows:
 
@@ -69,13 +69,13 @@ mixed_free_buffer(&right);
 ## Segment Plugin Architecture
 Libmixed offers a standardised architecture for audio processing units, called 'segments'. Each segment consists of a structure with pointers to functions that should execute the segment's respective actions. These structures can be constructed arbitrarily, allowing integration from non-C languages. Each segment also supports full reflection of its inputs, outputs, and properties, allowing the construction of generic user interfaces that can manage segments without needing special casing for each individual one.
 
-Information about a segment can be obtained through `mixed_segment_info`, which will provide you with an array of `struct mixed_segment_info`, containing information about the segment itself (`name`, `description`), its restrictions (`flags`), the number of its inputs and outputs (`min_inputs`, `max_inputs`, `outputs`), and the supported fields that can be set or retrieved (`fields`).
+Information about a segment can be obtained through `mixed_segment_info()`, which will provide you with an array of `struct mixed_segment_info`, containing information about the segment itself (`name`, `description`), its restrictions (`flags`), the number of its inputs and outputs (`min_inputs`, `max_inputs`, `outputs`), and the supported fields that can be set or retrieved (`fields`).
 
-A list of all known segments can be obtained via `mixed_list_segments`. For each registered segment, information about its constructor arguments can then be obtained via `mixed_make_segment_info`, and ultimately used to dynamically initialise a segment with `mixed_make_segment`.
+A list of all known segments can be obtained via `mixed_list_segments()`. For each registered segment, information about its constructor arguments can then be obtained via `mixed_make_segment_info()`, and ultimately used to dynamically initialise a segment with `mixed_make_segment()`.
 
 This allows adding and removing known segments at runtime, and provides an API that, again, allows automatically constructing user interfaces that could initialise arbitrary segments.
 
-libmixed also includes an API to provide segment plugin libraries. Such plugin libraries can be loaded (`mixed_load_plugin`) and unloaded (`mixed_close_plugin`) dynamically. In order to create such a plugin library, the user must simply dynamically link against libmixed and provide two exported functions, `mixed_make_plugin`, and `mixed_free_plugin`, which will automatically be called when the plugin is loaded or unloaded.
+libmixed also includes an API to provide segment plugin libraries. Such plugin libraries can be loaded (`mixed_load_plugin()`) and unloaded (`mixed_close_plugin()`) dynamically. In order to create such a plugin library, the user must simply dynamically link against libmixed and provide two exported functions, `mixed_make_plugin()`, and `mixed_free_plugin()`, which will automatically be called when the plugin is loaded or unloaded.
 
 The segment de/registration function is provided as an argument to allow third-party systems to provide integration into higher-level registration mechanisms without having to query libmixed after the fact.
 
