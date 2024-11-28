@@ -1297,9 +1297,25 @@ extern "C" {
   /// The queue's info will reflect the capabilities of the first segment, if any,
   /// and the queue's maximal capabilities otherwise.
   MIXED_EXPORT int mixed_make_segment_queue(struct mixed_segment *segment);
+
+  /// Add a segment to the queue to be played back.
+  /// 
+  /// The segment is added to the end of the queue and will only start playback
+  /// if there are no other segments in front of it.
   MIXED_EXPORT int mixed_queue_add(struct mixed_segment *news, struct mixed_segment *queue);
+  
+  /// Remove a segment from the queue.
+  ///
+  /// This will remove the segment regardless of its position in the queue.
   MIXED_EXPORT int mixed_queue_remove(struct mixed_segment *old, struct mixed_segment *queue);
+
+  /// Remove the segment at the given position from the queue.
+  ///
+  /// Note that a segment's position within the queue changes as segments are
+  /// removed from the queue.
   MIXED_EXPORT int mixed_queue_remove_at(uint32_t pos, struct mixed_segment *queue);
+
+  /// Remove all segments from the queue.
   MIXED_EXPORT int mixed_queue_clear(struct mixed_segment *queue);
 
   /// A segment that throws away all of its input.
