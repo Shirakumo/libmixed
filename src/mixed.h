@@ -1268,9 +1268,9 @@ extern "C" {
   /// samples.
   /// 
   /// For the FWD segment, the output buffer will be filled with framesize number
-  /// of values, with interleaved frequency and magnitude bins. If processing of
-  /// the output buffer is too slow, multiple frames may be written into the output
-  /// buffer in one mixing step.
+  /// of values, with interleaved frequency and magnitude bins, meaning there will
+  /// be framesize/2 frequency bins. If processing of the output buffer is too
+  /// slow, multiple frames may be written into the output buffer in one mixing step.
   /// 
   /// For the INV segment, the input buffer must be filled with framesize number
   /// of values, with interleaved frequency and magnitude bins.
@@ -1484,14 +1484,16 @@ extern "C" {
   //
   // framesize must be a power of two between [2^1, 2^13]
   // in and out may be the same buffers, both with framesize number of
-  // elements.
+  // elements. The output buffer will contain framesize/2 frequency bins
+  // as interleaved real and imaginary parts: [real, imag, real, imag, ...]
   MIXED_EXPORT int mixed_fwd_fft(uint16_t framesize, float *in, float *out);
 
   // Performa a fast fourier inverse transform on a buffer of samples.
   //
   // framesize must be a power of two between [2^1, 2^13]
   // in and out may be the same buffers, both with framesize number of
-  // elements.
+  // elements. The input buffer must contain framesize/2 frequency bins
+  // as interleaved real and imaginary parts: [real, imag, real, imag, ...]
   MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out);
 
   /// Return the current error code.
