@@ -35,7 +35,7 @@ static inline void __ignore(char _, ...){(void)_;}
 #if defined(__GNUC__) && !defined(__WIN32__)
 #if defined(__x86_64__)
 #define VECTORIZE __attribute__((target_clones("avx2","avx","sse4.1","default")))
-#elif defined(__arm__)
+#elif defined(__amd64__)
 #define VECTORIZE __attribute__((target_clones("neon","default")))
 #else
 #define VECTORIZE
