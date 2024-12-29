@@ -25,7 +25,7 @@ linux-aarch64:
 
 android-aarch64:
 	mkdir -p $(PREFIX)-$@
-	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/android-toolchain.cmake
+	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-android-toolchain.cmake
 	$(MAKE) -C $(PREFIX)-$@
 
 all:

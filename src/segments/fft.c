@@ -180,7 +180,8 @@ int fft_segment_inv(struct mixed_segment *segment){
   double expected = 2.*M_PI*(double)step/(double)framesize;
   long fifo_latency = framesize-step;
   if (data->overlap == 0) data->overlap = fifo_latency;
-
+  // FIXME: this is broken.
+  mixed_buffer_request_write(&out, &out_samples, data->out);
   for (i = 0; i < out_samples; i++){
     out[i] = out_fifo[data->overlap-fifo_latency];
     data->overlap++;
@@ -217,7 +218,6 @@ int fft_segment_inv(struct mixed_segment *segment){
     }
   }
 
-  mixed_buffer_request_write(&out, &out_samples, data->out);  
   mixed_buffer_finish_write(out_samples, data->out);
   return 1;
 }
