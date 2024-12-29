@@ -8,17 +8,17 @@ native:
 	$(CMAKE) . -B $(PREFIX) $(CMAKEFLAGS)
 	$(MAKE) -C $(PREFIX)
 
-win32-amd64:
+win-amd64:
 	mkdir -p $(PREFIX)-$@
 	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/x86_64-w64-mingw32-toolchain.cmake
 	$(MAKE) -C $(PREFIX)-$@
 
-win32-i686:
+win-i686:
 	mkdir -p $(PREFIX)-$@
 	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/i686-w64-mingw32-toolchain.cmake
 	$(MAKE) -C $(PREFIX)-$@
 
-linux-aarch64:
+lin-aarch64:
 	mkdir -p $(PREFIX)-$@
 	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-gcc-toolchain.cmake
 	$(MAKE) -C $(PREFIX)-$@
@@ -40,9 +40,9 @@ android-aarch64:
 
 all:
 	$(MAKE) native
-	$(MAKE) win32-amd64
-	$(MAKE) win32-i686
-	$(MAKE) linux-aarch64
+	$(MAKE) win-amd64
+	$(MAKE) win-i686
+	$(MAKE) lin-aarch64
 	$(MAKE) android-aarch64
 	$(MAKE) android-arm7a
 	$(MAKE) android-amd64
