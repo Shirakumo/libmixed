@@ -23,6 +23,16 @@ linux-aarch64:
 	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-gcc-toolchain.cmake
 	$(MAKE) -C $(PREFIX)-$@
 
+android-amd64:
+	mkdir -p $(PREFIX)-$@
+	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/amd64-android-toolchain.cmake
+	$(MAKE) -C $(PREFIX)-$@
+
+android-arm7a:
+	mkdir -p $(PREFIX)-$@
+	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/arm7a-android-toolchain.cmake
+	$(MAKE) -C $(PREFIX)-$@
+
 android-aarch64:
 	mkdir -p $(PREFIX)-$@
 	$(CMAKE) . -B $(PREFIX)-$@ $(CMAKEFLAGS) -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-android-toolchain.cmake
@@ -34,6 +44,8 @@ all:
 	$(MAKE) win32-i686
 	$(MAKE) linux-aarch64
 	$(MAKE) android-aarch64
+	$(MAKE) android-arm7a
+	$(MAKE) android-amd64
 
 docs:
 	mkdir -p $(PREFIX)
