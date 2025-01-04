@@ -376,6 +376,12 @@ extern "C" {
     /// The oversampling rate between FFT frames.
     /// The default is 4
     MIXED_OVERSAMPLING,
+    /// The suggested minimum size of buffers attached to the segment.
+    /// Supplying a smaller buffer may result in degenerate
+    /// performance or fail altogether.
+    /// Can only be read.
+    /// The default is 1
+    MIXED_BUFFER_SIZE_HINT,
   };
 
   /// This enum descripbes the possible resampling quality options.

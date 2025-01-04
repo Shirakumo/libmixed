@@ -247,6 +247,10 @@ int fft_segment_info(struct mixed_segment_info *info, struct mixed_segment *segm
   set_info_field(field++, MIXED_OVERSAMPLING,
                  MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The FFT oversampling rate.");
+
+  set_info_field(field++, MIXED_BUFFER_SIZE_HINT,
+                 MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_GETG,
+                 "The suggested minimum size for the output buffer.");
   
   clear_info_field(field++);
   return 1;
@@ -258,6 +262,7 @@ int fft_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   case MIXED_SAMPLERATE: *((uint32_t *)value) = data->samplerate; break;
   case MIXED_FRAMESIZE: *((uint32_t *)value) = data->framesize; break;
   case MIXED_OVERSAMPLING: *((uint32_t *)value) = data->oversampling; break;
+  case MIXED_BUFFER_SIZE_HINT: *((uint32_t *)value) = data->framesize; break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
