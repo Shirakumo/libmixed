@@ -100,7 +100,7 @@ int delay_segment_info(struct mixed_segment_info *info, struct mixed_segment *se
                  "The buffer for audio data attached to the location.");
 
   set_info_field(field++, MIXED_DELAY_TIME,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DURATION_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The time, in seconds, by which the output is delayed.");
 
   set_info_field(field++, MIXED_SAMPLERATE,

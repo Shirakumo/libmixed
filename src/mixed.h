@@ -194,19 +194,19 @@ extern "C" {
     MIXED_GENERATOR_TYPE,
     /// Access the location of the source or listener.
     /// The value should be an array of three floats.
-    /// The default is 0,0,0.
+    /// The default is 0,0,0
     MIXED_SPACE_LOCATION,
     /// Access the direction of the listener.
     /// The value should be an array of three floats.
-    /// The default is 0,0,1.
+    /// The default is 0,0,1
     MIXED_SPACE_DIRECTION,
     /// Access the velocity of the source or listener.
     /// The value should be an array of three floats.
-    /// The default is 0,0,0.
+    /// The default is 0,0,0
     MIXED_SPACE_VELOCITY,
     /// Access the "up" vector of the listener.
     /// The value should be an array of three floats.
-    /// The default is 0,1,0.
+    /// The default is 0,1,0
     MIXED_SPACE_UP,
     /// Access the speed of sound in space. This also
     /// implicitly sets the units used for the calculations.
@@ -217,22 +217,22 @@ extern "C" {
     /// Access the doppler factor value as a float.
     /// Changing this can exaggerate or dampen the doppler
     /// effect's potency.
-    /// The default is 1.
+    /// The default is 1
     MIXED_SPACE_DOPPLER_FACTOR,
     /// Access the minimal distance as a float.
     /// Any distance lower than this will make the sound
     /// appear at its maximal volume.
-    /// The default is 10.
+    /// The default is 10
     MIXED_SPACE_MIN_DISTANCE,
     /// Access the maximal distance as a float.
     /// Any distance greater than this will make the sound
     /// appear at its minimal volume.
-    /// The default is 100000.
+    /// The default is 100000
     MIXED_SPACE_MAX_DISTANCE,
     /// Access the rolloff factor as a float.
     /// This factor influences the curve of the attenuation
     /// function and should be in the range of [0.0, 1.0].
-    /// The default is 0.5.
+    /// The default is 0.5
     MIXED_SPACE_ROLLOFF,
     /// Access the attenuation function.
     /// this function calculates how quickly the sound gets
@@ -287,24 +287,24 @@ extern "C" {
     /// 
     MIXED_REPEAT_MODE,
     /// Access the frequency cutoff of the filter.
-    /// This value is a float in Hertz.
+    /// This value is a float in Hertz
     MIXED_FREQUENCY,
     /// Access the type of filter this is.
-    /// This value is an enum mixed_frequency_pass.
+    /// This value is an enum mixed_frequency_pass
     MIXED_BIQUAD_FILTER,
     /// Access the gain of the filter.
-    /// This value is a float.
+    /// This value is a float
     MIXED_GAIN,
     /// Access the Q or resonance factor of the filter.
-    /// This value is a float.
+    /// This value is a float
     MIXED_Q,
     /// Access the number of input buffers the segment holds.
     /// The value is a uint32_t.
-    /// The default is 2.
+    /// The default is 2
     MIXED_IN_COUNT,
     /// Access the number of output buffers the segment holds.
     /// The value is a uint32_t.
-    /// The default is 2.
+    /// The default is 2
     MIXED_OUT_COUNT,
     /// Returns the current segment in the queue.
     /// The value is a pointer to a struct mixed_segment.
@@ -320,30 +320,30 @@ extern "C" {
     /// effects. Has to be in [0,1] with 0 (dry) being no effect
     /// output and 1 being full effect output (wet).
     /// Setting this may also affect the MIXED_BYPASS value.
-    /// The default is 1.0, should be a float.
+    /// The default is 1.0
     MIXED_MIX,
     /// Access the location of the source or listener.
     /// The value should be an array of two floats.
-    /// The default is 0,0.
+    /// The default is 0,0
     MIXED_PLANE_LOCATION,
     /// Access the velocity of the source or listener.
     /// The value should be an array of two floats.
-    /// The default is 0,0.
+    /// The default is 0,0
     MIXED_PLANE_VELOCITY,
     /// The gain applied before compressing the signal, in dB.
-    /// The default is 0.
+    /// The default is 0
     MIXED_COMPRESSOR_PREGAIN,
     /// The threshold to activate compression, in dB.
-    /// The default is -24.
+    /// The default is -24
     MIXED_COMPRESSOR_THRESHOLD,
     /// The knee of the compressor curve.
-    /// The default is 30.
+    /// The default is 30
     MIXED_COMPRESSOR_KNEE,
     /// The compression ratio.
-    /// The default is 12.
+    /// The default is 12
     MIXED_COMPRESSOR_RATIO,
     /// The compressor's attack time in seconds.
-    /// The default is 0.003.
+    /// The default is 0.003
     MIXED_COMPRESSOR_ATTACK,
     /// The compressor's release time in seconds.
     /// The default is 0.25
@@ -356,7 +356,7 @@ extern "C" {
     /// The default is 0.09, 0.16, 0.42, 0.96
     MIXED_COMPRESSOR_RELEASEZONE,
     /// The gain applied after compression, in dB.
-    /// The default is 0.
+    /// The default is 0
     MIXED_COMPRESSOR_POSTGAIN,
     /// The actual gain that was applied during compression.
     /// Can only be read.
@@ -374,8 +374,8 @@ extern "C" {
     /// The default is 2048
     MIXED_FRAMESIZE,
     /// The oversampling rate between FFT frames.
-    /// The default is 4.
-    MIXED_OVERSAMPLING
+    /// The default is 4
+    MIXED_OVERSAMPLING,
   };
 
   /// This enum descripbes the possible resampling quality options.
@@ -551,12 +551,22 @@ extern "C" {
     MIXED_ENCODING_ENUM,
     MIXED_ERROR_ENUM,
     MIXED_RESAMPLE_TYPE_ENUM,
-    MIXED_CHANNEL_T
+    MIXED_CHANNEL_T,
+    MIXED_DECIBEL_T,
+    MIXED_DURATION_T,
   };
 
   /// Type used for channel count descriptions.
   /// 
   typedef uint8_t mixed_channel_t;
+
+  /// Type used for decibel descriptions.
+  ///
+  typedef float mixed_decibel_t;
+
+  /// Type used for time duration descriptions in seconds.
+  ///
+  typedef float mixed_duration_t;
 
   /// An internal audio data buffer.
   ///
@@ -610,7 +620,9 @@ extern "C" {
   /// fields are recognised on the segment and what you can
   /// do with it.
   MIXED_EXPORT struct mixed_segment_field_info{
-    /// The actual field index.
+    /// The actual field index. Fields should be in order
+    /// in the fields array of the info struct, but don't
+    /// have to be.
     /// 
     uint32_t field;
     /// A human-readable description of the data accessed.

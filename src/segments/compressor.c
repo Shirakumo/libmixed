@@ -458,11 +458,11 @@ int compressor_segment_info(struct mixed_segment_info *info, struct mixed_segmen
                  "Bypass the segment's processing.");
 
   set_info_field(field++, MIXED_COMPRESSOR_PREGAIN,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DECIBEL_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The gain before compression, in dB.");
 
   set_info_field(field++, MIXED_COMPRESSOR_THRESHOLD,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DECIBEL_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The threshold to activate compression, in dB.");
 
   set_info_field(field++, MIXED_COMPRESSOR_KNEE,
@@ -474,15 +474,15 @@ int compressor_segment_info(struct mixed_segment_info *info, struct mixed_segmen
                  "The compression ratio.");
 
   set_info_field(field++, MIXED_COMPRESSOR_ATTACK,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DURATION_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The attack time in seconds.");
 
   set_info_field(field++, MIXED_COMPRESSOR_RELEASE,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DURATION_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The release time in seconds.");
 
   set_info_field(field++, MIXED_COMPRESSOR_PREDELAY,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DURATION_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The delay before compression, in seconds.");
 
   set_info_field(field++, MIXED_COMPRESSOR_RELEASEZONE,
@@ -490,7 +490,7 @@ int compressor_segment_info(struct mixed_segment_info *info, struct mixed_segmen
                  "The release zones of the compressor.");
 
   set_info_field(field++, MIXED_COMPRESSOR_POSTGAIN,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DECIBEL_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The gain after compressin, in dB.");
 
   set_info_field(field++, MIXED_MIX,

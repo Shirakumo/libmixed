@@ -148,7 +148,7 @@ int fade_segment_info(struct mixed_segment_info *info, struct mixed_segment *seg
                  "The ending volume at which the fade ends.");
 
   set_info_field(field++, MIXED_FADE_TIME,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DURATION_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The number of seconds it takes to fade.");
 
   set_info_field(field++, MIXED_FADE_TYPE,

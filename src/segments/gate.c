@@ -172,23 +172,23 @@ int gate_segment_info(struct mixed_segment_info *info, struct mixed_segment *seg
                  "The buffer for audio data attached to the location.");
 
   set_info_field(field++, MIXED_GATE_OPEN_THRESHOLD,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DECIBEL_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The volume in dB necessary to open the gate.");
 
   set_info_field(field++, MIXED_GATE_CLOSE_THRESHOLD,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DECIBEL_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The volume in dB below which the gate is closed again.");
 
   set_info_field(field++, MIXED_GATE_ATTACK,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DURATION_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The time during which the output volume is scaled up.");
 
   set_info_field(field++, MIXED_GATE_HOLD,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DURATION_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The time during which the output is still transmitted despite the gate being closed.");
 
   set_info_field(field++, MIXED_GATE_RELEASE,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_DURATION_T, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The time during which the output volume is scaled down.");
 
   set_info_field(field++, MIXED_SAMPLERATE,
