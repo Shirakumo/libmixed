@@ -358,9 +358,6 @@ extern "C" {
     /// The gain applied after compression, in dB.
     /// The default is 0.
     MIXED_COMPRESSOR_POSTGAIN,
-    /// The dry/wet mix applied for compression.
-    /// The default is 1.
-    MIXED_COMPRESSOR_WET,
     /// The actual gain that was applied during compression.
     /// Can only be read.
     MIXED_COMPRESSOR_GAIN,

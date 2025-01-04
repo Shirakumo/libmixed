@@ -392,7 +392,7 @@ int compressor_segment_get(uint32_t field, void *value, struct mixed_segment *se
   case MIXED_COMPRESSOR_RELEASE: *((float *)value) = data->release; break;
   case MIXED_COMPRESSOR_PREDELAY: *((float *)value) = data->predelay; break;
   case MIXED_COMPRESSOR_POSTGAIN: *((float *)value) = data->postgain; break;
-  case MIXED_COMPRESSOR_WET: *((float *)value) = data->wet; break;
+  case MIXED_MIX: *((float *)value) = data->wet; break;
   case MIXED_COMPRESSOR_RELEASEZONE: {
     float *zone = (float *)value;
     zone[0] = data->releasezone[0];
@@ -423,7 +423,7 @@ int compressor_segment_set(uint32_t field, void *value, struct mixed_segment *se
   case MIXED_COMPRESSOR_RELEASE: data->release = *(float *)value; break;
   case MIXED_COMPRESSOR_PREDELAY: data->predelay = *(float *)value; break;
   case MIXED_COMPRESSOR_POSTGAIN: data->postgain = *(float *)value; break;
-  case MIXED_COMPRESSOR_WET: data->wet = *(float *)value; break;
+  case MIXED_MIX: data->wet = *(float *)value; break;
   case MIXED_COMPRESSOR_RELEASEZONE: {
     float *parts = (float *)value;
     data->releasezone[0] = parts[0];
@@ -493,7 +493,7 @@ int compressor_segment_info(struct mixed_segment_info *info, struct mixed_segmen
                  MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The gain after compressin, in dB.");
 
-  set_info_field(field++, MIXED_COMPRESSOR_WET,
+  set_info_field(field++, MIXED_MIX,
                  MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The dry/wet mix");
 
