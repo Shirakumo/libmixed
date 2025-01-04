@@ -559,7 +559,7 @@ extern "C" {
 
   /// Type used for channel count descriptions.
   /// 
-  typedef uint8_t channel_t;
+  typedef uint8_t mixed_channel_t;
 
   /// An internal audio data buffer.
   ///
@@ -601,7 +601,7 @@ extern "C" {
     enum mixed_encoding encoding;
     /// The number of channels that are packed into the array.
     /// 
-    channel_t channels;
+    mixed_channel_t channels;
     /// The sample rate at which data is encoded in Hz.
     /// 
     uint32_t samplerate;
@@ -1043,7 +1043,7 @@ extern "C" {
   /// adding more sources might involve allocations, which may not
   /// be suitable for real-time behaviour. Aside from this caveat,
   /// sources can be added or changed at any point in time.
-  MIXED_EXPORT int mixed_make_segment_basic_mixer(channel_t channels, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_basic_mixer(mixed_channel_t channels, struct mixed_segment *segment);
 
   /// A dynamic compressor
   /// 

@@ -3,8 +3,8 @@
 struct channel_data{
   struct mixed_buffer *in[14];
   struct mixed_buffer *out[14];
-  channel_t in_channels;
-  channel_t out_channels;
+  mixed_channel_t in_channels;
+  mixed_channel_t out_channels;
   struct biquad_data lp[3];
   uint32_t delay_i;
   uint32_t delay_size;
@@ -21,13 +21,13 @@ int channel_free(struct mixed_segment *segment){
 
 int channel_start(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
-  for(channel_t i=0; i<data->in_channels; ++i){
+  for(mixed_channel_t i=0; i<data->in_channels; ++i){
     if(data->in[i] == 0){
       mixed_err(MIXED_BUFFER_MISSING);
       return 0;
     }
   }
-  for(channel_t i=0; i<data->out_channels; ++i){
+  for(mixed_channel_t i=0; i<data->out_channels; ++i){
     if(data->out[i] == 0){
       mixed_err(MIXED_BUFFER_MISSING);
       return 0;
@@ -72,7 +72,7 @@ int channel_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed
 
 int channel_mix_transfer(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
-  for(channel_t c=0; c<data->in_channels; ++c)
+  for(mixed_channel_t c=0; c<data->in_channels; ++c)
     mixed_buffer_transfer(data->in[c], data->out[c]);
   return 1;
 }
@@ -330,10 +330,10 @@ int channel_get(uint32_t field, void *value, struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   switch(field){
   case MIXED_CHANNEL_COUNT_IN:
-    *((channel_t *)value) = data->in_channels;
+    *((mixed_channel_t *)value) = data->in_channels;
     break;
   case MIXED_CHANNEL_COUNT_OUT:
-    *((channel_t *)value) = data->out_channels;
+    *((mixed_channel_t *)value) = data->out_channels;
     break;
   default:
     mixed_err(MIXED_INVALID_FIELD);
@@ -344,11 +344,11 @@ int channel_get(uint32_t field, void *value, struct mixed_segment *segment){
 
 int channel_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
-  channel_t channels = 0;
+  mixed_channel_t channels = 0;
   switch(field){
   case MIXED_CHANNEL_COUNT_IN:
     channels = data->in_channels;
-    data->in_channels = *((channel_t *)value);
+    data->in_channels = *((mixed_channel_t *)value);
     if(!channel_update(segment)){
       data->in_channels = channels;
       return 0;
@@ -356,7 +356,7 @@ int channel_set(uint32_t field, void *value, struct mixed_segment *segment){
     break;
   case MIXED_CHANNEL_COUNT_OUT:
     channels = data->out_channels;
-    data->out_channels = *((channel_t *)value);
+    data->out_channels = *((mixed_channel_t *)value);
     if(!channel_update(segment)){
       data->out_channels = channels;
       return 0;
@@ -394,7 +394,7 @@ int channel_info(struct mixed_segment_info *info, struct mixed_segment *segment)
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out, uint32_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_channel_convert(mixed_channel_t in, mixed_channel_t out, uint32_t samplerate, struct mixed_segment *segment){
   struct channel_data *data = mixed_calloc(1, sizeof(struct channel_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -434,7 +434,7 @@ MIXED_EXPORT int mixed_make_segment_channel_convert(channel_t in, channel_t out,
 }
 
 int __make_channel_convert(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_channel_convert(ARG(channel_t, 0), ARG(channel_t, 1), ARG(uint32_t, 2), segment);
+  return mixed_make_segment_channel_convert(ARG(mixed_channel_t, 0), ARG(mixed_channel_t, 1), ARG(uint32_t, 2), segment);
 }
 
 REGISTER_SEGMENT(channel_convert, __make_channel_convert, 3, {

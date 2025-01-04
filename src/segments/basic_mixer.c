@@ -5,7 +5,7 @@ struct basic_mixer_data{
   uint32_t count;
   uint32_t size;
   struct mixed_buffer **out;
-  channel_t channels;
+  mixed_channel_t channels;
   float volume;
   float target_volume;
 };
@@ -21,7 +21,7 @@ int basic_mixer_start(struct mixed_segment *segment){
     mixed_err(MIXED_BUFFER_MISSING);
     return 0;
   }
-  for(channel_t i=0; i<data->channels; ++i){
+  for(mixed_channel_t i=0; i<data->channels; ++i){
     if(data->out[i] == 0){
       mixed_err(MIXED_BUFFER_MISSING);
       return 0;
@@ -75,13 +75,13 @@ int basic_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
 
 VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
   struct basic_mixer_data *data = (struct basic_mixer_data *)segment->data;
-  channel_t channels = data->channels;
+  mixed_channel_t channels = data->channels;
   float initial_volume = data->volume;
   float target_volume = data->target_volume;
   uint32_t count = data->count;
   bool changed = 0;
 
-  for(channel_t c=0; c<channels; ++c){
+  for(mixed_channel_t c=0; c<channels; ++c){
     float *in=0, *out=0;
     uint32_t samples = UINT32_MAX;
     
@@ -176,7 +176,7 @@ int basic_mixer_info(struct mixed_segment_info *info, struct mixed_segment *segm
   return 1;
 }
 
-MIXED_EXPORT int mixed_make_segment_basic_mixer(channel_t channels, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_basic_mixer(mixed_channel_t channels, struct mixed_segment *segment){
   struct basic_mixer_data *data = mixed_calloc(1, sizeof(struct basic_mixer_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -206,7 +206,7 @@ MIXED_EXPORT int mixed_make_segment_basic_mixer(channel_t channels, struct mixed
 }
 
 int __make_basic_mixer(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_basic_mixer(ARG(channel_t, 0), segment);
+  return mixed_make_segment_basic_mixer(ARG(mixed_channel_t, 0), segment);
 }
 
 REGISTER_SEGMENT(basic_mixer, __make_basic_mixer, 1, {{.description = "channels", .type = MIXED_UINT8}})

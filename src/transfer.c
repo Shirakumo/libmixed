@@ -126,7 +126,7 @@ MIXED_EXPORT mixed_transfer_function_from mixed_translator_from(enum mixed_encod
 }
 
 VECTORIZE MIXED_EXPORT int mixed_buffer_from_pack(struct mixed_pack *in, struct mixed_buffer **outs, float *volume, float target_volume){
-  channel_t channels = in->channels;
+  mixed_channel_t channels = in->channels;
   uint32_t frames_to_bytes = channels * mixed_samplesize(in->encoding);
   uint32_t frames = UINT32_MAX;
   char *ind;
@@ -174,7 +174,7 @@ MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding 
 }
 
 VECTORIZE MIXED_EXPORT int mixed_buffer_to_pack(struct mixed_buffer **ins, struct mixed_pack *out, float *volume, float target_volume){
-  channel_t channels = out->channels;
+  mixed_channel_t channels = out->channels;
   uint32_t frames_to_bytes = channels * mixed_samplesize(out->encoding);
   uint32_t frames = UINT32_MAX;
   char *outd;

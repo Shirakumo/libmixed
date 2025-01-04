@@ -98,11 +98,11 @@ int chain_segment_mix_bypass(struct mixed_segment *segment){
   struct mixed_segment *in = data->data[0];
   struct mixed_segment *out = data->data[count-1];
   
-  channel_t inc, outc;
+  mixed_channel_t inc, outc;
   if(!mixed_segment_get(MIXED_IN_COUNT, &inc, in)) return 0;
   if(!mixed_segment_get(MIXED_OUT_COUNT, &outc, out)) return 0;
   
-  for(channel_t c=0; c<MIN(inc,outc); ++c){
+  for(mixed_channel_t c=0; c<MIN(inc,outc); ++c){
     struct mixed_buffer *inb, *outb;
     if(!mixed_segment_get_in(MIXED_BUFFER, c, &inb, in)) return 0;
     if(!mixed_segment_get_out(MIXED_BUFFER, c, &outb, out)) return 0;
