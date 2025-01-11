@@ -249,7 +249,7 @@ int fft_segment_info(struct mixed_segment_info *info, struct mixed_segment *segm
                  "The FFT oversampling rate.");
 
   set_info_field(field++, MIXED_BUFFER_SIZE_HINT,
-                 MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_GETG,
+                 MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_GET,
                  "The suggested minimum size for the output buffer.");
   
   clear_info_field(field++);
