@@ -9,6 +9,7 @@ option(BUILD_EXAMPLES "Build the example applications" ON)
 option(BUILD_TESTER "Build the tester application" ON)
 option(BUILD_SIMD "Build with SIMD as minimum requirement" ON)
 option(BUILD_DOCS "Build the doxygen documentation files" ON)
+option(BUILD_DEBUG_LOG "Build with debug logging output" OFF)
 set(BUILD_SIMD_VERSION "SSE" CACHE STRING "Which SIMD version to require")
 
 ## Generate version
@@ -150,6 +151,9 @@ target_include_directories(mixed PRIVATE "src/" "libsamplerate/" "spiralfft/")
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(mixed PRIVATE MIXED_BUILD=1 MIXED_VERSION="${MIXED_VERSION_STRING}")
+if(BUILD_DEBUG_LOG)
+  target_compile_definitions(mixed PRIVATE MIXED_DEBUG=1)
+endif()
 target_compile_options(mixed PRIVATE ${COMPILATION_FLAGS} -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes -Wno-enum-conversion)
 
 find_library(DL_LIB dl)

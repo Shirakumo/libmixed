@@ -32,6 +32,12 @@
 #define IGNORE(...) __ignore(0, __VA_ARGS__)
 static inline void __ignore(char _, ...){(void)_;}
 
+#ifdef MIXED_DEBUG
+#define debug_log(...) {fprintf(stderr, "[libmixed] "); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n");}
+#else
+#define debug_log(...)
+#endif
+
 #if defined(__GNUC__) && !defined(__WIN32__)
 #if defined(__x86_64__)
 #define VECTORIZE __attribute__((target_clones("avx2","avx","sse4.1","default")))
