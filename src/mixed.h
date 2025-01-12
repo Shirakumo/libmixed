@@ -136,17 +136,28 @@ extern "C" {
   };
 
   /// This enum describes the possible sample encodings.
+  /// All encodings are little-endian.
   /// 
   MIXED_EXPORT enum mixed_encoding{
+    /// Corresponds to int8_t (signed 8-bit integer)
     MIXED_INT8 = 1,
+    /// Corresponds to uint8_t (unsigned 8-bit integer)
     MIXED_UINT8,
+    /// Corresponds to int16_t (signed 16-bit integer)
     MIXED_INT16,
+    /// Corresponds to uint16_t (unsigned 16-bit integer)
     MIXED_UINT16,
+    /// Corresponds to int24_t (signed 24-bit integer)
     MIXED_INT24,
+    /// Corresponds to uint24_t (unsigned 24-bit integer)
     MIXED_UINT24,
+    /// Corresponds to int32_t (signed 32-bit integer)
     MIXED_INT32,
+    /// Corresponds to uint32_t (unsigned 32-bit integer)
     MIXED_UINT32,
+    /// Corresponds to float (IEEE 754 single precision floating point)
     MIXED_FLOAT,
+    /// Corresponds to double (IEEE 754 double precision floating point)
     MIXED_DOUBLE
   };
 
@@ -417,56 +428,114 @@ extern "C" {
   /// This enum describes the possible preset attenuation functions.
   /// 
   MIXED_EXPORT enum mixed_attenuation{
+    /// No distance attenuation is performed at all and the source is always at its base volume.
+    ///
+    ///   v = 1.0
     MIXED_NO_ATTENUATION = 1,
+    /// Attenuation increases inversely correlated with distance to the minimum.
+    ///
+    ///   v = min / (min + roll*(dist-min))
     MIXED_INVERSE_ATTENUATION,
+    /// Attenuation increases linearly with distance between the maximum and minimum.
+    /// 
+    ///   v = 1 - r * (dist-min) / (max-min)
     MIXED_LINEAR_ATTENUATION,
+    /// Attenuation increases exponentially with distance from the minimum.
+    /// 
+    ///   v = 1 / (dist/min)^roll
     MIXED_EXPONENTIAL_ATTENUATION
   };
 
   /// This enum describes the possible fade easing function types.
   /// 
   MIXED_EXPORT enum mixed_fade_type{
+    /// Fade with a constant linear curve
+    ///
+    ///   v = t
     MIXED_LINEAR = 1,
+    /// Fade with a cubic slope
+    ///
+    ///   v = t^3
     MIXED_CUBIC_IN,
+    /// Fade with an inverse cubic slope
+    ///
+    ///   v = (t-1)^3 + 1
     MIXED_CUBIC_OUT,
+    /// Fade with a centred cubic slope
+    ///
+    ///   v = { (2t)^3 / 2         | t < 0.5
+    ///       { (2(t-1))^3 / 2 + 1 | otherwise 
     MIXED_CUBIC_IN_OUT
   };
 
   /// This enum describes the possible generator wave types.
   /// 
   MIXED_EXPORT enum mixed_generator_type{
+    /// Generate an exact sine wave
     MIXED_SINE = 1,
+    /// Generate a square wave with instant switches
     MIXED_SQUARE,
+    /// Generate a linear alternating triangle wave
     MIXED_TRIANGLE,
+    /// Generate a linear triangle wave with instant drop
     MIXED_SAWTOOTH
   };
 
   /// This enum describes the possible noise types.
   /// 
   MIXED_EXPORT enum mixed_noise_type{
+    /// Generate purely random white noise
     MIXED_WHITE_NOISE = 1,
+    /// Generate pink fractal noise
     MIXED_PINK_NOISE,
+    /// Generate Brownian noise
     MIXED_BROWN_NOISE
   };
 
   /// This enum describes the possible repeater segment modes.
   /// 
   MIXED_EXPORT enum mixed_repeat_mode{
+    /// Record the incoming audio stream into the buffer
     MIXED_RECORD = 1,
+    /// Play the recorded buffer back to the output stream
     MIXED_PLAY,
+    /// Record exactly once until the buffer is full then switch to play mode
     MIXED_RECORD_ONCE
   };
 
   /// This enum describes the possible biquad filters.
   /// 
   MIXED_EXPORT enum mixed_biquad_filter{
+    /// Perform a low frequency pass.
+    /// Only frequencies below the given frequency are let through.
+    /// The Q parameter acts as the resonance tuning parameter.
     MIXED_LOWPASS = 1,
+    /// Perform a high frequency pass.
+    /// Only frequencies above the given frequency are let through.
+    /// The Q parameter acts as the resonance tuning parameter.
     MIXED_HIGHPASS,
+    /// Perform a frequency band pass.
+    /// Only frequencies within a band around the given frequency are let through.
+    /// The Q parameter directs the band width.
     MIXED_BANDPASS,
+    /// Perform a frequency band notch.
+    /// Frequencies within the band around the given frequency are blocked.
+    /// The Q parameter directs the band width.
     MIXED_NOTCH,
+    /// Perform a frequency peak notch.
+    /// Frequencies around the given frequency are attenuated, with the peak at the given frequency.
+    /// The Q parameter directs the peak slope.
     MIXED_PEAKING,
+    /// Perform an all-pass filter.
+    /// Frequencies should not attenuated, but rather phase-shifted.
     MIXED_ALLPASS,
+    /// Perform a low frequency shelf.
+    /// Similar to the lowpass, but using a sloped attenuation.
+    /// The Q parameter should be 1.
     MIXED_LOWSHELF,
+    /// Perform a high frequency shelf.
+    /// Similar to the highpass, but using a sloped attenuation.
+    /// The Q parameter should be 1.
     MIXED_HIGHSHELF
   };
 
@@ -503,26 +572,47 @@ extern "C" {
   /// It is not required that a segment follow this channel
   /// layout scheme, but it is heavily recommended.
   MIXED_EXPORT enum mixed_location{
+    /// Signifies that the location is irrelevant and this is the only channel.
     MIXED_MONO = 0,
+    /// The left speaker in a stereo setup.
     MIXED_LEFT = 0,
+    /// The right speaker in a stereo setup.
     MIXED_RIGHT = 1,
+    /// The middle left front speaker in a 5.1 or similar setup.
     MIXED_LEFT_FRONT = 0,
+    /// The middle right front speaker in a 5.1 or similar setup.
     MIXED_RIGHT_FRONT = 1,
+    /// The middle left rear speaker in a 5.1 or similar setup.
     MIXED_LEFT_REAR = 2,
+    /// The middle right rear speaker in a 5.1 or similar setup.
     MIXED_RIGHT_REAR = 3,
+    /// The middle front center speaker in a 5.1 or similar setup.
     MIXED_CENTER = 4,
+    /// The subwoofer.
     MIXED_SUBWOOFER = 5,
+    /// The bottom front left speaker.
     MIXED_LEFT_FRONT_BOTTOM = 0,
+    /// The bottom front right speaker.
     MIXED_RIGHT_FRONT_BOTTOM = 1,
+    /// The bottom rear left speaker.
     MIXED_LEFT_REAR_BOTTOM = 2,
+    /// The bottom rear right speaker.
     MIXED_RIGHT_REAR_BOTTOM = 3,
+    /// The front center speaker.
     MIXED_CENTER_FRONT = 4,
+    /// The left side speaker.
     MIXED_LEFT_SIDE = 6,
+    /// The rigth side speaker.
     MIXED_RIGHT_SIDE = 7,
+    /// The top front left speaker.
     MIXED_LEFT_FRONT_TOP = 8,
+    /// The top front right speaker.
     MIXED_RIGHT_FRONT_TOP = 9,
+    /// The top rear left speaker.
     MIXED_LEFT_REAR_TOP = 10,
+    /// The top rear right speaker.
     MIXED_RIGHT_REAR_TOP = 11,
+    /// The rear center speaker.
     MIXED_CENTER_REAR = 12,
   };
 
@@ -540,27 +630,57 @@ extern "C" {
     MIXED_UINT32,
     MIXED_FLOAT,
     MIXED_DOUBLE */
+    /// A general boolean type, with 0 being false and anything else true.
+    /// Corresponds to int
     MIXED_BOOL = 11,
+    /// An unsigned integer type.
+    /// Corresponds to size_t (unsigned int of register size)
     MIXED_SIZE_T,
+    /// A generic human-readable utf-8-encoded string type.
+    /// Corresponds to char*
     MIXED_STRING,
+    /// A pointer to a callable function.
+    /// Corresponds to void*
     MIXED_FUNCTION,
+    /// A pointer to an arbitrary, segment-defined type of memory.
+    /// Corresponds to void*
     MIXED_POINTER,
+    /// A pointer to a mixed_segment
     MIXED_SEGMENT_POINTER,
+    /// A pointer to a mixed_buffer
     MIXED_BUFFER_POINTER,
+    /// A pointer to a mixed_pack
     MIXED_PACK_POINTER,
+    /// A pointer to a mixed_segment_sequence
     MIXED_SEGMENT_SEQUENCE_POINTER,
+    /// An enum mixed_location
     MIXED_LOCATION_ENUM,
+    /// An enum mixed_biquad_filter
     MIXED_BIQUAD_FILTER_ENUM,
+    /// An enum mixed_repeat_mode
     MIXED_REPEAT_MODE_ENUM,
+    /// An enum mixed_noise_type
     MIXED_NOISE_TYPE_ENUM,
+    /// An enum mixed_generator_type
     MIXED_GENERATOR_TYPE_ENUM,
+    /// An enum mixed_fade_type
     MIXED_FADE_TYPE_ENUM,
+    /// An enum mixed_attenuation
     MIXED_ATTENUATION_ENUM,
+    /// An enum mixed_encoding
     MIXED_ENCODING_ENUM,
+    /// An enum mixed_error
     MIXED_ERROR_ENUM,
+    /// An enum mixed_resample_type
     MIXED_RESAMPLE_TYPE_ENUM,
+    /// A channel count
+    /// Corresponds to mixed_channel_t
     MIXED_CHANNEL_T,
+    /// A volume in dB
+    /// Corresponds to mixed_decibel_t
     MIXED_DECIBEL_T,
+    /// A duration in seconds
+    /// Corresponds to mixed_duration_t
     MIXED_DURATION_T,
   };
 
@@ -736,24 +856,31 @@ extern "C" {
   /// Free the pack
   /// See mixed_free_buffer
   MIXED_EXPORT void mixed_free_pack(struct mixed_pack *pack);
+
   /// Zero out the pack data
   /// See mixed_buffer_clear
   MIXED_EXPORT int mixed_pack_clear(struct mixed_pack *pack);
+
   /// Return the number of available write octets
   /// See mixed_buffer_available_write
   MIXED_EXPORT uint32_t mixed_pack_available_write(struct mixed_pack *pack);
+
   /// Return the number of available read octets
   /// See mixed_buffer_available_read
   MIXED_EXPORT uint32_t mixed_pack_available_read(struct mixed_pack *pack);
+
   /// Start a write operation
   /// See mixed_buffer_request_write
   MIXED_EXPORT int mixed_pack_request_write(void **area, uint32_t *size, struct mixed_pack *pack);
+
   /// Complete a write operation
   /// See mixed_buffer_finish_write
   MIXED_EXPORT int mixed_pack_finish_write(uint32_t size, struct mixed_pack *pack);
+
   /// Start a read operation
   /// See mixed_buffer_request_read
   MIXED_EXPORT int mixed_pack_request_read(void **area, uint32_t *size, struct mixed_pack *pack);
+
   /// Complete a free operation
   /// See mixed_buffer_finish_read
   MIXED_EXPORT int mixed_pack_finish_read(uint32_t size, struct mixed_pack *pack); 
@@ -1289,11 +1416,19 @@ extern "C" {
   /// be framesize/2 frequency bins. If processing of the output buffer is too
   /// slow, multiple frames may be written into the output buffer in one mixing step.
   /// 
+  /// In order to control the framesize, use the MIXED_FRAMESIZE field.
+  MIXED_EXPORT int mixed_make_segment_fwd_fft(uint32_t samplerate, struct mixed_segment *segment);
+
+  /// A segment to perform a continuous Fast Fourier Transform.
+  ///
+  /// Unlike the raw mixed_fwd_fft/inv_fft functions, these segments perform the
+  /// necessary input windowing logic to properly process continuous streams of
+  /// samples.
+  /// 
   /// For the INV segment, the input buffer must be filled with framesize number
   /// of values, with interleaved frequency and magnitude bins.
   /// 
   /// In order to control the framesize, use the MIXED_FRAMESIZE field.
-  MIXED_EXPORT int mixed_make_segment_fwd_fft(uint32_t samplerate, struct mixed_segment *segment);
   MIXED_EXPORT int mixed_make_segment_inv_fft(uint32_t samplerate, struct mixed_segment *segment);
 
   /// A queue segment for inner segments.
@@ -1517,20 +1652,20 @@ extern "C" {
   ///
   MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding encoding);
 
-  // Perform a fast fourier forward transform on a buffer of samples.
-  //
-  // framesize must be a power of two between [2^1, 2^13]
-  // in and out may be the same buffers, both with framesize number of
-  // elements. The output buffer will contain framesize/2 frequency bins
-  // as interleaved real and imaginary parts: [real, imag, real, imag, ...]
+  /// Perform a fast fourier forward transform on a buffer of samples.
+  ///
+  /// framesize must be a power of two between [2^1, 2^13]
+  /// in and out may be the same buffers, both with framesize number of
+  /// elements. The output buffer will contain framesize/2 frequency bins
+  /// as interleaved real and imaginary parts: [real, imag, real, imag, ...]
   MIXED_EXPORT int mixed_fwd_fft(uint16_t framesize, float *in, float *out);
 
-  // Performa a fast fourier inverse transform on a buffer of samples.
-  //
-  // framesize must be a power of two between [2^1, 2^13]
-  // in and out may be the same buffers, both with framesize number of
-  // elements. The input buffer must contain framesize/2 frequency bins
-  // as interleaved real and imaginary parts: [real, imag, real, imag, ...]
+  /// Performa a fast fourier inverse transform on a buffer of samples.
+  ///
+  /// framesize must be a power of two between [2^1, 2^13]
+  /// in and out may be the same buffers, both with framesize number of
+  /// elements. The input buffer must contain framesize/2 frequency bins
+  /// as interleaved real and imaginary parts: [real, imag, real, imag, ...]
   MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out);
 
   /// Return the current error code.
