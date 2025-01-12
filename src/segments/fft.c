@@ -50,48 +50,6 @@ int fft_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int fft_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
-  struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
-
-  switch(field){
-  case MIXED_BUFFER:
-    if(location == 0){
-      if(segment->mix == fft_segment_inv && ((struct mixed_buffer *)buffer)->size < data->framesize){
-        mixed_err(MIXED_BUFFER_TO_SMALL);
-        return 0;
-      }
-      data->in = (struct mixed_buffer *)buffer;
-      return 1;
-    }
-    mixed_err(MIXED_INVALID_LOCATION);
-    return 0;
-  default:
-    mixed_err(MIXED_INVALID_FIELD);
-    return 0;
-  }
-}
-
-int fft_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
-  struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
-
-  switch(field){
-  case MIXED_BUFFER:
-    if(location == 0){
-      if(segment->mix == fft_segment_fwd && ((struct mixed_buffer *)buffer)->size < data->framesize){
-        mixed_err(MIXED_BUFFER_TO_SMALL);
-        return 0;
-      }
-      data->out = (struct mixed_buffer *)buffer;
-      return 1;
-    }
-    mixed_err(MIXED_INVALID_LOCATION);
-    return 0;
-  default:
-    mixed_err(MIXED_INVALID_FIELD);
-    return 0;
-  }
-}
-
 int fft_segment_fwd(struct mixed_segment *segment){
   struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
   uint32_t framesize = data->framesize;
@@ -226,6 +184,48 @@ int fft_segment_inv(struct mixed_segment *segment){
   mixed_buffer_finish_write(i, data->out);
 
   return 1;
+}
+
+int fft_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
+  struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
+
+  switch(field){
+  case MIXED_BUFFER:
+    if(location == 0){
+      if(segment->mix == fft_segment_inv && ((struct mixed_buffer *)buffer)->size < data->framesize){
+        mixed_err(MIXED_BUFFER_TO_SMALL);
+        return 0;
+      }
+      data->in = (struct mixed_buffer *)buffer;
+      return 1;
+    }
+    mixed_err(MIXED_INVALID_LOCATION);
+    return 0;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
+  }
+}
+
+int fft_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
+  struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
+
+  switch(field){
+  case MIXED_BUFFER:
+    if(location == 0){
+      if(segment->mix == fft_segment_fwd && ((struct mixed_buffer *)buffer)->size < data->framesize){
+        mixed_err(MIXED_BUFFER_TO_SMALL);
+        return 0;
+      }
+      data->out = (struct mixed_buffer *)buffer;
+      return 1;
+    }
+    mixed_err(MIXED_INVALID_LOCATION);
+    return 0;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
+  }
 }
 
 int fft_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
