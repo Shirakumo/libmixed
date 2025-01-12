@@ -199,6 +199,12 @@ MIXED_EXPORT char *mixed_type_string(int code){
     return "error";
   case MIXED_RESAMPLE_TYPE_ENUM:
     return "resample type";
+  case MIXED_CHANNEL_T:
+    return "channel count";
+  case MIXED_DECIBEL_T:
+    return "volume (dB)";
+  case MIXED_DURATION_T:
+    return "duration (s)";
   default:
     return "unknown";
   }
