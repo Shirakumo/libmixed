@@ -25,6 +25,10 @@ MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
   }
 }
 
+MIXED_EXPORT uint8_t mixed_byte_stride(channel_t channels, enum mixed_encoding encoding){
+  return mixed_samplesize(encoding)*channels;
+}
+
 int mix_noop(struct mixed_segment *segment){
   IGNORE(segment);
   return 1;

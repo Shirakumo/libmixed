@@ -1482,18 +1482,38 @@ extern "C" {
   /// Return the size of a sample in the given encoding in bytes.
   /// 
   MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding);
+
+  /// Return the number of bytes between two samples in a byte stream.
+  /// 
+  MIXED_EXPORT uint8_t mixed_byte_stride(channel_t channels, enum mixed_encoding encoding);
   
   /// A function to decode a packed sample array to the standardised float buffer format.
+  /// The stride is the number of bytes between two samples in the input array.
+  /// The samples is the number of samples to transfer.
+  /// The volume should be the starting volume at the beginning of the transfer.
+  /// The target_volume should be the volume to reach for. The function will smoothly
+  /// transition to this volume as it processes, in order to avoid harsh volume changes
+  /// that could introduce clicks into the audio. Once the function finishes, it returns
+  /// the current volume that was reached.
   typedef float (*mixed_transfer_function_from)(void *in, float *out, uint8_t stride, uint32_t samples, float volume, float target_volume);
 
   /// A function to encode a standardised float sample buffer to a packed array format.
+  /// The stride is the number of bytes between two samples in the output array.
+  /// The samples is the number of samples to transfer.
+  /// The volume should be the starting volume at the beginning of the transfer.
+  /// The target_volume should be the volume to reach for. The function will smoothly
+  /// transition to this volume as it processes, in order to avoid harsh volume changes
+  /// that could introduce clicks into the audio. Once the function finishes, it returns
+  /// the current volume that was reached.
   typedef float (*mixed_transfer_function_to)(float *in, void *out, uint8_t stride, uint32_t samples, float volume, float target_volume);
 
   /// Retrieve a sample format converter function that converts from a type to floats.
+  /// See mixed_transfer_function_from
   ///
   MIXED_EXPORT mixed_transfer_function_from mixed_translator_from(enum mixed_encoding encoding);
 
   /// Retrieve a sample format converter function that converts from floats to a type.
+  /// See mixed_transfer_function_to
   ///
   MIXED_EXPORT mixed_transfer_function_to mixed_translator_to(enum mixed_encoding encoding);
 
@@ -1519,17 +1539,17 @@ extern "C" {
   /// at the same time.
   MIXED_EXPORT int mixed_error(void);
 
-  /// Return the error string for the given error code.
+  /// Return the ASCII error string for the given error code.
   ///
   /// If the error code is less than zero, the error string for the
   /// error code returned by mixed_error(); is returned instead.
   MIXED_EXPORT char *mixed_error_string(int error_code);
 
-  /// Return a textual description of the given type identifier.
+  /// Return the ASCII textual description of the given type identifier.
   ///
   MIXED_EXPORT char *mixed_type_string(int code);
 
-  /// Returns the version string of the library.
+  /// Returns the ASCII version string of the library.
   ///
   MIXED_EXPORT char *mixed_version(void);
 
