@@ -25,7 +25,7 @@ MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
   }
 }
 
-MIXED_EXPORT uint8_t mixed_byte_stride(channel_t channels, enum mixed_encoding encoding){
+MIXED_EXPORT uint8_t mixed_byte_stride(mixed_channel_t channels, enum mixed_encoding encoding){
   return mixed_samplesize(encoding)*channels;
 }
 
@@ -66,6 +66,9 @@ MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out){
     return 0;
   }
 }
+
+MIXED_EXPORT extern inline float mixed_from_db(mixed_decibel_t volume);
+MIXED_EXPORT extern inline  mixed_decibel_t mixed_to_db(float volume);
 
 thread_local int errorcode = 0;
 

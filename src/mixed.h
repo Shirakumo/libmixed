@@ -23,6 +23,7 @@ extern "C" {
 #endif
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 #include "mixed_encoding.h"
 
   /// Note that while this API deals with sound and you will probably
@@ -173,7 +174,7 @@ extern "C" {
     /// Access the sample rate by which the segment operates.
     /// 
     MIXED_SAMPLERATE,
-    /// Access the volume of the segment.
+    /// Access the linear volume multiplier of the segment.
     /// The volume should be positive. Setting the volume
     /// to values higher than one will result in distortion.
     /// The type of this field should be a float.
@@ -898,8 +899,8 @@ extern "C" {
   /// This appropriately converts sample format and channel layout.
   /// You are responsible for passing in an array of buffers that is
   /// at least as long as the channel's channel count.
-  /// The volume is a multiplier you can pass to adjust the volume
-  /// in the resulting buffers.
+  /// The volume is a linear multiplier you can pass to adjust the
+  /// volume in the resulting buffers.
   /// pack.frames should be set to the number of frames in the input
   /// pack, and will be set to the number of frames that have actually
   /// been read from the packed buffer. This may be less if the
@@ -911,8 +912,8 @@ extern "C" {
   /// This appropriately converts sample format and channel layout.
   /// You are responsible for passing in an array of buffers that is
   /// at least as long as the channel's channel count.
-  /// The volume is a multiplier you can pass to adjust the volume
-  /// in the resulting channel.
+  /// The volume is a linear multiplier you can pass to adjust the
+  /// volume in the resulting channel.
   /// pack.frames should be set to the number of frames in the output
   /// pack, and will be set to the number of frames that have actually
   /// been written to the pack. This may be less if the input buffers
@@ -1198,6 +1199,8 @@ extern "C" {
   /// This segment can be used to regulate the volume and pan of the
   /// source. It is a strictly stereo segment and as such needs two
   /// inputs and two outputs.
+  ///
+  /// The volume is a linear multiplier.
   /// 
   /// The fields of this segment may be changed at any time.
   MIXED_EXPORT int mixed_make_segment_volume_control(float volume, float pan, struct mixed_segment *segment);
@@ -1620,7 +1623,7 @@ extern "C" {
 
   /// Return the number of bytes between two samples in a byte stream.
   /// 
-  MIXED_EXPORT uint8_t mixed_byte_stride(channel_t channels, enum mixed_encoding encoding);
+  MIXED_EXPORT uint8_t mixed_byte_stride(mixed_channel_t channels, enum mixed_encoding encoding);
   
   /// A function to decode a packed sample array to the standardised float buffer format.
   /// The stride is the number of bytes between two samples in the input array.
@@ -1630,6 +1633,7 @@ extern "C" {
   /// transition to this volume as it processes, in order to avoid harsh volume changes
   /// that could introduce clicks into the audio. Once the function finishes, it returns
   /// the current volume that was reached.
+  /// The volumes are linear, not in decibel.
   typedef float (*mixed_transfer_function_from)(void *in, float *out, uint8_t stride, uint32_t samples, float volume, float target_volume);
 
   /// A function to encode a standardised float sample buffer to a packed array format.
@@ -1640,6 +1644,7 @@ extern "C" {
   /// transition to this volume as it processes, in order to avoid harsh volume changes
   /// that could introduce clicks into the audio. Once the function finishes, it returns
   /// the current volume that was reached.
+  /// The volumes are linear, not in decibel.
   typedef float (*mixed_transfer_function_to)(float *in, void *out, uint8_t stride, uint32_t samples, float volume, float target_volume);
 
   /// Retrieve a sample format converter function that converts from a type to floats.
@@ -1667,6 +1672,16 @@ extern "C" {
   /// elements. The input buffer must contain framesize/2 frequency bins
   /// as interleaved real and imaginary parts: [real, imag, real, imag, ...]
   MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out);
+
+  /// Converts decibel to a linear volume multiplier.
+  __attribute__((always_inline)) MIXED_EXPORT inline float mixed_from_db(mixed_decibel_t volume){
+    return powf(10.0f, 0.05f * volume);
+  }
+
+  /// Converts a linear volume multiplier to decibel.
+  __attribute__((always_inline)) MIXED_EXPORT inline mixed_decibel_t mixed_to_db(float volume){
+    return 20.0f * log10f(volume);
+  }
 
   /// Return the current error code.
   ///
