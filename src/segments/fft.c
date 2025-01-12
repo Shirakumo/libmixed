@@ -193,7 +193,7 @@ int fft_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct m
   case MIXED_BUFFER:
     if(location == 0){
       if(segment->mix == fft_segment_inv && ((struct mixed_buffer *)buffer)->size < data->framesize){
-        mixed_err(MIXED_BUFFER_TO_SMALL);
+        mixed_err(MIXED_BUFFER_TOO_SMALL);
         return 0;
       }
       data->in = (struct mixed_buffer *)buffer;
@@ -214,7 +214,7 @@ int fft_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct 
   case MIXED_BUFFER:
     if(location == 0){
       if(segment->mix == fft_segment_fwd && ((struct mixed_buffer *)buffer)->size < data->framesize){
-        mixed_err(MIXED_BUFFER_TO_SMALL);
+        mixed_err(MIXED_BUFFER_TOO_SMALL);
         return 0;
       }
       data->out = (struct mixed_buffer *)buffer;

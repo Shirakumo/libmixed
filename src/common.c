@@ -130,6 +130,8 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "A bad number of arguments was specified.";
   case MIXED_BAD_NAME:
     return "A bad name was specified.";
+  case MIXED_BUFFER_TOO_SMALL:
+    return "The given buffer is too small for the required task.";
   default:
     return "Unknown error code.";
   }

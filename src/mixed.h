@@ -132,7 +132,7 @@ extern "C" {
     /// A name was too long or malformed.
     MIXED_BAD_NAME,
     /// A buffer is too small
-    MIXED_BUFFER_TO_SMALL,
+    MIXED_BUFFER_TOO_SMALL,
   };
 
   /// This enum describes the possible sample encodings.
