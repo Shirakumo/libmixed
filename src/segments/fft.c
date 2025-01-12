@@ -118,11 +118,8 @@ int fft_segment_fwd(struct mixed_segment *segment){
     data->overlap++;
     if(data->overlap >= framesize){
       uint32_t out_samples = framesize;
+      mixed_buffer_clear(data->out);
       mixed_buffer_request_write(&out, &out_samples, data->out);
-      if(out_samples < framesize){
-        mixed_buffer_finish_write(0, data->out);
-        break;
-      }
       
       data->overlap = fifo_latency;
 
