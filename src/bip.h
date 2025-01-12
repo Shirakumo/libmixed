@@ -116,6 +116,12 @@ static inline int bip_finish_read(uint32_t size, struct bip *buffer){
   return 1;
 }
 
+static inline void bip_discard(struct bip *buffer){
+  atomic_write(buffer->read, 0);
+  atomic_write(buffer->write, 0);
+  atomic_write(buffer->reserved, 0);
+}
+
 static inline uint32_t bip_available_read(struct bip *buffer){
   read_buffer_state(read, write, full_r2, buffer);
   if(full_r2){

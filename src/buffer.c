@@ -27,9 +27,7 @@ MIXED_EXPORT void mixed_free_buffer(struct mixed_buffer *buffer){
 }
 
 MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer){
-  buffer->read = 0;
-  buffer->write = 0;
-  buffer->reserved = 0;
+  bip_discard((struct bip*)buffer);
   return 1;
 }
 

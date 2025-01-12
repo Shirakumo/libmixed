@@ -21,9 +21,7 @@ MIXED_EXPORT void mixed_free_pack(struct mixed_pack *pack){
 }
 
 MIXED_EXPORT int mixed_pack_clear(struct mixed_pack *pack){
-  pack->read = 0;
-  pack->write = 0;
-  pack->reserved = 0;
+  bip_discard((struct bip*)pack);
   return 1;
 }
 
