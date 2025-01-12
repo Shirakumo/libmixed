@@ -279,12 +279,13 @@ int fft_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
     data->samplerate = *(uint32_t *)value;
     break;
   case MIXED_FRAMESIZE:
-    if(*(uint32_t *)value <= 0 || 1<<13 < *(uint32_t *)value){
+    { uint32_t framesize = *(uint32_t *)value;
+    if(framesize <= 2 || 1<<13 < framesize || (framesize & (framesize - 1)) == 0){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    data->framesize = *(uint32_t *)value;
-    break;
+    data->framesize = framesize;
+    }break;
   case MIXED_OVERSAMPLING:
     if(*(uint32_t *)value <= 0){
       mixed_err(MIXED_INVALID_VALUE);
