@@ -285,7 +285,7 @@ int fft_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
     break;
   case MIXED_FRAMESIZE:
     { uint32_t framesize = *(uint32_t *)value;
-    if(framesize <= 2 || 1<<13 < framesize || (framesize & (framesize - 1)) == 0){
+    if(framesize <= 2 || 1<<13 < framesize || (framesize & (framesize - 1)) != 0){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
