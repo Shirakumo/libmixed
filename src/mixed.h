@@ -546,26 +546,30 @@ extern "C" {
     /// This means that the segment's output and input
     /// buffers may be the same, as it processes the samples
     /// in place.
-    MIXED_INPLACE = 0x1,
+    MIXED_INPLACE        = 0x0001,
     /// This means that the segment will modify the samples in
     /// its input buffers, making them unusable for virtual
     /// buffers.
-    MIXED_MODIFIES_INPUT = 0x2,
+    MIXED_MODIFIES_INPUT = 0x0002,
     /// The field is available for inputs.
     /// 
-    MIXED_IN = 0x1,
+    MIXED_IN             = 0x0001,
     /// The field is available for outputs.
     /// 
-    MIXED_OUT = 0x2,
+    MIXED_OUT            = 0x0002,
     /// The field is available for segments.
     /// 
-    MIXED_SEGMENT = 0x4,
+    MIXED_SEGMENT        = 0x0004,
     /// The field can be set.
     /// 
-    MIXED_SET = 0x8,
+    MIXED_SET            = 0x0008,
     /// The field can be get.
     /// 
-    MIXED_GET = 0x10,
+    MIXED_GET            = 0x0010,
+    /// This means that the segment's output buffers
+    /// are cleared and overwritten on mix, losing all unread
+    /// output.
+    MIXED_CLEARS_OUTPUT  = 0x0020,
   };
 
   /// Convenience enum to map common speaker channels to buffer locations.

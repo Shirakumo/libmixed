@@ -238,7 +238,7 @@ int fft_segment_info(struct mixed_segment_info *info, struct mixed_segment *segm
   
   struct mixed_segment_field_info *field = info->fields;
   set_info_field(field++, MIXED_BUFFER,
-                 MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
+                 MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET | MIXED_CLEARS_OUTPUT,
                  "The buffer for audio data attached to the location.");
 
   set_info_field(field++, MIXED_SAMPLERATE,
