@@ -50,7 +50,7 @@ int fft_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int fft_segment_fwd(struct mixed_segment *segment){
+VECTORIZE int fft_segment_fwd(struct mixed_segment *segment){
   struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
   uint32_t framesize = data->framesize;
   uint32_t oversampling = data->oversampling;
@@ -120,7 +120,7 @@ int fft_segment_fwd(struct mixed_segment *segment){
   return 1;
 }
 
-int fft_segment_inv(struct mixed_segment *segment){
+VECTORIZE int fft_segment_inv(struct mixed_segment *segment){
   struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
   uint32_t framesize = data->framesize;
   uint32_t oversampling = data->oversampling;
