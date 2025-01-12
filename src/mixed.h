@@ -131,6 +131,8 @@ extern "C" {
     MIXED_BAD_ARGUMENT_COUNT,
     /// A name was too long or malformed.
     MIXED_BAD_NAME,
+    /// A buffer is too small
+    MIXED_BUFFER_TO_SMALL,
   };
 
   /// This enum describes the possible sample encodings.
