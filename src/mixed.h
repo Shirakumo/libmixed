@@ -780,7 +780,7 @@ extern "C" {
     uint32_t field;
     /// A human-readable description of the data accessed.
     /// 
-    char *description;
+    const char *description;
     /// An OR-combination of flags that describe the field's
     /// properties, usually about whether it is valid for
     /// inputs, outputs, or the segment itself, and whether
@@ -1300,7 +1300,7 @@ extern "C" {
   /// requires you to stop mixing before being able to change any property
   /// but some plugins may nevertheless work despite that. Thus, consult
   /// your plugin's source or documentation.
-  MIXED_EXPORT int mixed_make_segment_ladspa(char *file, uint32_t index, uint32_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_ladspa(const char *file, uint32_t index, uint32_t samplerate, struct mixed_segment *segment);
 
   /// A space (3D) processed mixer
   ///
@@ -1559,12 +1559,12 @@ extern "C" {
   ///
   /// The plugin should call this function to describe its segment names and
   /// construction argument types, along with the actual function to call.
-  typedef int (*mixed_register_segment_function)(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
+  typedef int (*mixed_register_segment_function)(const char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
 
   /// Function prototype for a plugin's segment type deregistration function.
   ///
   /// The plugin should call this to deregister a segment it previously registered.
-  typedef int (*mixed_deregister_segment_function)(char *name);
+  typedef int (*mixed_deregister_segment_function)(const char *name);
 
   /// If you write a segment plugin library, you must define an
   /// exported function of this signature named mixed_make_plugin.
@@ -1585,14 +1585,14 @@ extern "C" {
   /// function, or that function fails for some reason.
   /// The file name is copied and may be deallocated again after this
   /// function has been called.
-  MIXED_EXPORT int mixed_load_plugin(char *file);
+  MIXED_EXPORT int mixed_load_plugin(const char *file);
 
   /// Close an existing plugin library.
   ///
   /// This function may fail if the requested library was not loaded before,
   /// it does not contain the required mixed_free_plugin function, or that
   /// function fails for some reason.
-  MIXED_EXPORT int mixed_close_plugin(char *file);
+  MIXED_EXPORT int mixed_close_plugin(const char *file);
 
   /// The maximum number of arguments that can be passed to a segment constructor
 #define MIXED_MAX_MAKE_ARG_COUNT 32
@@ -1614,12 +1614,12 @@ extern "C" {
   /// is errored.
   /// If there are no more free segments available to register, MIXED_OUT_OF_MEMORY
   /// is errored.
-  MIXED_EXPORT int mixed_register_segment(char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
+  MIXED_EXPORT int mixed_register_segment(const char *name, uint32_t argc, struct mixed_segment_field_info *args, mixed_make_segment_function function);
 
   /// Remove a globally registered segment constructor.
   ///
   /// If successful, the given name can be registered again afterwards.
-  MIXED_EXPORT int mixed_deregister_segment(char *name);
+  MIXED_EXPORT int mixed_deregister_segment(const char *name);
 
   /// List available segments.
   ///
@@ -1632,14 +1632,14 @@ extern "C" {
   /// argc will be set to the number of required arguments, and
   /// args will be set to an array of segment_field_info structures of
   /// that size describing the required arguments.
-  MIXED_EXPORT int mixed_make_segment_info(char *name, uint32_t *argc, const struct mixed_segment_field_info **args);
+  MIXED_EXPORT int mixed_make_segment_info(const char *name, uint32_t *argc, const struct mixed_segment_field_info **args);
 
   /// Create a segment by name.
   ///
   /// args must be an array of pointers, where each pointer in the array
   /// points to a value of the type as described in the respective
   /// segment_field_info structure for the constructor.
-  MIXED_EXPORT int mixed_make_segment(char *name, void *args, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment(const char *name, void *args, struct mixed_segment *segment);
 
   /// Return the size of a sample in the given encoding in bytes.
   /// 
@@ -1717,15 +1717,15 @@ extern "C" {
   ///
   /// If the error code is less than zero, the error string for the
   /// error code returned by mixed_error(); is returned instead.
-  MIXED_EXPORT char *mixed_error_string(int error_code);
+  MIXED_EXPORT const char *mixed_error_string(int error_code);
 
   /// Return the ASCII textual description of the given type identifier.
   ///
-  MIXED_EXPORT char *mixed_type_string(int code);
+  MIXED_EXPORT const char *mixed_type_string(int code);
 
   /// Returns the ASCII version string of the library.
   ///
-  MIXED_EXPORT char *mixed_version(void);
+  MIXED_EXPORT const char *mixed_version(void);
 
   //// Allow customising how libmixed allocates things.
 #ifdef MIXED_NO_CUSTOM_ALLOCATOR

@@ -92,7 +92,7 @@ int load_out_segment(uint32_t samples, struct out **_out){
   long out_samplerate = output_samplerate;
   int out_channels = 2;
   int out_encoding = MPG123_ENC_SIGNED_16;
-  char *out_encname = "signed 16 bit";
+  const char *out_encname = "signed 16 bit";
   uint8_t out_samplesize = 0;
   int out_framesize = 0;
   struct out *out = calloc(1, sizeof(struct out));
@@ -149,7 +149,7 @@ int load_out_segment(uint32_t samples, struct out **_out){
     goto cleanup;
   }
 
-  out_encname = (char *)out123_enc_longname(out_encoding);
+  out_encname = (const char *)out123_enc_longname(out_encoding);
   fprintf(stderr, "Selected: %i channels @ %li Hz, %s %i\n", out_channels, out_samplerate, out_encname);
   
   // Prepare pipeline segments
@@ -209,11 +209,11 @@ void free_mp3(struct mp3 *mp3){
   free(mp3);
 }
 
-int load_mp3_segment(char *file, uint32_t samples, struct mp3 **_mp3){
+int load_mp3_segment(const char *file, uint32_t samples, struct mp3 **_mp3){
   long mp3_samplerate = 0;
   int mp3_channels = 0;
   int mp3_encoding = 0;
-  char *mp3_encname = 0;
+  const char *mp3_encname = 0;
   uint8_t mp3_samplesize = 0;
   struct mp3 *mp3 = calloc(1, sizeof(struct mp3));
 
@@ -244,7 +244,7 @@ int load_mp3_segment(char *file, uint32_t samples, struct mp3 **_mp3){
     goto cleanup;
   }
   
-  mp3_encname = (char *)out123_enc_longname(mp3_encoding);
+  mp3_encname = (const char *)out123_enc_longname(mp3_encoding);
   fprintf(stderr, "MP3: %i channels @ %li Hz, %s\n", mp3_channels, mp3_samplerate, mp3_encname);
 
   mp3->pack.encoding = fmt123_to_mixed(mp3_encoding);

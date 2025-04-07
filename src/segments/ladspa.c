@@ -208,7 +208,7 @@ int ladspa_segment_set(uint32_t field, void *value, struct mixed_segment *segmen
   return 0;
 }
 
-int ladspa_load_descriptor(char *file, uint32_t index, LADSPA_Descriptor **_descriptor){
+int ladspa_load_descriptor(const char *file, uint32_t index, LADSPA_Descriptor **_descriptor){
   LADSPA_Descriptor_Function descriptor_function;
   const LADSPA_Descriptor *descriptor;
 
@@ -232,7 +232,7 @@ int ladspa_load_descriptor(char *file, uint32_t index, LADSPA_Descriptor **_desc
   return 0;
 }
 
-MIXED_EXPORT int mixed_make_segment_ladspa(char *file, uint32_t index, uint32_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_ladspa(const char *file, uint32_t index, uint32_t samplerate, struct mixed_segment *segment){
   struct ladspa_segment_data *data = 0;
 
   data = mixed_calloc(1, sizeof(struct ladspa_segment_data));
@@ -285,7 +285,7 @@ MIXED_EXPORT int mixed_make_segment_ladspa(char *file, uint32_t index, uint32_t 
 }
 
 int __make_ladspa(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_ladspa(ARG(char *, 0), ARG(uint32_t, 1), ARG(uint32_t, 2), segment);
+  return mixed_make_segment_ladspa(ARG(const char *, 0), ARG(uint32_t, 1), ARG(uint32_t, 2), segment);
 }
 
 REGISTER_SEGMENT(ladspa, __make_ladspa, 3, {
