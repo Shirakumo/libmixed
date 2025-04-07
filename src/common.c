@@ -80,7 +80,7 @@ MIXED_EXPORT int mixed_error(void){
   return errorcode;
 }
 
-MIXED_EXPORT char *mixed_error_string(int code){
+MIXED_EXPORT const char *mixed_error_string(int code){
   if(code < 0) code = errorcode;
   switch(code){
   case MIXED_NO_ERROR:
@@ -144,7 +144,7 @@ MIXED_EXPORT char *mixed_error_string(int code){
   }
 }
 
-MIXED_EXPORT char *mixed_type_string(int code){
+MIXED_EXPORT const char *mixed_type_string(int code){
   switch(code){
   case MIXED_UNKNOWN:
     return "unknown";
@@ -217,7 +217,7 @@ MIXED_EXPORT char *mixed_type_string(int code){
   }
 }
 
-MIXED_EXPORT char *mixed_version(void){
+MIXED_EXPORT const char *mixed_version(void){
   return MIXED_VERSION;
 }
 
@@ -237,7 +237,7 @@ void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   return ptr;
 }
 
-void set_info_field(struct mixed_segment_field_info *info, uint32_t field, enum mixed_segment_field_type type, uint32_t count, enum mixed_segment_info_flags flags, char*description){
+void set_info_field(struct mixed_segment_field_info *info, uint32_t field, enum mixed_segment_field_type type, uint32_t count, enum mixed_segment_info_flags flags, const char*description){
   info->field = field;
   info->description = description;
   info->flags = flags;
@@ -253,7 +253,7 @@ void clear_info_field(struct mixed_segment_field_info *info){
   info->type_count = 0;
 }
 
-void *open_library(char *file){
+void *open_library(const char *file){
 #ifdef _WIN32
   void *lib = LoadLibrary(file);
   if(!lib){
@@ -288,7 +288,7 @@ void close_library(void *handle){
 #endif
 }
 
-void *load_symbol(void *handle, char *name){
+void *load_symbol(void *handle, const char *name){
 #ifdef _WIN32
   void *function = GetProcAddress(handle, "mixed_make_plugin");
   if(!function){

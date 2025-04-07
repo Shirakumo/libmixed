@@ -7,7 +7,7 @@
     *target = p;                                \
   }
 
-int parse_arg(int type, void **target, char *in){
+int parse_arg(int type, void **target, const char *in){
   switch(type){
   case MIXED_INT8:
     DECODE_INT(int8_t) break;

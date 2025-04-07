@@ -155,11 +155,11 @@ void mixed_err(int errorcode);
 
 void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size);
 
-void *open_library(char *file);
+void *open_library(const char *file);
 void close_library(void *handle);
-void *load_symbol(void *handle, char *name);
+void *load_symbol(void *handle, const char *name);
 
-void set_info_field(struct mixed_segment_field_info *info, uint32_t field, enum mixed_segment_field_type type, uint32_t count, enum mixed_segment_info_flags flags, char*description);
+void set_info_field(struct mixed_segment_field_info *info, uint32_t field, enum mixed_segment_field_type type, uint32_t count, enum mixed_segment_info_flags flags, const char*description);
 void clear_info_field(struct mixed_segment_field_info *info);
 
 float mixed_random(void);
