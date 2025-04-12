@@ -60,10 +60,10 @@ int main(int argc, char **argv){
     goto cleanup;
   }
 
-  if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_LEFT, &mp3->left, &conv_l)
-     || !mixed_segment_set_in(MIXED_BUFFER, MIXED_RIGHT, &mp3->right, &conv_r)
-     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_LEFT, &out->left, &conv_l)
-     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_RIGHT, &out->right, &conv_r)){
+  if(!mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &mp3->left, &conv_l)
+     || !mixed_segment_set_in(MIXED_BUFFER, MIXED_MONO, &mp3->right, &conv_r)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->left, &conv_l)
+     || !mixed_segment_set_out(MIXED_BUFFER, MIXED_MONO, &out->right, &conv_r)){
     fprintf(stderr, "Failed to attach buffers to segments: %s\n", mixed_error_string(-1));
     goto cleanup;
   }

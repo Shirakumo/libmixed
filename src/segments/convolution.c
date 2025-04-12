@@ -202,7 +202,7 @@ MIXED_EXPORT int mixed_make_segment_convolution(float *fir, uint32_t fir_size, u
     goto cleanup;
   }
 
-  data->fir = mixed_calloc(framesize, sizeof(float));
+  data->fir = mixed_calloc(framesize*2, sizeof(float));
   if(!data->fir){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
