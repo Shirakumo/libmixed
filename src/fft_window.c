@@ -11,28 +11,18 @@ void free_fft_window_data(struct fft_window_data *data){
   data->in_fifo = 0;
   data->out_fifo = 0;
   data->fft_workspace = 0;
+  data->output_accumulator = 0;
   data->last_phase = 0;
   data->phase_sum = 0;
-  data->output_accumulator = 0;
-  data->analyzed_frequency = 0;
-  data->analyzed_magnitude = 0;
-  data->synthesized_frequency = 0;
-  data->synthesized_magnitude = 0;
 }
 
 int make_fft_window_data(uint32_t framesize, uint32_t oversampling, uint32_t samplerate, struct fft_window_data *data){
-  // FIXME: determine which of these can be static and which actually
-  //        need to be retained for processing over contiguous buffers
   float *mem = mixed_calloc(framesize+
                             framesize+
                             framesize*2+
-                            framesize/2+1+
-                            framesize/2+1+
                             framesize*2+
-                            framesize+
-                            framesize+
-                            framesize+
-                            framesize, sizeof(float));
+                            framesize/2+1+
+                            framesize/2+1, sizeof(float));
 
   if(!mem){
     mixed_err(MIXED_OUT_OF_MEMORY);
@@ -42,13 +32,9 @@ int make_fft_window_data(uint32_t framesize, uint32_t oversampling, uint32_t sam
   data->in_fifo = mem; mem += framesize;
   data->out_fifo = mem; mem += framesize;
   data->fft_workspace = mem; mem += framesize*2;
+  data->output_accumulator = mem; mem += framesize*2;
   data->last_phase = mem; mem += framesize/2+1;
   data->phase_sum = mem; mem += framesize/2+1;
-  data->output_accumulator = mem; mem += framesize*2;
-  data->analyzed_frequency = mem; mem += framesize;
-  data->analyzed_magnitude = mem; mem += framesize;
-  data->synthesized_frequency = mem; mem += framesize;
-  data->synthesized_magnitude = mem; mem += framesize;
 
   data->framesize = framesize;
   data->oversampling = oversampling;
@@ -63,24 +49,23 @@ VECTORIZE void fft_window(float *in, float *out, uint32_t samples, struct fft_wi
   float *out_fifo = data->out_fifo;
   float *fft_workspace = data->fft_workspace;
   float *output_accumulator = data->output_accumulator;
-  double window;
-  long i, k;
 
   long framesize2 = framesize/2;
   long step = framesize/oversampling;
   long fifo_latency = framesize-step;
-  if (data->overlap == 0) data->overlap = fifo_latency;
+  if(data->overlap == 0)
+    data->overlap = fifo_latency;
 
-  for (i = 0; i < samples; i++){
+  for(uint32_t i = 0; i < samples; i++){
     in_fifo[data->overlap] = in[i];
     out[i] = out_fifo[data->overlap-fifo_latency];
     data->overlap++;
-    if (data->overlap >= framesize) {
+    if(data->overlap >= framesize){
       data->overlap = fifo_latency;
 
       /* do windowing and re,im interleave */
-      for (k = 0; k < framesize;k++) {
-        window = -.5*cos(2.*M_PI*(double)k/(double)framesize)+.5;
+      for(uint32_t k = 0; k < framesize; k++) {
+        double window = -.5*cos(2.*M_PI*(double)k/(double)framesize)+.5;
         fft_workspace[2*k] = in_fifo[k] * window;
         fft_workspace[2*k+1] = 0.;
       }
@@ -90,15 +75,17 @@ VECTORIZE void fft_window(float *in, float *out, uint32_t samples, struct fft_wi
       spiral_fft_float(framesize, +1, fft_workspace, fft_workspace);
 
       /* do windowing and add to output accumulator */
-      for(k=0; k < framesize; k++) {
-        window = -.5*cos(2.*M_PI*(double)k/(double)framesize)+.5;
+      for(uint32_t k = 0; k < framesize; k++) {
+        double window = -.5*cos(2.*M_PI*(double)k/(double)framesize)+.5;
         output_accumulator[k] += 2.*window*fft_workspace[2*k]/(framesize2*oversampling);
       }
-      for (k = 0; k < step; k++) out_fifo[k] = output_accumulator[k];
+      for(uint32_t k = 0; k < step; k++)
+        out_fifo[k] = output_accumulator[k];
 
       memmove(output_accumulator, output_accumulator+step, framesize*sizeof(float));
 
-      for (k = 0; k < fifo_latency; k++) in_fifo[k] = in_fifo[k+step];
+      for(uint32_t k = 0; k < fifo_latency; k++)
+        in_fifo[k] = in_fifo[k+step];
     }
   }
 }
@@ -107,20 +94,20 @@ VECTORIZE void fft_pitch_shift(struct fft_window_data *data, void *user){
   uint32_t framesize = data->framesize;
   uint32_t oversampling = data->oversampling;
   uint32_t framesize2 = framesize/2;
-  long step = framesize/oversampling;
-  double bin_frequencies = (double)data->samplerate/(double)framesize;
-  double expected = 2.*M_PI*(double)step/(double)framesize;
   float *fft_workspace = data->fft_workspace;
   float *last_phase = data->last_phase;
   float *phase_sum = data->phase_sum;
-  float *analyzed_frequency = data->analyzed_frequency;
-  float *analyzed_magnitude = data->analyzed_magnitude;
-  float *synthesized_frequency = data->synthesized_frequency;
-  float *synthesized_magnitude = data->synthesized_magnitude;
+  float analyzed_frequency[framesize];
+  float analyzed_magnitude[framesize];
+  float synthesized_frequency[framesize];
+  float synthesized_magnitude[framesize];
 
+  uint32_t step = framesize/oversampling;
+  double bin_frequencies = (double)data->samplerate/(double)framesize;
+  double expected = 2.*M_PI*(double)step/(double)framesize;
   float pitch_shift = *((float*)user);
 
-  for(long k = 0; k <= framesize2; k++){
+  for(uint32_t k = 0; k <= framesize2; k++){
     float real = fft_workspace[2*k];
     float imag = fft_workspace[2*k+1];
 
@@ -142,15 +129,15 @@ VECTORIZE void fft_pitch_shift(struct fft_window_data *data, void *user){
 
   memset(synthesized_magnitude, 0, framesize*sizeof(float));
   memset(synthesized_frequency, 0, framesize*sizeof(float));
-  for(long k = 0; k <= framesize2; k++){
-    long index = k*pitch_shift;
+  for(uint32_t k = 0; k <= framesize2; k++){
+    uint32_t index = k*pitch_shift;
     if(index <= framesize2){
       synthesized_magnitude[index] += analyzed_magnitude[k];
       synthesized_frequency[index] = analyzed_frequency[k] * pitch_shift;
     }
   }
 
-  for(long k = 0; k <= framesize2; k++){
+  for(uint32_t k = 0; k <= framesize2; k++){
     float magnitude = synthesized_magnitude[k];
     float tmp = synthesized_frequency[k];
 
@@ -165,7 +152,7 @@ VECTORIZE void fft_pitch_shift(struct fft_window_data *data, void *user){
     fft_workspace[2*k+1] = magnitude*sin(phase);
   }
 
-  for(long k = framesize+2; k < 2*framesize; k++)
+  for(uint32_t k = framesize+2; k < 2*framesize; k++)
     fft_workspace[k] = 0.;
 }
 
@@ -174,7 +161,7 @@ VECTORIZE void fft_convolve(struct fft_window_data *data, void *user){
   float *fft_workspace = data->fft_workspace;
   float *fir = (float *)user;
   
-  for(long k = 0; k < framesize; k+= 2){
+  for(uint32_t k = 0; k < framesize; k+= 2){
     float reA = fft_workspace[k+0];
     float imA = fft_workspace[k+1];
     float reB = fir[k+0];
