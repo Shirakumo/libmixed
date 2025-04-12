@@ -129,6 +129,7 @@ add_library(mixed OBJECT
   "src/segments/chain.c"
   "src/segments/channel.c"
   "src/segments/compressor.c"
+  "src/segments/convolution.c"
   "src/segments/delay.c"
   "src/segments/distribute.c"
   "src/segments/fade.c"
