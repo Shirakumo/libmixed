@@ -1549,6 +1549,9 @@ extern "C" {
   /// threads at once.
   MIXED_EXPORT int mixed_chain_remove_at(uint32_t i, struct mixed_segment *chain);
 
+  
+  MIXED_EXPORT int mixed_make_segment_convolution(float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment);
+
   /// Function prototype for a plugin's segment construction function.
   ///
   /// This type of function will be called with an opaque argument list
