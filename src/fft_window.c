@@ -155,22 +155,3 @@ VECTORIZE void fft_pitch_shift(struct fft_window_data *data, void *user){
   for(uint32_t k = framesize+2; k < 2*framesize; k++)
     fft_workspace[k] = 0.;
 }
-
-VECTORIZE void fft_convolve(struct fft_window_data *data, void *user){
-  uint32_t framesize = data->framesize;
-  float *fft_workspace = data->fft_workspace;
-  float *fir = (float *)user;
-  
-  for(uint32_t k = 0; k < framesize; k+= 2){
-    float reA = fft_workspace[k+0];
-    float imA = fft_workspace[k+1];
-    float reB = fir[k+0];
-    float imB = fir[k+1];
-
-    float re = reA * reB - imA * imB;
-    float im = reA * imB + imA * reB;
-
-    fft_workspace[k+0] += re;
-    fft_workspace[k+1] += im;
-  }
-}

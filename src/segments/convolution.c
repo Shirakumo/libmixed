@@ -6,6 +6,9 @@ struct convolution_segment_data{
   struct fft_window_data fft_window_data;
   uint32_t samplerate;
   float mix;
+  uint32_t block_count;
+  uint32_t block_size;
+  uint32_t block_idx;
   float *fir;
 };
 
@@ -29,6 +32,7 @@ int convolution_segment_start(struct mixed_segment *segment){
     mixed_err(MIXED_BUFFER_MISSING);
     return 0;
   }
+  data->block_idx = 0;
   return 1;
 }
 
@@ -66,6 +70,27 @@ int convolution_segment_set_out(uint32_t field, uint32_t location, void *buffer,
   }
 }
 
+VECTORIZE void fft_convolve(struct fft_window_data *data, void *user){
+  struct convolution_segment_data *user_data = (struct convolution_segment_data *)user;
+  uint32_t framesize = data->framesize;
+  float *fft_workspace = data->fft_workspace;
+  float *fir = user_data->fir + (user_data->block_idx * user_data->block_size);
+  
+  for(uint32_t k = 0; k < framesize; k+= 2){
+    float reA = fft_workspace[k+0];
+    float imA = fft_workspace[k+1];
+    float reB = fir[k+0];
+    float imB = fir[k+1];
+
+    float re = reA * reB - imA * imB;
+    float im = reA * imB + imA * reB;
+
+    fft_workspace[k+0] += re;
+    fft_workspace[k+1] += im;
+  }
+  user_data->block_idx = (user_data->block_idx+1) % user_data->block_count;
+}
+
 int convolution_segment_mix(struct mixed_segment *segment){
   struct convolution_segment_data *data = (struct convolution_segment_data *)segment->data;
 
@@ -74,7 +99,7 @@ int convolution_segment_mix(struct mixed_segment *segment){
   float mix = data->mix;
   mixed_buffer_request_read(&in, &samples, data->in);
   mixed_buffer_request_write(&out, &samples, data->out);
-  fft_window(in, out, samples, &data->fft_window_data, fft_convolve, data->fir);
+  fft_window(in, out, samples, &data->fft_window_data, fft_convolve, data);
   for(uint32_t i=0; i<samples; ++i){
     out[i] = LERP(in[i], out[i], mix);
   }
@@ -141,7 +166,7 @@ int convolution_segment_set(uint32_t field, void *value, struct mixed_segment *s
     }
     data->samplerate = *(uint32_t *)value;
     free_fft_window_data(&data->fft_window_data);
-    if(!make_fft_window_data(2048, 4, data->samplerate, &data->fft_window_data)){
+    if(!make_fft_window_data(data->block_size, 4, data->samplerate, &data->fft_window_data)){
       return 0;
     }
     break;
@@ -184,35 +209,55 @@ uint32_t next_power2(uint32_t v){
   return v;
 }
 
-MIXED_EXPORT int mixed_make_segment_convolution(float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_convolution(uint16_t block_size, float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment){
+  while(0 < fir_size && fabs(fir[fir_size-1]) < 0.000001f){
+    --fir_size;
+  }
+  block_size = next_power2(block_size);
+  if(4096 < block_size){
+    mixed_err(MIXED_INVALID_VALUE);
+    return 0;
+  }
+  
   struct convolution_segment_data *data = mixed_calloc(1, sizeof(struct convolution_segment_data));
   if(!data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
   }
-
-  uint32_t framesize = 0;
-  for(uint32_t i=0; i<fir_size; ++i){
-    if(0.000001f < fir[i]) framesize = i;
-  }
-  framesize = MIN(next_power2(framesize), 8192);
   
-  if(!make_fft_window_data(framesize, 4, samplerate, &data->fft_window_data)){
+  if(!make_fft_window_data(block_size, 4, samplerate, &data->fft_window_data)){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
 
-  data->fir = mixed_calloc(framesize*2, sizeof(float));
+  uint32_t block_count = 1 + ((fir_size - 1) / block_size);
+
+  data->fir = mixed_calloc(block_count*block_size*2, sizeof(float));
   if(!data->fir){
     mixed_err(MIXED_OUT_OF_MEMORY);
     goto cleanup;
   }
 
-  if(!mixed_fwd_fft(framesize, fir, data->fir))
-    goto cleanup;
+  float *fir_i = fir;
+  float *fir_o = data->fir;
+  for(uint32_t i=0; i<block_count; ++i){
+    memcpy(fir_o, fir_i, sizeof(float)*MIN(block_size, fir_size));
+    if(fir_size < block_size){
+      // Zero out the rest
+      memset(fir_o+fir_size, 0, sizeof(float)*(block_size-fir_size));
+    }
+
+    if(!mixed_fwd_fft(block_size, fir_o, fir_o))
+      goto cleanup;
+    fir_i += block_size;
+    fir_o += block_size;
+    fir_size -= block_size;
+  }
 
   data->samplerate = samplerate;
   data->mix = 1.0;
+  data->block_size = block_size;
+  data->block_count = block_count;
   
   segment->free = convolution_segment_free;
   segment->start = convolution_segment_start;
@@ -233,10 +278,11 @@ MIXED_EXPORT int mixed_make_segment_convolution(float *fir, uint32_t fir_size, u
 }
 
 int __make_convolution(void *args, struct mixed_segment *segment){
-  return mixed_make_segment_convolution(ARG(float *, 1), ARG(uint32_t, 2), ARG(uint32_t, 3), segment);
+  return mixed_make_segment_convolution(ARG(uint32_t, 1), ARG(float *, 2), ARG(uint32_t, 3), ARG(uint32_t, 4), segment);
 }
 
-REGISTER_SEGMENT(convolution, __make_convolution, 3, {
+REGISTER_SEGMENT(convolution, __make_convolution, 4, {
+  {.description = "block_size", .type = MIXED_UINT32},
   {.description = "fir", .type = MIXED_POINTER},
   {.description = "fir_size", .type = MIXED_UINT32},
   {.description = "samplerate", .type = MIXED_UINT32}})

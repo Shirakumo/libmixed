@@ -53,8 +53,8 @@ int main(int argc, char **argv){
     fprintf(stderr, "WAV file contains more than two channels.\n");
   }
 
-  if(!mixed_make_segment_convolution(firs[0]._data, firs[0].size, internal_samplerate, &conv_l)
-     || !mixed_make_segment_convolution(firs[1]._data, firs[0].size, internal_samplerate, &conv_r)
+  if(!mixed_make_segment_convolution(2048, firs[0]._data, firs[0].size, internal_samplerate, &conv_l)
+     || !mixed_make_segment_convolution(2048, firs[1]._data, firs[0].size, internal_samplerate, &conv_r)
      || !mixed_make_segment_chain(&chain)){
     fprintf(stderr, "Failed to create segments: %s\n", mixed_error_string(-1));
     goto cleanup;
