@@ -72,7 +72,7 @@ int vector_remove_pos(uint32_t i, struct vector *vector);
 int vector_remove_item(void *element, struct vector *vector);
 int vector_clear(struct vector *vector);
 
-struct pitch_data{
+struct fft_window_data{
   float *in_fifo;
   float *out_fifo;
   float *fft_workspace;
@@ -89,9 +89,14 @@ struct pitch_data{
   long samplerate;
 };
 
-void free_pitch_data(struct pitch_data *data);
-int make_pitch_data(uint32_t framesize, uint32_t oversampling, uint32_t samplerate, struct pitch_data *data);
-void pitch_shift(float pitch, float *in, float *out, uint32_t samples, struct pitch_data *data);
+
+typedef void (*fft_window_process)(struct fft_window_data *data, void *user);
+void fft_pitch_shift(struct fft_window_data *data, void *user);
+void fft_convolve(struct fft_window_data *data, void *user);
+
+void free_fft_window_data(struct fft_window_data *data);
+int make_fft_window_data(uint32_t framesize, uint32_t oversampling, uint32_t samplerate, struct fft_window_data *data);
+void fft_window(float *in, float *out, uint32_t samples, struct fft_window_data *data, fft_window_process process, void *user);
 
 float attenuation_none(float min, float max, float dist, float roll);
 float attenuation_inverse(float min, float max, float dist, float roll);

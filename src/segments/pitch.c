@@ -3,16 +3,17 @@
 struct pitch_segment_data{
   struct mixed_buffer *in;
   struct mixed_buffer *out;
-  struct pitch_data pitch_data;
+  struct fft_window_data fft_window_data;
   uint32_t samplerate;
   float pitch;
   float mix;
 };
 
 int pitch_segment_free(struct mixed_segment *segment){
-  if(segment->data){
-    free_pitch_data(&((struct pitch_segment_data *)segment->data)->pitch_data);
-    mixed_free(segment->data);
+  struct pitch_segment_data *data = (struct pitch_segment_data *)segment->data;
+  if(data){
+    free_fft_window_data(&data->fft_window_data);
+    mixed_free(data);
   }
   segment->data = 0;
   return 1;
@@ -72,7 +73,7 @@ int pitch_segment_mix(struct mixed_segment *segment){
     float mix = data->mix;
     mixed_buffer_request_read(&in, &samples, data->in);
     mixed_buffer_request_write(&out, &samples, data->out);
-    pitch_shift(data->pitch, in, out, samples, &data->pitch_data);
+    fft_window(in, out, samples, &data->fft_window_data, fft_pitch_shift, &data->pitch);
     for(uint32_t i=0; i<samples; ++i){
       out[i] = LERP(in[i], out[i], mix);
     }
@@ -144,8 +145,8 @@ int pitch_segment_set(uint32_t field, void *value, struct mixed_segment *segment
       return 0;
     }
     data->samplerate = *(uint32_t *)value;
-    free_pitch_data(&data->pitch_data);
-    if(!make_pitch_data(2048, 4, data->samplerate, &data->pitch_data)){
+    free_fft_window_data(&data->fft_window_data);
+    if(!make_fft_window_data(2048, 4, data->samplerate, &data->fft_window_data)){
       return 0;
     }
     break;
@@ -191,7 +192,7 @@ MIXED_EXPORT int mixed_make_segment_pitch(float pitch, uint32_t samplerate, stru
     return 0;
   }
 
-  if(!make_pitch_data(2048, 4, samplerate, &data->pitch_data)){
+  if(!make_fft_window_data(2048, 4, samplerate, &data->fft_window_data)){
     mixed_free(data);
     return 0;
   }

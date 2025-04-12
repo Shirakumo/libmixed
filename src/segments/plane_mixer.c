@@ -15,7 +15,7 @@ struct plane_mixer_data{
   uint32_t size;
   struct mixed_buffer *left;
   struct mixed_buffer *right;
-  struct pitch_data pitch_data;
+  struct fft_window_data fft_window_data;
   float location[2];
   float velocity[2];
   float soundspeed;
@@ -30,7 +30,7 @@ struct plane_mixer_data{
 int plane_mixer_free(struct mixed_segment *segment){
   struct plane_mixer_data *data = (struct plane_mixer_data *)segment->data;
   if(data){
-    free_pitch_data(&data->pitch_data);
+    free_fft_window_data(&data->fft_window_data);
     mixed_free(data->sources);
     mixed_free(data);
   }
@@ -133,7 +133,7 @@ VECTORIZE int plane_mixer_mix(struct mixed_segment *segment){
       calculate_volumes(&lvolume, &rvolume, source, data);
       float pitch = clamp(0.5, calculate_pitch_shift(data, source), 2.0);
       if(pitch != 1.0)
-        pitch_shift(pitch, in, in, samples, &data->pitch_data);
+        fft_window(in, in, samples, &data->fft_window_data, fft_pitch_shift, &pitch);
       for(uint32_t i=0; i<samples; ++i){
         float sample = in[i];
         left[i] += sample * lvolume;
@@ -467,7 +467,7 @@ MIXED_EXPORT int mixed_make_segment_plane_mixer(uint32_t samplerate, struct mixe
   }
 
   // These factors might need tweaking for efficiency/quality.
-  if(!make_pitch_data(2048, 4, samplerate, &data->pitch_data)){
+  if(!make_fft_window_data(2048, 4, samplerate, &data->fft_window_data)){
     mixed_free(data);
     return 0;
   }
