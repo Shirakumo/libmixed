@@ -66,6 +66,69 @@ mixed_free_buffer(&right);
 // Clean up source and drain
 ```
 
+## Provided Segments
+Libmixed provides the following segments out of the box:
+
+- `basic_mixer`  
+  Basic linear mixer, adds several input sources together.
+- `biquad_filter`  
+  A biquad filter to allow for effects like lowpass, highpass, bandpass, etc.
+- `chain`  
+  A segment that processes other segments in sequence. Used for composing.
+- `channel_convert`  
+  Upmix or downmix channels. Supports the following conversions:
+  - 1.0 -> 2.0
+  - 2.0 -> 1.0
+  - 2.0 -> 3.0
+  - 2.0 -> 4.0
+  - 2.0 -> 5.0
+  - 2.0 -> 5.1 
+  - 2.0 -> 7.1
+- `compressor`  
+  Compression filter to limit volume.
+- `convolution`  
+  Finite Input Response Convolution, typically used for reverb.
+- `delay`  
+  A single-channel delay line.
+- `distribute`  
+  Allows distributing an output buffer to multiple inputs at once. Useful when a signal needs to be processed in multiple ways at once.
+- `fade`  
+  Allows fading an input in and out over time.
+- `fft`  
+  Performs a forward or inverse Fast Fourier Transform. Useful for more manual sound processing or visualisation.
+- `gate`  
+  A basic noise gate.
+- `generator`  
+  Generates simple sound waves, either sine, square, sawtooth, or triangle waves.
+- `ladspa`  
+  A conversion plugin to load LADSPA-API effects into libmixed.
+- `noise`  
+  Generates pink, brown, or white noise.
+- `void`  
+  Consumes audio without processing it.
+- `zero`
+  Produces silence.
+- `packer`  
+  Packs audio from several buffers into an interleaved and packed audio stream.
+- `unpacker`  
+  Unpacks audio from an interleaved and packed audio stream to several buffers.
+- `pitch`  
+  Changes the pitch of the signal without affecting its speed.
+- `plane_mixer`  
+  Performs 2D, "planar" audio mixing, allowing for effects placement in 2D with attenuation and optional doppler.
+- `quantize`  
+  Quantizes the signal, useful for creating distorted, lo-fi audio.
+- `queue`  
+  Processes a single segment in a sequence until it stops producing output.
+- `repeat`  
+  Captures and replays an input signal.
+- `space_mixer`  
+  Performs 3D, "spatial" audio mixing, allowing for effects placement in 3D with attenuation and optional doppler.
+- `speed_change`  
+  Changes the playback speed of the incoming audio.
+- `volume_control`  
+  Adjusts the volume and pan of the incoming audio.
+
 ## Segment Plugin Architecture
 Libmixed offers a standardised architecture for audio processing units, called 'segments'. Each segment consists of a structure with pointers to functions that should execute the segment's respective actions. These structures can be constructed arbitrarily, allowing integration from non-C languages. Each segment also supports full reflection of its inputs, outputs, and properties, allowing the construction of generic user interfaces that can manage segments without needing special casing for each individual one.
 
