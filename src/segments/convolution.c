@@ -230,7 +230,7 @@ MIXED_EXPORT int mixed_make_segment_convolution(uint16_t block_size, float *fir,
     --fir_size;
   }
   block_size = next_power2(block_size);
-  if(4096 < block_size){
+  if(8192 < block_size){
     mixed_err(MIXED_INVALID_VALUE);
     return 0;
   }

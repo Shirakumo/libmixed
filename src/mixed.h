@@ -1549,8 +1549,17 @@ extern "C" {
   /// threads at once.
   MIXED_EXPORT int mixed_chain_remove_at(uint32_t i, struct mixed_segment *chain);
 
-  
-  MIXED_EXPORT int mixed_make_segment_convolution(uint16_t block_size, float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment);
+  /// A segment for finite input response (FIR) convolution filtering.
+  ///
+  /// The fir should be the raw input response signal of the channel to
+  /// process, with fir_size being the number of elements in the FIR.
+  /// The fir array may be freed after the call to this function.
+  ///
+  /// framesize must be a power of two between [2^1, 2^13] and designates
+  /// the size of the FFT frames that are processed. Larger frames lead to
+  /// better quality at the cost of greater latency. 2048 should be a good
+  /// default.
+  MIXED_EXPORT int mixed_make_segment_convolution(uint16_t framesize, float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment);
 
   /// Function prototype for a plugin's segment construction function.
   ///
