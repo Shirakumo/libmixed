@@ -76,13 +76,10 @@ struct fft_window_data{
   float *in_fifo;
   float *out_fifo;
   float *fft_workspace;
+  float *output_accumulator;
+  // Extra stuff used for pitch
   float *last_phase;
   float *phase_sum;
-  float *output_accumulator;
-  float *analyzed_frequency;
-  float *analyzed_magnitude;
-  float *synthesized_frequency;
-  float *synthesized_magnitude;
   long framesize;
   long oversampling;
   long overlap;
