@@ -77,11 +77,11 @@ int channel_mix_transfer(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_2_0_to_1_0(struct mixed_segment *segment){
+VECTORIZE int channel_mix_2_0_to_1_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   uint32_t frames = UINT32_MAX;
-  float *l, *r, *out;
+  float *restrict l, *restrict r, *restrict out;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
   mixed_buffer_request_write(&out, &frames, data->out[MIXED_MONO]);
@@ -95,11 +95,11 @@ int channel_mix_2_0_to_1_0(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_1_0_to_2_0(struct mixed_segment *segment){
+VECTORIZE int channel_mix_1_0_to_2_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   uint32_t frames = UINT32_MAX;
-  float *l, *r, *in;
+  float *restrict l, *restrict r, *restrict in;
   mixed_buffer_request_write(&l, &frames, data->out[MIXED_LEFT]);
   mixed_buffer_request_write(&r, &frames, data->out[MIXED_RIGHT]);
   mixed_buffer_request_read(&in, &frames, data->in[MIXED_MONO]);
@@ -114,11 +114,11 @@ int channel_mix_1_0_to_2_0(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_2_0_to_3_0(struct mixed_segment *segment){
+VECTORIZE int channel_mix_2_0_to_3_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
   uint32_t frames = UINT32_MAX;
-  float *l, *r, *fl, *fr, *fc;
+  float *restrict l, *restrict r, *restrict fl, *restrict fr, *restrict fc;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
   mixed_buffer_request_write(&fl, &frames, data->out[MIXED_LEFT_FRONT]);
@@ -142,11 +142,11 @@ int channel_mix_2_0_to_3_0(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_2_0_to_4_0(struct mixed_segment *segment){
+VECTORIZE int channel_mix_2_0_to_4_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
   uint32_t frames = UINT32_MAX;
-  float *l, *r, *fl, *fr, *rl, *rr;
+  float *restrict l, *restrict r, *restrict fl, *restrict fr, *restrict rl, *restrict rr;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
   mixed_buffer_request_write(&fl, &frames, data->out[MIXED_LEFT_FRONT]);
@@ -172,11 +172,11 @@ int channel_mix_2_0_to_4_0(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_2_0_to_5_0(struct mixed_segment *segment){
+VECTORIZE int channel_mix_2_0_to_5_0(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   uint32_t frames = UINT32_MAX;
-  float *l, *r, *fl, *fr, *rl, *rr, *ce;
+  float *restrict l, *restrict r, *restrict fl, *restrict fr, *restrict rl, *restrict rr, *restrict ce;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
   mixed_buffer_request_write(&fl, &frames, data->out[MIXED_LEFT_FRONT]);
@@ -211,11 +211,11 @@ int channel_mix_2_0_to_5_0(struct mixed_segment *segment){
 
 // Based on Real-Time Conversion of Stereo Audio to 5.1 Channel Audio for Providing Realistic Sounds by Chan Jun Chun et al.
 //   https://core.ac.uk/download/pdf/25789335.pdf
-int channel_mix_2_0_to_5_1(struct mixed_segment *segment){
+VECTORIZE int channel_mix_2_0_to_5_1(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
 
   uint32_t frames = UINT32_MAX;
-  float *l, *r, *fl, *fr, *rl, *rr, *ce, *lfe;
+  float *restrict l, *restrict r, *restrict fl, *restrict fr, *restrict rl, *restrict rr, *restrict ce, *restrict lfe;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
   mixed_buffer_request_write(&fl, &frames, data->out[MIXED_LEFT_FRONT]);
@@ -260,11 +260,11 @@ int channel_mix_2_0_to_5_1(struct mixed_segment *segment){
   return 1;
 }
 
-int channel_mix_2_0_to_7_1(struct mixed_segment *segment){
+VECTORIZE int channel_mix_2_0_to_7_1(struct mixed_segment *segment){
   struct channel_data *data = (struct channel_data *)segment->data;
   
   uint32_t frames = UINT32_MAX;
-  float *l, *r, *fl, *fr, *sl, *sr, *rl, *rr, *ce, *lfe;
+  float *restrict l, *restrict r, *restrict fl, *restrict fr, *restrict sl, *restrict sr, *restrict rl, *restrict rr, *restrict ce, *restrict lfe;
   mixed_buffer_request_read(&l, &frames, data->in[MIXED_LEFT]);
   mixed_buffer_request_read(&r, &frames, data->in[MIXED_RIGHT]);
   mixed_buffer_request_write(&fl, &frames, data->out[MIXED_LEFT_FRONT]);

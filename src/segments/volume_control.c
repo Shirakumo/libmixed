@@ -61,7 +61,7 @@ int volume_control_segment_mix(struct mixed_segment *segment){
   struct volume_control_segment_data *data = (struct volume_control_segment_data *)segment->data;
   float lvolume = data->volume * ((0.0<data->pan)?(1.0f-data->pan):1.0f);
   float rvolume = data->volume * ((data->pan<0.0)?(1.0f+data->pan):1.0f);
-  float *in, *out;
+  float *restrict in, *restrict out;
   uint32_t samples;
 
   mixed_buffer_request_read(&in, &samples, data->in[MIXED_LEFT]);

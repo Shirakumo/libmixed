@@ -83,9 +83,9 @@ int repeat_segment_mix(struct mixed_segment *segment){
 
   uint32_t repeat_samples = data->buffer_size;
   uint32_t index = data->buffer_index;
-  float *buf = data->buffer;
+  float *restrict buf = data->buffer;
 
-  float *in, *out;
+  float *restrict in, *restrict out;
   uint32_t samples = UINT32_MAX;
   if (data->mode == MIXED_RECORD_ONCE) {
     samples = repeat_samples - index;

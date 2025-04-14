@@ -57,7 +57,7 @@ int quantize_segment_set_out(uint32_t field, uint32_t location, void *buffer, st
   }
 }
 
-int quantize_segment_mix(struct mixed_segment *segment){
+VECTORIZE int quantize_segment_mix(struct mixed_segment *segment){
   struct quantize_segment_data *data = (struct quantize_segment_data *)segment->data;
 
   float steps = data->steps;

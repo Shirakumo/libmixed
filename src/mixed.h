@@ -896,7 +896,7 @@ extern "C" {
 
   /// Start a write operation
   /// See mixed_buffer_request_write
-  MIXED_EXPORT int mixed_pack_request_write(void **area, uint32_t *size, struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_request_write(void *restrict *area, uint32_t *size, struct mixed_pack *pack);
 
   /// Complete a write operation
   /// See mixed_buffer_finish_write
@@ -904,7 +904,7 @@ extern "C" {
 
   /// Start a read operation
   /// See mixed_buffer_request_read
-  MIXED_EXPORT int mixed_pack_request_read(void **area, uint32_t *size, struct mixed_pack *pack);
+  MIXED_EXPORT int mixed_pack_request_read(void *restrict *area, uint32_t *size, struct mixed_pack *pack);
 
   /// Complete a free operation
   /// See mixed_buffer_finish_read
@@ -993,7 +993,7 @@ extern "C" {
   /// thread is reading from the buffer. It is however /NOT/ safe
   /// to write from multiple threads or read from multiple threads
   /// at the same time.
-  MIXED_EXPORT int mixed_buffer_request_write(float **area, uint32_t *size, struct mixed_buffer *buffer);
+  MIXED_EXPORT int mixed_buffer_request_write(float *restrict *area, uint32_t *size, struct mixed_buffer *buffer);
 
   /// Commit a reserved block after writing to it.
   ///
@@ -1014,7 +1014,7 @@ extern "C" {
   /// If no block has been written to, this operation will fail.
   /// In the case of a failure, size will be set to zero, and area
   /// will be left untouched.
-  MIXED_EXPORT int mixed_buffer_request_read(float **area, uint32_t *size, struct mixed_buffer *buffer);
+  MIXED_EXPORT int mixed_buffer_request_read(float *restrict *area, uint32_t *size, struct mixed_buffer *buffer);
 
   /// Free part of a block after reading from it.
   ///
@@ -1042,7 +1042,7 @@ extern "C" {
     uint32_t samples = UINT32_MAX;                                      \
     struct mixed_buffer *__in = in;                                     \
     struct mixed_buffer *__out = out;                                   \
-    float *inv, *outv;                                                  \
+    float *restrict inv, *restrict outv;                                \
     if(__in == __out){                                                  \
       mixed_buffer_request_read(&inv, &samples, __in);                  \
       outv = inv;                                                       \

@@ -25,7 +25,7 @@ MIXED_EXPORT int mixed_pack_clear(struct mixed_pack *pack){
   return 1;
 }
 
-MIXED_EXPORT int mixed_pack_request_write(void **area, uint32_t *size, struct mixed_pack *pack){
+MIXED_EXPORT int mixed_pack_request_write(void *restrict *area, uint32_t *size, struct mixed_pack *pack){
   uint32_t off = 0;
   if(!bip_request_write(&off, size, (struct bip*)pack))
      return 0;
@@ -37,7 +37,7 @@ MIXED_EXPORT int mixed_pack_finish_write(uint32_t size, struct mixed_pack *pack)
   return bip_finish_write(size, (struct bip*)pack);
 }
 
-MIXED_EXPORT int mixed_pack_request_read(void **area, uint32_t *size, struct mixed_pack *pack){
+MIXED_EXPORT int mixed_pack_request_read(void *restrict *area, uint32_t *size, struct mixed_pack *pack){
   uint32_t off = 0;
   if(!bip_request_read(&off, size, (struct bip*)pack))
     return 0;

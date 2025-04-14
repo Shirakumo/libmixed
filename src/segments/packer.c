@@ -93,8 +93,8 @@ int source_segment_mix(struct mixed_segment *segment){
   if(pack->samplerate == data->samplerate){
     mixed_buffer_from_pack(data->pack, data->buffers, &data->volume, data->target_volume);
   }else{
-    void *pack_data;
-    float *target = data->resample_in;
+    void *restrict pack_data;
+    float *restrict target = data->resample_in;
     mixed_channel_t channels = pack->channels;
     uint32_t frames, buffer_frames = 512 / channels;
     uint32_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
@@ -125,7 +125,7 @@ int source_segment_mix(struct mixed_segment *segment){
         }
         // Step 4: transfer from contigous to separate buffers
         frames = src_data.input_frames_used;
-        float *source = src_data.data_out;
+        float *restrict source = src_data.data_out;
         for(mixed_channel_t c=0; c<channels; ++c){
           uint32_t out_frames = src_data.output_frames_gen;
           mixed_buffer_request_write(&target, &out_frames, data->buffers[c]);
@@ -149,8 +149,8 @@ int drain_segment_mix(struct mixed_segment *segment){
   if(pack->samplerate == data->samplerate){
     mixed_buffer_to_pack(data->buffers, pack, &data->volume, data->target_volume);
   }else{
-    void *pack_data;
-    float *target = data->resample_in;
+    void *restrict pack_data;
+    float *restrict target = data->resample_in;
     mixed_channel_t channels = pack->channels;
     uint32_t frames, buffer_frames = 512 / channels;
     uint32_t frames_to_bytes = channels * mixed_samplesize(pack->encoding);
@@ -172,7 +172,7 @@ int drain_segment_mix(struct mixed_segment *segment){
       frames = MIN(buffer_frames, (src_data.output_frames*data->samplerate) / pack->samplerate);
       if(pack_data){
         for(mixed_channel_t c=0; c<channels; ++c){
-          float *source;
+          float *restrict source;
           mixed_buffer_request_read(&source, &frames, data->buffers[c]);
           for(uint32_t i=0; i<frames; ++i)
             target[c+i*channels] = source[i];

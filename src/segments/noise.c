@@ -85,7 +85,7 @@ int noise_segment_mix(struct mixed_segment *segment){
 
   float (*noise)(struct noise_segment_data *data) = data->type;
   float volume = data->volume;
-  float *out;
+  float *restrict out;
   uint32_t samples = UINT32_MAX;
   mixed_buffer_request_write(&out, &samples, data->out);
   for(uint32_t i=0; i<samples; ++i){

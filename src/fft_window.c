@@ -42,12 +42,12 @@ int make_fft_window_data(uint32_t framesize, uint32_t oversampling, uint32_t sam
   return 1;
 }
 
-VECTORIZE void fft_window(float *in, float *out, uint32_t samples, struct fft_window_data *data, fft_window_process process, void *user){
+VECTORIZE void fft_window(float *restrict in, float *restrict out, uint32_t samples, struct fft_window_data *data, fft_window_process process, void *user){
   uint32_t framesize = data->framesize;
   uint32_t oversampling = data->oversampling;
-  float *in_fifo = data->in_fifo;
-  float *out_fifo = data->out_fifo;
-  float *fft_workspace = data->fft_workspace;
+  float *restrict in_fifo = data->in_fifo;
+  float *restrict out_fifo = data->out_fifo;
+  float *restrict fft_workspace = data->fft_workspace;
   float *output_accumulator = data->output_accumulator;
 
   long framesize2 = framesize/2;
@@ -94,9 +94,9 @@ VECTORIZE void fft_pitch_shift(struct fft_window_data *data, void *user){
   uint32_t framesize = data->framesize;
   uint32_t oversampling = data->oversampling;
   uint32_t framesize2 = framesize/2;
-  float *fft_workspace = data->fft_workspace;
-  float *last_phase = data->last_phase;
-  float *phase_sum = data->phase_sum;
+  float *restrict fft_workspace = data->fft_workspace;
+  float *restrict last_phase = data->last_phase;
+  float *restrict phase_sum = data->phase_sum;
   float analyzed_frequency[framesize];
   float analyzed_magnitude[framesize];
   float synthesized_frequency[framesize];

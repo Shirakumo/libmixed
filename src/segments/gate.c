@@ -83,7 +83,7 @@ int gate_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct
   }
 }
 
-int gate_segment_mix(struct mixed_segment *segment){
+VECTORIZE int gate_segment_mix(struct mixed_segment *segment){
   struct gate_segment_data *data = (struct gate_segment_data *)segment->data;
 
   float stime = 1.0/data->samplerate;

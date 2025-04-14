@@ -28,7 +28,7 @@ int null_segment_set(uint32_t field, uint32_t location, void *buffer, struct mix
 
 int void_segment_mix(struct mixed_segment *segment){
   struct mixed_buffer *data = (struct mixed_buffer *)segment->data;
-  float *buffer;
+  float *restrict buffer;
   uint32_t frames = UINT32_MAX;
   mixed_buffer_request_read(&buffer, &frames, data);
   mixed_buffer_finish_read(frames, data);
@@ -37,7 +37,7 @@ int void_segment_mix(struct mixed_segment *segment){
 
 int zero_segment_mix(struct mixed_segment *segment){
   struct mixed_buffer *data = (struct mixed_buffer *)segment->data;
-  float *buffer;
+  float *restrict buffer;
   uint32_t frames = UINT32_MAX;
   mixed_buffer_request_write(&buffer, &frames, data);
   memset(buffer, 0, frames*sizeof(float));

@@ -87,7 +87,7 @@ float fade_cubic_in_out(float x){
   }
 }
 
-int fade_segment_mix(struct mixed_segment *segment){
+VECTORIZE int fade_segment_mix(struct mixed_segment *segment){
   struct fade_segment_data *data = (struct fade_segment_data *)segment->data;
 
   double time = data->time_passed;

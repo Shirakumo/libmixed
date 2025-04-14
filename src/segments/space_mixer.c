@@ -152,7 +152,7 @@ VECTORIZE static inline float calculate_pitch_shift(struct space_mixer_data *lis
 
 VECTORIZE int space_mixer_mix(struct mixed_segment *segment){
   struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
-  float *left, *right, *in;
+  float *restrict left, *restrict right, *restrict in;
   uint32_t samples = UINT32_MAX;
   
   // Compute sample counts

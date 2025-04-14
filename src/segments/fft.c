@@ -54,11 +54,11 @@ VECTORIZE int fft_segment_fwd(struct mixed_segment *segment){
   struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
   uint32_t framesize = data->framesize;
   uint32_t oversampling = data->oversampling;
-  float *in_fifo = data->fifo;
-  float *fft_workspace = data->fft_workspace;
-  float *last_phase = data->phase;
+  float *restrict in_fifo = data->fifo;
+  float *restrict fft_workspace = data->fft_workspace;
+  float *restrict last_phase = data->phase;
 
-  float *in, *out;
+  float *restrict in, *restrict out;
   uint32_t in_samples = UINT32_MAX;
   mixed_buffer_request_read(&in, &in_samples, data->in);
 
@@ -124,12 +124,12 @@ VECTORIZE int fft_segment_inv(struct mixed_segment *segment){
   struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
   uint32_t framesize = data->framesize;
   uint32_t oversampling = data->oversampling;
-  float *out_fifo = data->fifo;
-  float *fft_workspace = data->fft_workspace;
-  float *phase_sum = data->phase;
-  float *output_accumulator = data->accumulator;
+  float *restrict out_fifo = data->fifo;
+  float *restrict fft_workspace = data->fft_workspace;
+  float *restrict phase_sum = data->phase;
+  float *restrict output_accumulator = data->accumulator;
 
-  float *in, *out;
+  float *restrict in, *restrict out;
   uint32_t in_samples = framesize;
   uint32_t out_samples = UINT32_MAX;
 

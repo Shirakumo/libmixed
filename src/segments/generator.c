@@ -73,7 +73,7 @@ int generator_segment_mix(struct mixed_segment *segment){
   case MIXED_SAWTOOTH: generator = sawtooth_wave; break;
   }
   
-  float *out;
+  float *restrict out;
   uint32_t samples = UINT32_MAX;
   mixed_buffer_request_write(&out, &samples, data->out);
   for(uint32_t i=0; i<samples; ++i){

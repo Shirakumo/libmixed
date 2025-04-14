@@ -106,7 +106,7 @@ VECTORIZE static inline float calculate_pitch_shift(struct plane_mixer_data *lis
 
 VECTORIZE int plane_mixer_mix(struct mixed_segment *segment){
   struct plane_mixer_data *data = (struct plane_mixer_data *)segment->data;
-  float *left, *right, *in;
+  float *restrict left, *restrict right, *restrict in;
   uint32_t count = data->count;
   uint32_t samples = UINT32_MAX;
   

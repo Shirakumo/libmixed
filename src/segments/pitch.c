@@ -68,7 +68,7 @@ int pitch_segment_mix(struct mixed_segment *segment){
   if(data->pitch == 1.0){
     mixed_buffer_transfer(data->in, data->out);
   }else{
-    float *in, *out;
+    float *restrict in, *restrict out;
     uint32_t samples = UINT32_MAX;
     float mix = data->mix;
     mixed_buffer_request_read(&in, &samples, data->in);

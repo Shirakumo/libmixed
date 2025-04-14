@@ -31,7 +31,7 @@ MIXED_EXPORT int mixed_buffer_clear(struct mixed_buffer *buffer){
   return 1;
 }
 
-MIXED_EXPORT int mixed_buffer_request_write(float **area, uint32_t *size, struct mixed_buffer *buffer){
+MIXED_EXPORT int mixed_buffer_request_write(float *restrict *area, uint32_t *size, struct mixed_buffer *buffer){
   uint32_t off = 0;
   if(!bip_request_write(&off, size, (struct bip*)buffer)){
     *area = 0;
@@ -45,7 +45,7 @@ MIXED_EXPORT int mixed_buffer_finish_write(uint32_t size, struct mixed_buffer *b
   return bip_finish_write(size, (struct bip*)buffer);
 }
 
-MIXED_EXPORT int mixed_buffer_request_read(float **area, uint32_t *size, struct mixed_buffer *buffer){
+MIXED_EXPORT int mixed_buffer_request_read(float *restrict *area, uint32_t *size, struct mixed_buffer *buffer){
   uint32_t off = 0;
   if(!bip_request_read(&off, size, (struct bip*)buffer)){
     *area = 0;
@@ -70,7 +70,7 @@ MIXED_EXPORT uint32_t mixed_buffer_available_write(struct mixed_buffer *buffer){
 MIXED_EXPORT int mixed_buffer_transfer(struct mixed_buffer *from, struct mixed_buffer *to){
   mixed_err(MIXED_NO_ERROR);
   if(from != to){
-    float *read, *write;
+    float *restrict read, *restrict write;
     uint32_t samples = UINT32_MAX;
     mixed_buffer_request_read(&read, &samples, from);
     mixed_buffer_request_write(&write, &samples, to);
@@ -84,7 +84,7 @@ MIXED_EXPORT int mixed_buffer_transfer(struct mixed_buffer *from, struct mixed_b
 MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffer *to){
   mixed_err(MIXED_NO_ERROR);
   if(from != to){
-    float *read, *write;
+    float *restrict read, *restrict write;
     uint32_t samples = UINT32_MAX;
     mixed_buffer_request_read(&read, &samples, from);
     mixed_buffer_request_write(&write, &samples, to);

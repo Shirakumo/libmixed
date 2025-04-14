@@ -82,7 +82,7 @@ VECTORIZE int basic_mixer_mix(struct mixed_segment *segment){
   bool changed = 0;
 
   for(mixed_channel_t c=0; c<channels; ++c){
-    float *in=0, *out=0;
+    float *restrict in=0, *restrict out=0;
     uint32_t samples = UINT32_MAX;
     
     // Compute how much we can mix on this channel.

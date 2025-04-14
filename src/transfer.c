@@ -60,7 +60,7 @@ extern inline void mixed_transfer_sample_to_uint24(float *in, uint32_t is, void 
 
 //// Array transfer functions
 #define DEF_MIXED_TRANSFER_ARRAY_FROM_ALTERNATING(datatype)             \
-  VECTORIZE float mixed_transfer_array_from_alternating_##datatype(void *in, float *out, uint8_t stride, uint32_t samples, float volume, float target_volume) { \
+  VECTORIZE float mixed_transfer_array_from_alternating_##datatype(void *restrict in, float *restrict out, uint8_t stride, uint32_t samples, float volume, float target_volume) { \
     if(samples == 0) return volume;                                     \
     mixed_transfer_sample_from_##datatype(in, 0, out, 0, volume);       \
     for(uint32_t sample=1; sample<samples; ++sample){                   \
@@ -74,7 +74,7 @@ extern inline void mixed_transfer_sample_to_uint24(float *in, uint32_t is, void 
   }
 
 #define DEF_MIXED_TRANSFER_ARRAY_TO_ALTERNATING(datatype)               \
-  VECTORIZE static inline float mixed_transfer_array_to_alternating_##datatype(float *in, void *out, uint8_t stride, uint32_t samples, float volume, float target_volume){ \
+  VECTORIZE static inline float mixed_transfer_array_to_alternating_##datatype(float *restrict in, void *restrict out, uint8_t stride, uint32_t samples, float volume, float target_volume){ \
     if(samples == 0) return volume;                                     \
     mixed_transfer_sample_to_##datatype(in, 0, out, 0, volume);         \
     for(uint32_t sample=1; sample<samples; ++sample){                   \
