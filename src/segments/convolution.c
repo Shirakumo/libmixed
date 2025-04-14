@@ -263,7 +263,7 @@ MIXED_EXPORT int mixed_make_segment_convolution(uint16_t block_size, float *fir,
   float *fir_o = data->fir;
   float block_attenuation = 1.0/block_count;
   for(uint32_t i=0; i<block_count; ++i){
-    for(uint32_t k=0; k<sizeof(float)*MIN(block_size, fir_size); ++k){
+    for(uint32_t k=0; k<MIN(block_size, fir_size); ++k){
       fir_o[k] = fir_i[k] * block_attenuation;
     }
     if(fir_size < block_size){
