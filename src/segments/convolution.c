@@ -145,6 +145,10 @@ int convolution_segment_info(struct mixed_segment_info *info, struct mixed_segme
                  MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
                  "The buffer for audio data attached to the location.");
 
+  set_info_field(field++, MIXED_FIR,
+                 MIXED_BUFFER_POINTER, 1, MIXED_SEGMENT | MIXED_SET,
+                 "Update the input response buffer.");
+
   set_info_field(field++, MIXED_SAMPLERATE,
                  MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The samplerate at which the segment operates.");
@@ -172,6 +176,59 @@ int convolution_segment_get(uint32_t field, void *value, struct mixed_segment *s
   return 1;
 }
 
+int update_fir(float *fir, uint32_t fir_size, struct convolution_segment_data *data){
+  uint32_t block_size = data->block_size;
+  float *fir_fft, *fir_buf;
+
+  while(0 < fir_size && fabs(fir[fir_size-1]) < 0.000001f){
+    --fir_size;
+  }
+  uint32_t block_count = 1 + ((fir_size - 1) / block_size);
+  
+  fir_fft = mixed_calloc(block_count*block_size*2, sizeof(float));
+  if(!fir_fft){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+  fir_buf = mixed_calloc(block_count*block_size*2, sizeof(float));
+  if(!fir_buf){
+    mixed_err(MIXED_OUT_OF_MEMORY);
+    goto cleanup;
+  }
+
+  float *fir_i = fir;
+  float *fir_o = fir_fft;
+  float block_attenuation = 1.0/block_count;
+  for(uint32_t i=0; i<block_count; ++i){
+    for(uint32_t k=0; k<MIN(block_size, fir_size); ++k){
+      fir_o[k] = fir_i[k] * block_attenuation;
+    }
+    if(fir_size < block_size){
+      // Zero out the rest
+      memset(fir_o+fir_size, 0, sizeof(float)*(block_size-fir_size));
+    }
+
+    if(!mixed_fwd_fft(block_size, fir_o, fir_o))
+      goto cleanup;
+    fir_i += block_size;
+    fir_o += block_size;
+    fir_size -= block_size;
+  }
+
+  if(data->fir) free(data->fir);
+  if(data->buf) free(data->buf);
+  
+  data->block_count = block_count;
+  data->fir = fir_fft;
+  data->buf = fir_buf;
+  return 1;
+
+ cleanup:
+  if(fir_fft) free(fir_fft);
+  if(fir_buf) free(fir_buf);
+  return 0;
+}
+
 int convolution_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct convolution_segment_data *data = (struct convolution_segment_data *)segment->data;
   switch(field){
@@ -186,6 +243,12 @@ int convolution_segment_set(uint32_t field, void *value, struct mixed_segment *s
       return 0;
     }
     break;
+  case MIXED_FIR: {
+    float *fir;
+    uint32_t size = 0xFFFFFFFF;
+    mixed_buffer_request_read(&fir, &size, (struct mixed_buffer *)value);
+    return update_fir(fir, size, data);
+    break;}
   case MIXED_MIX:
     if(*(float *)value < 0 || 1 < *(float *)value){
       mixed_err(MIXED_INVALID_VALUE);
@@ -226,9 +289,6 @@ uint32_t next_power2(uint32_t v){
 }
 
 MIXED_EXPORT int mixed_make_segment_convolution(uint16_t block_size, float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment){
-  while(0 < fir_size && fabs(fir[fir_size-1]) < 0.000001f){
-    --fir_size;
-  }
   block_size = next_power2(block_size);
   if(8192 < block_size){
     mixed_err(MIXED_INVALID_VALUE);
@@ -246,42 +306,12 @@ MIXED_EXPORT int mixed_make_segment_convolution(uint16_t block_size, float *fir,
     goto cleanup;
   }
 
-  uint32_t block_count = 1 + ((fir_size - 1) / block_size);
-
-  data->fir = mixed_calloc(block_count*block_size*2, sizeof(float));
-  if(!data->fir){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    goto cleanup;
-  }
-  data->buf = mixed_calloc(block_count*block_size*2, sizeof(float));
-  if(!data->buf){
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    goto cleanup;
-  }
-
-  float *fir_i = fir;
-  float *fir_o = data->fir;
-  float block_attenuation = 1.0/block_count;
-  for(uint32_t i=0; i<block_count; ++i){
-    for(uint32_t k=0; k<MIN(block_size, fir_size); ++k){
-      fir_o[k] = fir_i[k] * block_attenuation;
-    }
-    if(fir_size < block_size){
-      // Zero out the rest
-      memset(fir_o+fir_size, 0, sizeof(float)*(block_size-fir_size));
-    }
-
-    if(!mixed_fwd_fft(block_size, fir_o, fir_o))
-      goto cleanup;
-    fir_i += block_size;
-    fir_o += block_size;
-    fir_size -= block_size;
-  }
-
   data->samplerate = samplerate;
   data->mix = 1.0;
   data->block_size = block_size;
-  data->block_count = block_count;
+
+  if(!update_fir(fir, fir_size, data))
+    goto cleanup;
   
   segment->free = convolution_segment_free;
   segment->start = convolution_segment_start;

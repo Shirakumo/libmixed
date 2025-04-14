@@ -396,6 +396,12 @@ extern "C" {
     /// Can only be read.
     /// The default is 1
     MIXED_BUFFER_SIZE_HINT,
+    /// Set the finite input response buffer for the convolution segment.
+    /// Should be a buffer pointer. The buffer's available read data is
+    /// used, but the read is *not* committed, meaning that after the FIR
+    /// is set, the buffer will still have the same amount of available
+    /// data to be read.
+    MIXED_FIR,
   };
 
   /// This enum descripbes the possible resampling quality options.
