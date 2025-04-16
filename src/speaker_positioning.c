@@ -42,7 +42,7 @@ MIXED_EXPORT int mixed_default_speaker_position(float position[3], mixed_channel
     memcpy(position, default_speaker_positions[channel], sizeof(float)*3);
     return 1;
   }
-  mixed_err(MIXED_INVALID_VALUE);
+  mixed_err(MIXED_BAD_CHANNEL_CONFIGURATION);
   return 0;
 }
 
@@ -62,10 +62,10 @@ const struct mixed_channel_configuration default_configurations[] =
   };
 
 MIXED_EXPORT struct mixed_channel_configuration const* mixed_default_channel_configuration(mixed_channel_t channel_count){
-  if(0 < channel_count && channel_count < 8){
+  if(0 < channel_count && channel_count < 11){
     return &default_configurations[channel_count];
   }
-  mixed_err(MIXED_INVALID_VALUE);
+  mixed_err(MIXED_BAD_CHANNEL_CONFIGURATION);
   return 0;
 }
 
@@ -73,21 +73,31 @@ MIXED_EXPORT struct mixed_channel_configuration const* mixed_default_channel_con
 //// as described by Ville Pulkki in "Spatial Sound Generation and Perception by Amplitude Panning Techniques"
 
 /// The compute_gains function is used at runtime, regardless of data dimensionality.
-VECTORIZE int compute_gains(const float position[3], float gains[3], mixed_channel_t speakers[3], struct vbap_data *data){
+VECTORIZE int mixed_compute_gains(const float position[3], float gains[], mixed_channel_t speakers[], mixed_channel_t *count, struct vbap_data *data){
   char dims = data->dims;
   float best_gain = -INFINITY;
   char best_negs = dims;
   mixed_channel_t best_set = 0;
+  
+  // If the direction is a zero vector, recast as 0,-1,0 on 3d, and 0,0,1 on 2d.
+  // which should give a best approximation for being "on" the position.
+  // Ideally we'd drive *all* speakers in that case, but the exact power of them
+  // isn't clear to me.
   float direction[3];
   vec_normalize(direction, position);
+  if(direction[0] == 0.0 && direction[1] == 0.0 && direction[2] == 0.0){
+    if(dims == 3) direction[1] = -1.0;
+    else          direction[2] = +1.0;
+  }
+  // Find set with the highest correspondence to our direction
   for(int i=0; i<data->set_count; ++i){
     float gain[3] = {0.0, 0.0, 0.0};
     float cur_gain = INFINITY;
     char cur_negs = dims;
     
     for(int j=0; j<dims; ++j){
-      gain[j] = direction[1] * data->sets[i].inv_mat[0+j*3] +
-                direction[2] * data->sets[i].inv_mat[1+j*3] +
+      gain[j] = direction[0] * data->sets[i].inv_mat[0+j*3] +
+                direction[1] * data->sets[i].inv_mat[1+j*3] +
                 direction[2] * data->sets[i].inv_mat[2+j*3];
       if(gain[j] < cur_gain)
         cur_gain = gain[j];
@@ -102,7 +112,7 @@ VECTORIZE int compute_gains(const float position[3], float gains[3], mixed_chann
     }
   }
   memcpy(speakers, data->sets[best_set].speakers, sizeof(mixed_channel_t)*3);
-
+  // Handle if the best set still does not contain our point.
   char okey = 1;
   for(int i=0; i<dims; ++i){
     if(gains[i] < -0.01){
@@ -111,6 +121,7 @@ VECTORIZE int compute_gains(const float position[3], float gains[3], mixed_chann
     }
   }
   vec_normalize(gains, gains);
+  *count = dims;
   return okey;
 }
 
@@ -207,7 +218,7 @@ int make_vbap_3d(struct vbap_data *data){
   // Compute the speaker sets. We start by eagerly constructing all possible triangle combinations.
   char connected[MIXED_MAX_SPEAKER_COUNT][MIXED_MAX_SPEAKER_COUNT] = {0};
   for(int i=0; i<speaker_count; ++i){
-    for(int j=i+1; i<speaker_count; ++j){
+    for(int j=i+1; j<speaker_count; ++j){
       for(int k=j+1; k<speaker_count; ++k){
         data->sets[set_count].speakers[0] = i;
         data->sets[set_count].speakers[1] = j;
@@ -231,7 +242,7 @@ int make_vbap_3d(struct vbap_data *data){
     distances[i] = INFINITY;
   }
   for(int i=0; i<speaker_count; ++i){
-    for(int j=i+1; i<speaker_count; ++j){
+    for(int j=i+1; j<speaker_count; ++j){
       if(connected[i][j]){
         float dist = fabs(vec_angle(data->speakers[i], data->speakers[j]));
         int k=0; while(distances[k] < dist) ++k;
@@ -283,6 +294,12 @@ int make_vbap_3d(struct vbap_data *data){
   for(int s=0; s<set_count; ++s){
     compute_set_matrix_3d(s, data);
   }
+
+  if(set_count == 0){
+    mixed_err(MIXED_INVALID_VALUE);
+    return 0;
+  }
+  
   data->set_count = set_count;
   return 1;
 }
@@ -371,8 +388,10 @@ int make_vbap_2d(struct vbap_data *data){
       }
   }
 
-  if(set_count == 0)
+  if(set_count == 0){
+    mixed_err(MIXED_INVALID_VALUE);
     return 0;
+  }
   
   data->set_count = set_count;
   return 1;
@@ -406,16 +425,26 @@ int make_vbap(float speakers[][3], mixed_channel_t speaker_count, int dim, struc
   }
 }
 
-int make_vbap_default(struct mixed_channel_configuration const* configuration, int dim, struct vbap_data *data){
+int make_vbap_from_configuration(struct mixed_channel_configuration const* configuration, struct vbap_data *data){
+  if(configuration->count < 2){
+    mixed_err(MIXED_INVALID_VALUE);
+    return 0;
+  }
+  // Get default plane
   float speakers[configuration->count][3];
-  for(int i=0; i<configuration->count; ++i){
+  if(!mixed_default_speaker_position(speakers[0], configuration->positions[0])) return 0;
+  float plane = speakers[0][1];
+  // Initialise rest of the speakers and check if we're actually 3D or not.
+  int dim = 2;
+  for(int i=1; i<configuration->count; ++i){
     if(!mixed_default_speaker_position(speakers[i], configuration->positions[i])) return 0;
+    if(speakers[i][1] != plane) dim = 3;
   }
   return make_vbap(speakers, configuration->count, dim, data);
 }
 
-int make_vbap_default2(mixed_channel_t speaker_count, int dim, struct vbap_data *data){
+int make_vbap_from_channel_count(mixed_channel_t speaker_count, struct vbap_data *data){
   struct mixed_channel_configuration const* configuration = mixed_default_channel_configuration(speaker_count);
   if(!configuration) return 0;
-  return make_vbap_default(configuration, dim, data);
+  return make_vbap_from_configuration(configuration, data);
 }

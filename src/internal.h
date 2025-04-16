@@ -243,7 +243,7 @@ struct vbap_data{
   struct vbap_set sets[MAX_VBAP_SETS];
 };
 
-int compute_gains(const float position[3], float gains[3], mixed_channel_t speakers[3], struct vbap_data *data);
+int mixed_compute_gains(const float position[3], float gains[], mixed_channel_t speakers[], mixed_channel_t *count, struct vbap_data *data);
 int make_vbap(float speakers[][3], mixed_channel_t speaker_count, int dim, struct vbap_data *data);
-int make_vbap_default(struct mixed_channel_configuration const* configuration, int dim, struct vbap_data *data);
-int make_vbap_default2(mixed_channel_t speaker_count, int dim, struct vbap_data *data);
+int make_vbap_from_configuration(struct mixed_channel_configuration const* configuration, struct vbap_data *data);
+int make_vbap_from_channel_count(mixed_channel_t speaker_count, struct vbap_data *data);
