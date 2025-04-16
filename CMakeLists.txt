@@ -122,6 +122,7 @@ add_library(mixed OBJECT
   "src/pack.c"
   "src/plugin.c"
   "src/segment.c"
+  "src/speaker_positioning.c"
   "src/transfer.c"
   "src/vector.c"
   "src/segments/basic_mixer.c"

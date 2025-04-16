@@ -644,7 +644,8 @@ extern "C" {
     MIXED_LEFT_CENTER_BOTTOM = 28,
     MIXED_RIGHT_CENTER_BOTTOM = 29,
     MIXED_LEFT_FRONT_CENTER_TOP = 31,
-    MIXED_RIGHT_FRONT_CENTER_BOTTOM = 32
+    MIXED_RIGHT_FRONT_CENTER_BOTTOM = 32,
+    MIXED_MAX_SPEAKER_COUNT = 33
   };
 
   /// This enum holds type descriptors for the segment fields.
@@ -718,6 +719,14 @@ extern "C" {
   /// Type used for channel count descriptions.
   /// 
   typedef uint8_t mixed_channel_t;
+
+  /// Type used for channel speaker configuration descriptions.
+  /// Every element in the array describes a mixed_channel enum
+  /// for the intended speaker of the corresponding channel.
+  MIXED_EXPORT struct mixed_channel_configuration{
+    mixed_channel_t count;
+    mixed_channel_t positions[MIXED_MAX_SPEAKER_COUNT];
+  };
 
   /// Type used for decibel descriptions.
   ///
@@ -1666,6 +1675,18 @@ extern "C" {
   /// Return the number of bytes between two samples in a byte stream.
   /// 
   MIXED_EXPORT uint8_t mixed_byte_stride(mixed_channel_t channels, enum mixed_encoding encoding);
+
+  /// Default the speaker position for the given speaker channel.
+  ///
+  /// If no poistion is known for the requested channel, zero is returned
+  /// and the error is set to MIXED_INVALID_VALUE.
+  MIXED_EXPORT int mixed_default_speaker_position(float position[3], mixed_channel_t channel);
+
+  /// Returns the default channel configuration for the given number of channels.
+  ///
+  /// If no configuration is known for the given set of channels, a null pointer is
+  /// returned, and the error is set to MIXED_INVALID_VALUE.
+  MIXED_EXPORT struct mixed_channel_configuration const* mixed_default_channel_configuration(mixed_channel_t channel_count);
   
   /// A function to decode a packed sample array to the standardised float buffer format.
   /// The stride is the number of bytes between two samples in the input array.
