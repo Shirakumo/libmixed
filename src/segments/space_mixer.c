@@ -151,6 +151,7 @@ VECTORIZE int space_mixer_mix(struct mixed_segment *segment){
       if(!source) continue;
       
       mixed_buffer_request_read(&in, &samples, source->buffer);
+      // TODO: cache volumes and pitch
       calculate_volumes(volumes, speakers, &speaker_count, source, data);
       float pitch = CLAMP(0.5, calculate_pitch_shift(data, source), 2.0);
       if(pitch != 1.0)
@@ -438,16 +439,24 @@ int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
     data->velocity[2] = parts[2];
     break;
   case MIXED_SPACE_DIRECTION:
-    data->direction[0] = parts[0];
-    data->direction[1] = parts[1];
-    data->direction[2] = parts[2];
-    recompute_look_at(data);
+    if(data->direction[0] != parts[0] ||
+       data->direction[1] != parts[1] ||
+       data->direction[2] != parts[2]){
+      data->direction[0] = parts[0];
+      data->direction[1] = parts[1];
+      data->direction[2] = parts[2];
+      recompute_look_at(data);
+    }
     break;
   case MIXED_SPACE_UP:
-    data->up[0] = parts[0];
-    data->up[1] = parts[1];
-    data->up[2] = parts[2];
-    recompute_look_at(data);
+    if(data->up[0] != parts[0] ||
+       data->up[1] != parts[1] ||
+       data->up[2] != parts[2]){
+      data->up[0] = parts[0];
+      data->up[1] = parts[1];
+      data->up[2] = parts[2];
+      recompute_look_at(data);
+    }
     break;
   case MIXED_SPACE_SOUNDSPEED:
     data->soundspeed = *(float *)value;
