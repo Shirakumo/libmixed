@@ -181,3 +181,50 @@ unsigned int mixed_random_int(void);
 #define atomic_write(PLACE, VAL) __atomic_store_n(&PLACE, VAL, __ATOMIC_SEQ_CST)
 #define atomic_cas(PLACE, OLD, NEW) __sync_bool_compare_and_swap(&PLACE, OLD, NEW)
 #define FREE(PLACE) if(PLACE){mixed_free(PLACE); PLACE=0;}
+
+static inline float vec_dot(const float a[3], const float b[3]){
+  return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+static inline float vec_length(const float v[3]){
+  return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
+
+static inline float vec_distance(const float a[3], const float b[3]){
+  float c[3] = {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
+  return vec_length(c);
+}
+
+static inline float *vec_normalize(float o[3], const float v[3]){
+  float length = vec_length(v);
+  if(0 < length){
+    o[0] = v[0]/length;
+    o[1] = v[1]/length;
+    o[2] = v[2]/length;
+  }else{
+    o[0] = 0.0;
+    o[1] = 0.0;
+    o[2] = 0.0;
+  }
+  return o;
+}
+
+static inline float *vec_normalized(float v[3]){
+  return vec_normalize(v, v);
+}
+
+static inline float *vec_cross(float o[3], const float a[3], const float b[3]){
+  float ax = a[0], ay = a[1], az = a[2];
+  float bx = b[0], by = b[1], bz = b[2];
+  o[0] = (ay * bz) - (az * by);
+  o[1] = (az * bx) - (ax * bz);
+  o[2] = (ax * by) - (ay * bx);
+  return vec_normalize(o, o);
+}
+
+static inline float vec_angle(float a[3], float b[3]){
+  float inner = vec_dot(a,b) / (vec_length(a)*vec_length(b));
+  if(1.0 < inner) return 0.0;
+  if(inner < -1.0) return M_PI;
+  return fabs(acos(inner));
+}

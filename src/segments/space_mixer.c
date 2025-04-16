@@ -68,34 +68,6 @@ float attenuation_exponential(float min, float max, float dist, float roll){
   return 1.0/pow(dist / min, roll);
 }
 
-static inline float dot(float a[3], float b[3]){
-  return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
-}
-
-static inline float mag(float a[3]){
-  return sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
-}
-
-static inline float dist(float a[3], float b[3]){
-  float r[3] = {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
-  return mag(r);
-}
-
-static inline float *norm(float a[3]){
-  float Mag = mag(a);
-  if(Mag != 0.0){
-    a[0] /= Mag; a[1] /= Mag; a[2] /= Mag;
-  }
-  return a;
-}
-
-static inline float *cross(float a[3], float b[3], float r[3]){
-  r[0] = (a[1] * b[2]) - (a[2] * b[1]);
-  r[1] = (a[2] * b[1]) - (a[0] * b[2]);
-  r[2] = (a[0] * b[1]) - (a[1] * b[0]);
-  return r;
-}
-
 static inline float min(float a, float b){
   return (a < b)? a : b;
 }
@@ -106,12 +78,12 @@ static inline float clamp(float l, float v, float r){
 
 static inline float calculate_pan(float S[3], float L[3], float D[3], float U[3]){
   float t1[3], t2[3] = {L[0] - S[0], L[1] - S[1], L[2] - S[2]};
-  return dot(norm(cross(U, D, t1)), norm(t2));
+  return vec_dot(vec_normalized(vec_cross(U, D, t1)), vec_normalized(t2));
 }
 
 static inline float calculate_phase(float S[3], float L[3], float D[3]){
   float t2[3] = {S[0] - L[0], S[1] - L[1], S[2] - L[2]};
-  return dot(norm(D), norm(t2));
+  return vec_dot(vec_normalized(D), vec_normalized(t2));
 }
 
 VECTORIZE static inline void calculate_volumes(float *lvolume, float *rvolume, struct space_source *source, struct space_mixer_data *data){
@@ -119,7 +91,7 @@ VECTORIZE static inline void calculate_volumes(float *lvolume, float *rvolume, s
   float max = source->max_distance;
   float roll = source->rolloff;
   float div = data->volume;
-  float distance = clamp(min, dist(source->location, data->location), max);
+  float distance = clamp(min, vec_distance(source->location, data->location), max);
   float volume = div * data->attenuation(min, max, distance, roll);
   float pan = (distance <= min)
     ? 0.0
@@ -141,9 +113,9 @@ VECTORIZE static inline float calculate_pitch_shift(struct space_mixer_data *lis
   float *LV = listener->velocity;
   float SS = listener->soundspeed;
   float DF = listener->doppler_factor;
-  float Mag = mag(SL);
-  float vls = dot(SL, LV) * Mag;
-  float vss = dot(SL, SV) * Mag;
+  float Mag = vec_length(SL);
+  float vls = vec_dot(SL, LV) * Mag;
+  float vss = vec_dot(SL, SV) * Mag;
   float SS_DF = SS/DF;
   vss = min(vss, SS_DF);
   vls = min(vls, SS_DF);
