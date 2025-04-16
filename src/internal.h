@@ -228,3 +228,22 @@ static inline float vec_angle(float a[3], float b[3]){
   if(inner < -1.0) return M_PI;
   return fabs(acos(inner));
 }
+
+#define MAX_VBAP_SETS (MIXED_MAX_SPEAKER_COUNT*(MIXED_MAX_SPEAKER_COUNT-1)/2)
+struct vbap_set{
+  mixed_channel_t speakers[3];
+  float inv_mat[9];
+};
+
+struct vbap_data{
+  char dims;
+  mixed_channel_t speaker_count;
+  float speakers[MIXED_MAX_SPEAKER_COUNT][3];
+  int set_count;
+  struct vbap_set sets[MAX_VBAP_SETS];
+};
+
+int compute_gains(const float position[3], float gains[3], mixed_channel_t speakers[3], struct vbap_data *data);
+int make_vbap(float speakers[][3], mixed_channel_t speaker_count, int dim, struct vbap_data *data);
+int make_vbap_default(struct mixed_channel_configuration const* configuration, int dim, struct vbap_data *data);
+int make_vbap_default2(mixed_channel_t speaker_count, int dim, struct vbap_data *data);
