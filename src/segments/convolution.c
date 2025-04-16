@@ -178,7 +178,7 @@ int convolution_segment_get(uint32_t field, void *value, struct mixed_segment *s
 
 int update_fir(float *fir, uint32_t fir_size, struct convolution_segment_data *data){
   uint32_t block_size = data->block_size;
-  float *fir_fft, *fir_buf;
+  float *fir_fft = 0, *fir_buf = 0;
 
   while(0 < fir_size && fabs(fir[fir_size-1]) < 0.000001f){
     --fir_size;

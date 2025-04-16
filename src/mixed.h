@@ -134,6 +134,8 @@ extern "C" {
     MIXED_BAD_NAME,
     /// A buffer is too small
     MIXED_BUFFER_TOO_SMALL,
+    /// An error was encountered that really should not be possible to hit.
+    MIXED_INTERNAL_ERROR,
   };
 
   /// This enum describes the possible sample encodings.
@@ -402,6 +404,9 @@ extern "C" {
     /// is set, the buffer will still have the same amount of available
     /// data to be read.
     MIXED_FIR,
+    /// The specific channel configuration of the segment.
+    /// The field is a MIXED_CHANNEL_CONFIGURATION_POINTER.
+    MIXED_CHANNEL_CONFIGURATION
   };
 
   /// This enum descripbes the possible resampling quality options.
@@ -714,6 +719,8 @@ extern "C" {
     /// A duration in seconds
     /// Corresponds to mixed_duration_t
     MIXED_DURATION_T,
+    /// A pointer to a mixed_channel_configuration
+    MIXED_CHANNEL_CONFIGURATION_POINTER,
   };
 
   /// Type used for channel count descriptions.

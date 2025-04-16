@@ -28,6 +28,7 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define LERP(a, b, x) ((a)*(1-(x)) + (b)*(x))
+#define CLAMP(l, v, h) ((v < l)? l : ((v < h)? v : h))
 
 #define IGNORE(...) __ignore(0, __VA_ARGS__)
 static inline void __ignore(char _, ...){(void)_;}
@@ -227,6 +228,14 @@ static inline float vec_angle(float a[3], float b[3]){
   if(1.0 < inner) return 0.0;
   if(inner < -1.0) return M_PI;
   return fabs(acos(inner));
+}
+
+static inline float *vec_mul(float o[3], const float m[9], const float a[3]){
+  float x = a[0], y = a[1], z = a[2];
+  o[0] = x*m[0] + y*m[1] + z*m[2];
+  o[1] = x*m[3] + y*m[4] + z*m[5];
+  o[2] = x*m[6] + y*m[7] + z*m[8];
+  return o;
 }
 
 #define MAX_VBAP_SETS (MIXED_MAX_SPEAKER_COUNT*(MIXED_MAX_SPEAKER_COUNT-1)/2)
