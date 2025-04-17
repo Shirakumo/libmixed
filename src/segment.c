@@ -82,3 +82,14 @@ MIXED_EXPORT int mixed_segment_set(uint32_t field, void *value, struct mixed_seg
   mixed_err(MIXED_NOT_IMPLEMENTED);
   return 0;
 }
+
+MIXED_EXPORT int mixed_segment_print(char *str, size_t size, struct mixed_segment *segment){
+  struct mixed_segment_info info;
+  if(!segment){
+    return snprintf(str, size, "[SEGMENT (null)]");
+  }else if(!mixed_segment_info(&info, segment)){
+    return snprintf(str, size, "[SEGMENT (error) 0x%X]", segment);
+  }else{
+    return snprintf(str, size, "[SEGMENT %s 0x%X]", info.name, segment);
+  }
+}

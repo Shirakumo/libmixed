@@ -1193,6 +1193,12 @@ extern "C" {
   /// MIXED_NOT_IMPLEMENTED.
   MIXED_EXPORT int mixed_segment_get(uint32_t field, void *value, struct mixed_segment *segment);
 
+  /// Convenience to print a string representation of a segment.
+  ///
+  /// Returns the number of characters printed to str excluding
+  /// the null terminating character. Same as snprintf.
+  MIXED_EXPORT int mixed_segment_print(char *str, size_t size, struct mixed_segment *segment);
+
   /// An audio unpacker.
   ///
   /// This segment convers the data from the channel's data
