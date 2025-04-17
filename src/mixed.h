@@ -1779,6 +1779,18 @@ extern "C" {
   ///
   MIXED_EXPORT const char *mixed_type_string(int code);
 
+  /// Return the ASCII textual description of the given segment field.
+  /// 
+  MIXED_EXPORT const char *mixed_segment_field_string(int code);
+
+  /// Return the ASCII textual description of the given channel location.
+  /// 
+  MIXED_EXPORT const char *mixed_location_string(int code);
+
+  /// Return the ASCII textual description of the given info flag.
+  /// Note: only one flag at a time can be decoded like this.
+  MIXED_EXPORT const char *mixed_info_flag_string(int code);
+
   /// Returns the ASCII version string of the library.
   ///
   MIXED_EXPORT const char *mixed_version(void);

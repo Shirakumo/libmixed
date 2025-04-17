@@ -80,9 +80,11 @@ MIXED_EXPORT int mixed_error(void){
   return errorcode;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wswitch-enum"
 MIXED_EXPORT const char *mixed_error_string(int code){
   if(code < 0) code = errorcode;
-  switch(code){
+  switch((enum mixed_error)code){
   case MIXED_NO_ERROR:
     return "No error has occurred.";
   case MIXED_OUT_OF_MEMORY:
@@ -220,6 +222,230 @@ MIXED_EXPORT const char *mixed_type_string(int code){
     return "unknown";
   }
 }
+
+MIXED_EXPORT const char *mixed_segment_field_string(int code){
+  switch((enum mixed_segment_fields)code){
+  case MIXED_BUFFER:
+    return "buffer";
+  case MIXED_BYPASS:
+    return "bypass";
+  case MIXED_SAMPLERATE:
+    return "samplerate";
+  case MIXED_VOLUME:
+    return "volume";
+  case MIXED_RESAMPLE_TYPE:
+    return "resample type";
+  case MIXED_VOLUME_CONTROL_PAN:
+    return "pan";
+  case MIXED_FADE_FROM:
+    return "fade start";
+  case MIXED_FADE_TO:
+    return "fade end";
+  case MIXED_FADE_TIME:
+    return "fade duration";
+  case MIXED_FADE_TYPE:
+    return "fade function";
+  case MIXED_GENERATOR_FREQUENCY:
+    return "frequency";
+  case MIXED_GENERATOR_TYPE:
+    return "wave type";
+  case MIXED_SPACE_LOCATION:
+    return "location";
+  case MIXED_SPACE_DIRECTION:
+    return "direction";
+  case MIXED_SPACE_VELOCITY:
+    return "velocity";
+  case MIXED_SPACE_UP:
+    return "up";
+  case MIXED_SPACE_SOUNDSPEED:
+    return "soundspeed";
+  case MIXED_SPACE_DOPPLER_FACTOR:
+    return "doppler factor";
+  case MIXED_SPACE_MIN_DISTANCE:
+    return "minimum distance";
+  case MIXED_SPACE_MAX_DISTANCE:
+    return "maximum distance";
+  case MIXED_SPACE_ROLLOFF:
+    return "rolloff factor";
+  case MIXED_SPACE_ATTENUATION:
+    return "attenuation factor";
+  case MIXED_DELAY_TIME:
+    return "delay time";
+  case MIXED_PITCH_SHIFT:
+    return "pitch shift factor";
+  case MIXED_GATE_OPEN_THRESHOLD:
+    return "open threshold";
+  case MIXED_GATE_CLOSE_THRESHOLD:
+    return "close threshold";
+  case MIXED_GATE_ATTACK:
+    return "attack";
+  case MIXED_GATE_HOLD:
+    return "hold";
+  case MIXED_GATE_RELEASE:
+    return "release";
+  case MIXED_NOISE_TYPE:
+    return "noise type";
+  case MIXED_REPEAT_TIME:
+    return "repeat duration";
+  case MIXED_REPEAT_MODE:
+    return "repetition mode";
+  case MIXED_FREQUENCY:
+    return "frequency";
+  case MIXED_BIQUAD_FILTER:
+    return "filter type";
+  case MIXED_GAIN:
+    return "gain";
+  case MIXED_Q:
+    return "Q";
+  case MIXED_IN_COUNT:
+    return "input count";
+  case MIXED_OUT_COUNT:
+    return "output count";
+  case MIXED_CURRENT_SEGMENT:
+    return "current segment";
+  case MIXED_SPEED_FACTOR:
+    return "speed factor";
+  case MIXED_QUANTIZE_STEPS:
+    return "quantization steps";
+  case MIXED_MIX:
+    return "mix";
+  case MIXED_PLANE_LOCATION:
+    return "location";
+  case MIXED_PLANE_VELOCITY:
+    return "velocity";
+  case MIXED_COMPRESSOR_PREGAIN:
+    return "pregain";
+  case MIXED_COMPRESSOR_THRESHOLD:
+    return "threshold";
+  case MIXED_COMPRESSOR_KNEE:
+    return "knee";
+  case MIXED_COMPRESSOR_RATIO:
+    return "ratio";
+  case MIXED_COMPRESSOR_ATTACK:
+    return "attack";
+  case MIXED_COMPRESSOR_RELEASE:
+    return "release";
+  case MIXED_COMPRESSOR_PREDELAY:
+    return "predelay";
+  case MIXED_COMPRESSOR_RELEASEZONE:
+    return "release zone";
+  case MIXED_COMPRESSOR_POSTGAIN:
+    return "postgain";
+  case MIXED_COMPRESSOR_GAIN:
+    return "gain";
+  case MIXED_CHANNEL_COUNT_IN:
+    return "input channel count";
+  case MIXED_CHANNEL_COUNT_OUT:
+    return "output channel count";
+  case MIXED_REPEAT_POSITION:
+    return "reptition position";
+  case MIXED_FRAMESIZE:
+    return "frame size";
+  case MIXED_OVERSAMPLING:
+    return "oversampling factor";
+  case MIXED_BUFFER_SIZE_HINT:
+    return "buffer size hint";
+  case MIXED_FIR:
+    return "finite input response";
+  case MIXED_CHANNEL_CONFIGURATION:
+    return "channel configuration";
+  default:
+    return "unknown";
+  }
+}
+
+MIXED_EXPORT const char *mixed_location_string(int code){
+  switch((enum mixed_location)code){
+  case MIXED_LEFT_FRONT_BOTTOM:
+    return "left front bottom";
+  case MIXED_RIGHT_FRONT_BOTTOM:
+    return "right front bottom";
+  case MIXED_LEFT_REAR_BOTTOM:
+    return "left rear bottom";
+  case MIXED_RIGHT_REAR_BOTTOM:
+    return "right rear bottom";
+  case MIXED_CENTER_FRONT:
+    return "center front";
+  case MIXED_SUBWOOFER:
+    return "subwoofer";
+  case MIXED_LEFT_SIDE:
+    return "left side";
+  case MIXED_RIGHT_SIDE:
+    return "right side";
+  case MIXED_LEFT_FRONT_TOP:
+    return "left front top";
+  case MIXED_RIGHT_FRONT_TOP:
+    return "right front top";
+  case MIXED_LEFT_REAR_TOP:
+    return "left rear top";
+  case MIXED_RIGHT_REAR_TOP:
+    return "right rear top";
+  case MIXED_CENTER_REAR:
+    return "center rear";
+  case MIXED_LEFT_SIDE_TOP:
+    return "left side top";
+  case MIXED_RIGHT_SIDE_TOP:
+    return "right side top";
+  case MIXED_SUBWOOFER_2:
+    return "subwoofer 2";
+  case MIXED_LEFT_FRONT_WIDE:
+    return "left front wide";
+  case MIXED_RIGHT_FRONT_WIDE:
+    return "right front wide";
+  case MIXED_CENTER_FRONT_TOP:
+    return "center front top";
+  case MIXED_CENTER_REAR_TOP:
+    return "center rear top";
+  case MIXED_LEFT_REAR_CENTER:
+    return "left rear center";
+  case MIXED_RIGHT_REAR_CENTER:
+    return "right rear center";
+  case MIXED_SUBWOOFER_LEFT:
+    return "left subwoofer";
+  case MIXED_SUBWOOFER_RIGHT:
+    return "right subwoofer";
+  case MIXED_LEFT_FRONT_HIGH:
+    return "left front high";
+  case MIXED_RIGHT_FRONT_HIGH:
+    return "right front high";
+  case MIXED_CENTER_FRONT_HIGH:
+    return "center front high";
+  case MIXED_CENTER_BOTTOM:
+    return "center bottom";
+  case MIXED_LEFT_CENTER_BOTTOM:
+    return "left center bottom";
+  case MIXED_RIGHT_CENTER_BOTTOM:
+    return "right center bottom";
+  case MIXED_LEFT_FRONT_CENTER_TOP:
+    return "left front center top";
+  case MIXED_RIGHT_FRONT_CENTER_BOTTOM:
+    return "right front center bottom";
+  case MIXED_MAX_SPEAKER_COUNT:
+  default:
+    return "unknown";
+  }
+}
+
+MIXED_EXPORT const char *mixed_info_flag_string(int code){
+  switch((enum mixed_segment_info_flags)code){
+  case MIXED_IN:
+    return "input";
+  case MIXED_OUT:
+    return "output";
+  case MIXED_SEGMENT:
+    return "segment";
+  case MIXED_SET:
+    return "settable";
+  case MIXED_GET:
+    return "gettable";
+  case MIXED_CLEARS_OUTPUT:
+    return "clears output";
+  default:
+    return "unknown";
+  }
+}
+
+#pragma GCC diagnostic pop
 
 MIXED_EXPORT const char *mixed_version(void){
   return MIXED_VERSION;

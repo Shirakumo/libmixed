@@ -112,7 +112,7 @@ int main(int argc, char **argv){
       for(size_t i=0; i<32; ++i){
         struct mixed_segment_field_info field = info.fields[i];
         if(!field.type_count) break;
-        printf("- %3i %2i %16s %s\n", field.field, field.flags, mixed_type_string(field.type), field.description);
+        printf("- %-16s\t%s[%i]\t%2i %s\n", mixed_segment_field_string(field.field), mixed_type_string(field.type), field.type_count, field.flags, field.description);
       }
     }
   }
