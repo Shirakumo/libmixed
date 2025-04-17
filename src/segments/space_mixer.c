@@ -46,9 +46,10 @@ int space_mixer_free(struct mixed_segment *segment){
 int space_mixer_start(struct mixed_segment *segment){
   struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   for(int i=0; i<data->channels.count; ++i){
-    if(!data->out[i])
+    if(!data->out[i]){
       mixed_err(MIXED_BUFFER_MISSING);
-    return 0;
+      return 0;
+    }
   }
   return 1;
 }
