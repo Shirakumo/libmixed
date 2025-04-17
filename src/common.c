@@ -139,6 +139,8 @@ MIXED_EXPORT const char *mixed_error_string(int code){
     return "A bad name was specified.";
   case MIXED_BUFFER_TOO_SMALL:
     return "The given buffer is too small for the required task.";
+  case MIXED_INTERNAL_ERROR:
+    return "An internal error occurred. This points towards a bug in libmixed.";
   default:
     return "Unknown error code.";
   }
@@ -212,6 +214,8 @@ MIXED_EXPORT const char *mixed_type_string(int code){
     return "volume (dB)";
   case MIXED_DURATION_T:
     return "duration (s)";
+  case MIXED_CHANNEL_CONFIGURATION_POINTER:
+    return "channel configuration pointer";
   default:
     return "unknown";
   }
