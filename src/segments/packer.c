@@ -67,9 +67,9 @@ int pack_segment_start(struct mixed_segment *segment){
     return 0;
   }
 
-  if(data->resample_state)
+  if(data->resample_state){
     src_reset(data->resample_state);
-  else{
+  }else{
     int e = 0;
     SRC_STATE *src_state = src_new(data->quality, data->pack->channels, &e);
     if(!src_state){
@@ -214,18 +214,17 @@ int source_segment_set(uint32_t field, void *value, struct mixed_segment *segmen
   
   switch(field){
   case MIXED_RESAMPLE_TYPE: {
-    int error;
+    int e;
     data->quality = *(enum mixed_resample_type *)value;
-    if(data->resample_state){
-      SRC_STATE *new = src_new(data->quality, data->pack->channels, &error);
-      if(!new) {
-        mixed_err(MIXED_RESAMPLE_FAILED);
-        return 0;
-      }
-      if(data->resample_state)
-        src_delete(data->resample_state);
-      data->resample_state = new;
+    // Always allocate it now ahead of start to catch errors in the value
+    // or configuration.
+    SRC_STATE *new = src_new(data->quality, data->pack->channels, &e);
+    if(!new){
+      fprintf(stderr, "libsamplerate: %s\n", src_strerror(e));
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
     }
+    src_delete(new);
   }
     return 1;
   case MIXED_VOLUME:
