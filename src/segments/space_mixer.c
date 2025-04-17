@@ -87,14 +87,19 @@ VECTORIZE static inline void calculate_volumes(float volumes[], mixed_channel_t 
   float location[3] = {source->location[0]-data->location[0],
                        source->location[1]-data->location[1],
                        source->location[2]-data->location[2]};
-  float distance = CLAMP(min, vec_length(location), max);
-  float volume = data->volume * data->attenuation(min, max, distance, roll);
+  float distance = MIN(vec_length(location), max);
+  float volume = data->volume;
+  if(distance <= min){
+    volume += (1.0 - (distance / min));
+  }else{
+    volume *= data->attenuation(min, max, distance, roll);
+  }
   // Bring the location into our reference frame
   vec_mul(location, data->look_at, location);
   // Compute the actual gain factors using VBAP
   mixed_compute_gains(location, volumes, speakers, speaker_count, &data->vbap);
   for(mixed_channel_t c=0; c<*speaker_count; ++c){
-    volumes[c] *= volume;
+    volumes[c] = MIN(1.0, volume*volumes[c]);
   }
   // If we are not on a surround setup, we can simulate the sound appearing
   // from behind by inverting the right channels, causing a phase shift.
