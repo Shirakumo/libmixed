@@ -58,7 +58,11 @@ int main(int argc, char **argv){
   window = load_curses();
   
   // Perform the mixing
-  mixed_segment_start(&chain);
+  if(!mixed_segment_start(&chain)){
+    fprintf(stderr, "Failure starting the segments: %s\n", mixed_error_string(-1));
+    goto cleanup;
+  }
+  
   size_t read = 0;
   uint32_t fft_processed = 0, width, height;
   float bytes_to_usecs = 1.0e6 / (mixed_samplesize(mp3->pack.encoding) * mp3->pack.channels * mp3->pack.samplerate);

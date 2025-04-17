@@ -65,7 +65,10 @@ int main(int argc, char **argv){
   }
 
   // Perform the mixing
-  mixed_segment_start(&chain);
+  if(!mixed_segment_start(&chain)){
+    fprintf(stderr, "Failure starting the segments: %s\n", mixed_error_string(-1));
+    goto cleanup;
+  }
 
   size_t read = 0, played = 0;
   do{

@@ -69,11 +69,15 @@ int main(int argc, char **argv){
     goto cleanup;
   }
   
+  if(!mixed_segment_start(&chain)){
+    fprintf(stderr, "Failure starting the segments: %s\n", mixed_error_string(-1));
+    goto cleanup;
+  }
+  
   // Start up ncurses
   window = load_curses();
   mvprintw(0, 0, "<←/→>: Change frequency <SPC>: Cycle wave-type");
 
-  mixed_segment_start(&chain);
   size_t played;
   do{
     mixed_segment_mix(&chain);
