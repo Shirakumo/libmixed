@@ -28,6 +28,7 @@ struct space_mixer_data{
   float max_distance;
   float rolloff;
   float volume;
+  bool surround;
   float (*attenuation)(float min, float max, float dist, float roll);
 };
 
@@ -95,26 +96,18 @@ VECTORIZE static inline void calculate_volumes(float volumes[], mixed_channel_t 
   for(mixed_channel_t c=0; c<*speaker_count; ++c){
     volumes[c] *= volume;
   }
-  // Invert the right side to shift the phase and make it appear from behind.
-  // Ideally we could also smooth this depending on "how" behind it is, but
-  // I'm not aware of how to do this right now.
-  if(calculate_phase(location, data->direction) < 0){
+  // If we are not on a surround setup, we can simulate the sound appearing
+  // from behind by inverting the right channels, causing a phase shift.
+  if(!data->surround && calculate_phase(location, data->direction) < 0){
     for(mixed_channel_t c=0; c<*speaker_count; ++c){
       switch(data->channels.positions[speakers[c]]){
       case MIXED_RIGHT_FRONT_BOTTOM:
-      case MIXED_RIGHT_REAR_BOTTOM:
-      case MIXED_RIGHT_SIDE:
       case MIXED_RIGHT_FRONT_TOP:
-      case MIXED_RIGHT_REAR_TOP:
-      case MIXED_RIGHT_SIDE_TOP:
       case MIXED_RIGHT_FRONT_WIDE:
-      case MIXED_RIGHT_REAR_CENTER:
-      case MIXED_SUBWOOFER_RIGHT:
       case MIXED_RIGHT_FRONT_HIGH:
       case MIXED_RIGHT_CENTER_BOTTOM:
       case MIXED_RIGHT_FRONT_CENTER_BOTTOM:
-        volumes[0] *= -1.0;
-        break;
+        volumes[c] *= -1.0;
       }
     }
   }
@@ -518,6 +511,7 @@ int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
       mixed_err(MIXED_OUT_OF_MEMORY);
       return 0;
     }
+    data->surround = mixed_configuration_is_surround(&data->channels);
     break;
   case MIXED_CHANNEL_CONFIGURATION:
     memcpy(&data->channels, (struct mixed_channel_configuration *)value, sizeof(struct mixed_channel_configuration));
@@ -527,6 +521,7 @@ int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
       mixed_err(MIXED_OUT_OF_MEMORY);
       return 0;
     }
+    data->surround = mixed_configuration_is_surround(&data->channels);
     break;
   default:
     mixed_err(MIXED_INVALID_FIELD);
