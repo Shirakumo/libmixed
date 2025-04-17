@@ -88,8 +88,8 @@ MIXED_EXPORT int mixed_segment_print(char *str, size_t size, struct mixed_segmen
   if(!segment){
     return snprintf(str, size, "[SEGMENT (null)]");
   }else if(!mixed_segment_info(&info, segment)){
-    return snprintf(str, size, "[SEGMENT (error) 0x%X]", segment);
+    return snprintf(str, size, "[SEGMENT (error) 0x%p]", (void*)segment);
   }else{
-    return snprintf(str, size, "[SEGMENT %s 0x%X]", info.name, segment);
+    return snprintf(str, size, "[SEGMENT %s 0x%p]", info.name, (void*)segment);
   }
 }
