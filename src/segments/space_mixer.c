@@ -531,14 +531,14 @@ int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
 }
 
 int space_mixer_info(struct mixed_segment_info *info, struct mixed_segment *segment){
-  IGNORE(segment);
+  struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   
   info->name = "space_mixer";
   info->description = "Mixes multiple sources while simulating 3D space.";
   info->flags = MIXED_MODIFIES_INPUT;
   info->min_inputs = 0;
   info->max_inputs = -1;
-  info->outputs = 2;
+  info->outputs = data->channels.count;
     
   struct mixed_segment_field_info *field = info->fields;
   set_info_field(field++, MIXED_BUFFER,
