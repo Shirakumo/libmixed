@@ -147,7 +147,8 @@ int main(int argc, char **argv){
     mixed_segment_set_in(MIXED_SPACE_VELOCITY, 0, vel, &space);
     mixed_segment_set(MIXED_SPACE_DOPPLER_FACTOR, &doppler, &space);
 
-    mvprintw(1, 0, "Read: %4u Processed: %4u Played: %4u Speed: %f Radius: %f\n", read, bytes, played, dphi, r);
+    mvprintw(1, 0, "Position: %f %f %f\n", pos[0], pos[1], pos[2]);
+    mvprintw(2, 0, "Read: %4u Processed: %4u Played: %4u Speed: %f Radius: %f\n", read, bytes, played, dphi, r);
     refresh();
   }while(!interrupted);
   mixed_segment_end(&chain);

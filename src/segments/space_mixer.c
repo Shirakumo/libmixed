@@ -95,11 +95,28 @@ VECTORIZE static inline void calculate_volumes(float volumes[], mixed_channel_t 
   for(mixed_channel_t c=0; c<*speaker_count; ++c){
     volumes[c] *= volume;
   }
-  // Invert one channel to shift the phase and make it appear from behind.
-  // I'm not sure if it's important which channel gets inverted, so we
-  // just invert one, no matter which.
+  // Invert the right side to shift the phase and make it appear from behind.
+  // Ideally we could also smooth this depending on "how" behind it is, but
+  // I'm not aware of how to do this right now.
   if(calculate_phase(location, data->direction) < 0){
-    volumes[0] *= -1.0;
+    for(mixed_channel_t c=0; c<*speaker_count; ++c){
+      switch(data->channels.positions[speakers[c]]){
+      case MIXED_RIGHT_FRONT_BOTTOM:
+      case MIXED_RIGHT_REAR_BOTTOM:
+      case MIXED_RIGHT_SIDE:
+      case MIXED_RIGHT_FRONT_TOP:
+      case MIXED_RIGHT_REAR_TOP:
+      case MIXED_RIGHT_SIDE_TOP:
+      case MIXED_RIGHT_FRONT_WIDE:
+      case MIXED_RIGHT_REAR_CENTER:
+      case MIXED_SUBWOOFER_RIGHT:
+      case MIXED_RIGHT_FRONT_HIGH:
+      case MIXED_RIGHT_CENTER_BOTTOM:
+      case MIXED_RIGHT_FRONT_CENTER_BOTTOM:
+        volumes[0] *= -1.0;
+        break;
+      }
+    }
   }
 }
 
