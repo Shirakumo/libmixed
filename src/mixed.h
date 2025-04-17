@@ -1700,6 +1700,10 @@ extern "C" {
   /// If no configuration is known for the given set of channels, a null pointer is
   /// returned, and the error is set to MIXED_INVALID_VALUE.
   MIXED_EXPORT struct mixed_channel_configuration const* mixed_default_channel_configuration(mixed_channel_t channel_count);
+
+  /// Returns whether the configuration includes side or rear channels.
+  /// 
+  MIXED_EXPORT int mixed_configuration_is_surround(struct mixed_channel_configuration const* configuration);
   
   /// A function to decode a packed sample array to the standardised float buffer format.
   /// The stride is the number of bytes between two samples in the input array.

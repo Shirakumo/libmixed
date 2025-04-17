@@ -69,6 +69,31 @@ MIXED_EXPORT struct mixed_channel_configuration const* mixed_default_channel_con
   return 0;
 }
 
+MIXED_EXPORT int mixed_configuration_is_surround(struct mixed_channel_configuration const* configuration){
+  /// Check if we have any side or back channels.
+  for(mixed_channel_t i=0; i<configuration->count; ++i){
+    switch(configuration->positions[i]){
+    case MIXED_LEFT_REAR_BOTTOM:
+    case MIXED_RIGHT_REAR_BOTTOM:
+    case MIXED_LEFT_SIDE:
+    case MIXED_RIGHT_SIDE:
+    case MIXED_LEFT_REAR_TOP:
+    case MIXED_RIGHT_REAR_TOP:
+    case MIXED_CENTER_REAR:
+    case MIXED_LEFT_SIDE_TOP:
+    case MIXED_RIGHT_SIDE_TOP:
+    case MIXED_CENTER_TOP:
+    case MIXED_CENTER_REAR_TOP:
+    case MIXED_LEFT_REAR_CENTER:
+    case MIXED_RIGHT_REAR_CENTER:
+    case MIXED_SUBWOOFER_LEFT:
+    case MIXED_SUBWOOFER_RIGHT:
+      return 1;
+    }
+  }
+  return 0;
+}
+
 //// This is an implementation of "Vector Based Amplitude Panning" algorithms
 //// as described by Ville Pulkki in "Spatial Sound Generation and Perception by Amplitude Panning Techniques"
 
