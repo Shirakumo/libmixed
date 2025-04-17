@@ -66,11 +66,8 @@ int chain_segment_start(struct mixed_segment *segment){
   uint32_t count = data->count;
   for(uint32_t i=0; i<count; ++i){
     struct mixed_segment *segment = (struct mixed_segment *)data->data[i];
-    if(segment->start){
-      if(!segment->start(segment)){
-        return 0;
-      }
-    }
+    if(!mixed_segment_start(segment))
+      return 0;
   }
   return 1;
 }
