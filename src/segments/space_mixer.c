@@ -7,6 +7,12 @@ struct space_source{
   float min_distance;
   float max_distance;
   float rolloff;
+  // cache
+  float volumes[MIXED_MAX_SPEAKER_COUNT];
+  mixed_channel_t speakers[MIXED_MAX_SPEAKER_COUNT];
+  mixed_channel_t speaker_count;
+  float pitch;
+  bool dirty;
 };
 
 struct space_mixer_data{
@@ -79,7 +85,10 @@ static inline float calculate_phase(float L[3], float D[3]){
   return vec_dot(vec_normalized(D), vec_normalize(t2, L));
 }
 
-VECTORIZE static inline void calculate_volumes(float volumes[], mixed_channel_t speakers[], mixed_channel_t *speaker_count, struct space_source *source, struct space_mixer_data *data){
+VECTORIZE static void calculate_volumes(struct space_source *source, struct space_mixer_data *data){
+  float volumes[MIXED_MAX_SPEAKER_COUNT];
+  mixed_channel_t speakers[MIXED_MAX_SPEAKER_COUNT];
+  mixed_channel_t speaker_count;
   float min = source->min_distance;
   float max = source->max_distance;
   float roll = source->rolloff;
@@ -88,23 +97,23 @@ VECTORIZE static inline void calculate_volumes(float volumes[], mixed_channel_t 
                        source->location[1]-data->location[1],
                        source->location[2]-data->location[2]};
   float distance = MIN(vec_length(location), max);
-  float volume = data->volume;
+  float volume = 1.0;
   if(distance <= min){
-    volume += (1.0 - (distance / min));
+    volume = (1.0 - (distance / min));
   }else{
     volume *= data->attenuation(min, max, distance, roll);
   }
   // Bring the location into our reference frame
   vec_mul(location, data->look_at, location);
   // Compute the actual gain factors using VBAP
-  mixed_compute_gains(location, volumes, speakers, speaker_count, &data->vbap);
-  for(mixed_channel_t c=0; c<*speaker_count; ++c){
+  mixed_compute_gains(location, volumes, speakers, &speaker_count, &data->vbap);
+  for(mixed_channel_t c=0; c<speaker_count; ++c){
     volumes[c] = MIN(1.0, volume*volumes[c]);
   }
   // If we are not on a surround setup, we can simulate the sound appearing
   // from behind by inverting the right channels, causing a phase shift.
   if(!data->surround && calculate_phase(location, data->direction) < 0){
-    for(mixed_channel_t c=0; c<*speaker_count; ++c){
+    for(mixed_channel_t c=0; c<speaker_count; ++c){
       switch(data->channels.positions[speakers[c]]){
       case MIXED_RIGHT_FRONT_BOTTOM:
       case MIXED_RIGHT_FRONT_TOP:
@@ -116,10 +125,17 @@ VECTORIZE static inline void calculate_volumes(float volumes[], mixed_channel_t 
       }
     }
   }
+  // Cache
+  memcpy(source->volumes, volumes, sizeof(float)*speaker_count);
+  memcpy(source->speakers, speakers, sizeof(float)*speaker_count);
+  source->speaker_count = speaker_count;
 }
 
-VECTORIZE static inline float calculate_pitch_shift(struct space_mixer_data *listener, struct space_source *source){
-  if(listener->doppler_factor <= 0.0) return 1.0;
+VECTORIZE static void calculate_pitch_shift(struct space_source *source, struct space_mixer_data *listener){
+  if(listener->doppler_factor <= 0.0){
+    source->pitch = 1.0;
+    return;
+  }
   // See OpenAL1.1 specification §3.5.2
   float SL[3] = {listener->location[0] - source->location[0],
                  listener->location[1] - source->location[1],
@@ -134,7 +150,8 @@ VECTORIZE static inline float calculate_pitch_shift(struct space_mixer_data *lis
   float SS_DF = SS/DF;
   vss = MIN(vss, SS_DF);
   vls = MIN(vls, SS_DF);
-  return (SS - DF*vls) / (SS - DF*vss);
+  float pitch = CLAMP(0.5, (SS - DF*vls) / (SS - DF*vss), 2.0);
+  source->pitch = pitch;
 }
 
 VECTORIZE int space_mixer_mix(struct mixed_segment *segment){
@@ -142,9 +159,7 @@ VECTORIZE int space_mixer_mix(struct mixed_segment *segment){
   uint32_t samples = UINT32_MAX;
   uint32_t channels = data->channels.count;
   float *restrict outs[channels], *restrict in;
-  float volumes[channels];
-  mixed_channel_t speakers[channels];
-  mixed_channel_t speaker_count = 0;
+  float global_volume = data->volume;
   
   // Compute sample counts
   for(mixed_channel_t c=0; c<channels; ++c){
@@ -166,15 +181,18 @@ VECTORIZE int space_mixer_mix(struct mixed_segment *segment){
       struct space_source *source = data->sources[s];
       if(!source) continue;
       
+      if(source->dirty){
+        calculate_volumes(source, data);
+        calculate_pitch_shift(source, data);
+        source->dirty = 0;
+      }
+
       mixed_buffer_request_read(&in, &samples, source->buffer);
-      // TODO: cache volumes and pitch
-      calculate_volumes(volumes, speakers, &speaker_count, source, data);
-      float pitch = CLAMP(0.5, calculate_pitch_shift(data, source), 2.0);
-      if(pitch != 1.0)
-        fft_window(in, in, samples, &data->fft_window_data, fft_pitch_shift, &pitch);
-      for(mixed_channel_t c=0; c<speaker_count; ++c){
-        float *restrict out = outs[speakers[c]];
-        float volume = volumes[c];
+      if(source->pitch != 1.0)
+        fft_window(in, in, samples, &data->fft_window_data, fft_pitch_shift, &source->pitch);
+      for(mixed_channel_t c=0; c<source->speaker_count; ++c){
+        float *restrict out = outs[source->speakers[c]];
+        float volume = global_volume*source->volumes[c];
         for(uint32_t i=0; i<samples; ++i){
           out[i] += volume * in[i];
         }
@@ -246,6 +264,7 @@ int space_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
         source->location[0] = data->location[0];
         source->location[1] = data->location[1];
         source->location[2] = data->location[2];
+        source->dirty = 1;
       }
       source->buffer = (struct mixed_buffer *)buffer;
       if(location < data->count) data->sources[location] = source;
@@ -291,6 +310,7 @@ int space_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
       source->velocity[2] = value[2];
       break;
     }
+    source->dirty = 1;
     return 1;
   default:
     mixed_err(MIXED_INVALID_FIELD);
@@ -437,6 +457,14 @@ void recompute_look_at(struct space_mixer_data *data){
   data->look_at[6] = z[0]; data->look_at[7] = z[1]; data->look_at[8] = z[2];
 }
 
+void mark_sources_dirty(struct space_mixer_data *data){
+  for(uint32_t s=0; s<data->count; ++s){
+      struct space_source *source = data->sources[s];
+      if(!source) continue;
+      source->dirty = 1;
+  }
+}
+
 int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
   struct space_mixer_data *data = (struct space_mixer_data *)segment->data;
   float *parts = (float *)value;
@@ -445,14 +473,24 @@ int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
     data->volume = *((float *)value);
     break;
   case MIXED_SPACE_LOCATION:
-    data->location[0] = parts[0];
-    data->location[1] = parts[1];
-    data->location[2] = parts[2];
+    if(data->location[0] != parts[0] ||
+       data->location[1] != parts[1] ||
+       data->location[2] != parts[2]){
+      data->location[0] = parts[0];
+      data->location[1] = parts[1];
+      data->location[2] = parts[2];
+      mark_sources_dirty(data);
+    }
     break;
   case MIXED_SPACE_VELOCITY:
-    data->velocity[0] = parts[0];
-    data->velocity[1] = parts[1];
-    data->velocity[2] = parts[2];
+    if(data->velocity[0] != parts[0] ||
+       data->velocity[1] != parts[1] ||
+       data->velocity[2] != parts[2]){
+      data->velocity[0] = parts[0];
+      data->velocity[1] = parts[1];
+      data->velocity[2] = parts[2];
+      mark_sources_dirty(data);
+    }
     break;
   case MIXED_SPACE_DIRECTION:
     if(data->direction[0] != parts[0] ||
@@ -462,6 +500,7 @@ int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
       data->direction[1] = parts[1];
       data->direction[2] = parts[2];
       recompute_look_at(data);
+      mark_sources_dirty(data);
     }
     break;
   case MIXED_SPACE_UP:
@@ -472,22 +511,28 @@ int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
       data->up[1] = parts[1];
       data->up[2] = parts[2];
       recompute_look_at(data);
+      mark_sources_dirty(data);
     }
     break;
   case MIXED_SPACE_SOUNDSPEED:
     data->soundspeed = *(float *)value;
+    mark_sources_dirty(data);
     break;
   case MIXED_SPACE_DOPPLER_FACTOR:
     data->doppler_factor = *(float *)value;
+    mark_sources_dirty(data);
     break;
   case MIXED_SPACE_MIN_DISTANCE:
     data->min_distance = *(float *)value;
+    mark_sources_dirty(data);
     break;
   case MIXED_SPACE_MAX_DISTANCE:
     data->max_distance = *(float *)value;
+    mark_sources_dirty(data);
     break;
   case MIXED_SPACE_ROLLOFF:
     data->rolloff = *(float *)value;
+    mark_sources_dirty(data);
     break;
   case MIXED_SPACE_ATTENUATION:
     switch(*(uint32_t *)value){
@@ -507,6 +552,7 @@ int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
       data->attenuation = (float (*)(float min, float max, float dist, float roll))value;
       break;
     }
+    mark_sources_dirty(data);
     break;
   case MIXED_OUT_COUNT:
     memcpy(&data->channels, mixed_default_channel_configuration(*(uint32_t *)value), sizeof(struct mixed_channel_configuration));
@@ -517,6 +563,7 @@ int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
       return 0;
     }
     data->surround = mixed_configuration_is_surround(&data->channels);
+    mark_sources_dirty(data);
     break;
   case MIXED_CHANNEL_CONFIGURATION:
     memcpy(&data->channels, (struct mixed_channel_configuration *)value, sizeof(struct mixed_channel_configuration));
@@ -527,6 +574,7 @@ int space_mixer_set(uint32_t field, void *value, struct mixed_segment *segment){
       return 0;
     }
     data->surround = mixed_configuration_is_surround(&data->channels);
+    mark_sources_dirty(data);
     break;
   default:
     mixed_err(MIXED_INVALID_FIELD);
