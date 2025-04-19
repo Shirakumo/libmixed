@@ -406,7 +406,10 @@ extern "C" {
     MIXED_FIR,
     /// The specific channel configuration of the segment.
     /// The field is a MIXED_CHANNEL_CONFIGURATION_POINTER.
-    MIXED_CHANNEL_CONFIGURATION
+    MIXED_CHANNEL_CONFIGURATION,
+    /// The frequency adjustment values of the 8 bands for the equalizer.
+    /// Should be an array of 8 floats.
+    MIXED_EQUALIZER_BAND,
   };
 
   /// This enum descripbes the possible resampling quality options.
@@ -1588,6 +1591,11 @@ extern "C" {
   /// better quality at the cost of greater latency. 2048 should be a good
   /// default.
   MIXED_EXPORT int mixed_make_segment_convolution(uint16_t framesize, float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment);
+
+  /// An 8-band equalizer used for frequency adaptation.
+  ///
+  /// Each band is a multiplicative factor, with 1.0 being no adjustment.
+  MIXED_EXPORT int mixed_make_segment_equalizer(float bands[8], uint32_t samplerate, struct mixed_segment *segment);
 
   /// Function prototype for a plugin's segment construction function.
   ///

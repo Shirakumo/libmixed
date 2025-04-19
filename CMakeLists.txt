@@ -133,6 +133,7 @@ add_library(mixed OBJECT
   "src/segments/convolution.c"
   "src/segments/delay.c"
   "src/segments/distribute.c"
+  "src/segments/equalizer.c"
   "src/segments/fade.c"
   "src/segments/fft.c"
   "src/segments/gate.c"
