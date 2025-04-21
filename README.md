@@ -92,6 +92,8 @@ Libmixed provides the following segments out of the box:
   A single-channel delay line.
 - `distribute`  
   Allows distributing an output buffer to multiple inputs at once. Useful when a signal needs to be processed in multiple ways at once.
+- `equalizer`  
+  An 8-band frequency equalizer.
 - `fade`  
   Allows fading an input in and out over time.
 - `fft`  
