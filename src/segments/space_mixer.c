@@ -1,4 +1,5 @@
 #include "../internal.h"
+#include<float.h>
 
 struct space_source{
   struct mixed_buffer *buffer;
@@ -13,6 +14,7 @@ struct space_source{
   mixed_channel_t speaker_count;
   float pitch;
   bool dirty;
+  bool spatial;
 };
 
 struct space_mixer_data{
@@ -98,31 +100,42 @@ VECTORIZE static void calculate_volumes(struct space_source *source, struct spac
                        source->location[2]-data->location[2]};
   float distance = MIN(vec_length(location), max);
   float volume = 1.0;
-  if(distance <= min){
+  if(max < min){
+  }else if(distance <= min){
     volume = (1.0 - (distance / min));
   }else{
     volume *= data->attenuation(min, max, distance, roll);
   }
-  // Bring the location into our reference frame
-  vec_mul(location, data->look_at, location);
-  // Compute the actual gain factors using VBAP
-  mixed_compute_gains(location, volumes, speakers, &speaker_count, &data->vbap);
-  for(mixed_channel_t c=0; c<speaker_count; ++c){
-    volumes[c] = MIN(1.0, volume*volumes[c]);
-  }
-  // If we are not on a surround setup, we can simulate the sound appearing
-  // from behind by inverting the right channels, causing a phase shift.
-  if(!data->surround && calculate_phase(location, data->direction) < 0){
+  if(source->spatial){
+    // Bring the location into our reference frame
+    vec_mul(location, data->look_at, location);
+    // Compute the actual gain factors using VBAP
+    mixed_compute_gains(location, volumes, speakers, &speaker_count, &data->vbap);
     for(mixed_channel_t c=0; c<speaker_count; ++c){
-      switch(data->channels.positions[speakers[c]]){
-      case MIXED_RIGHT_FRONT_BOTTOM:
-      case MIXED_RIGHT_FRONT_TOP:
-      case MIXED_RIGHT_FRONT_WIDE:
-      case MIXED_RIGHT_FRONT_HIGH:
-      case MIXED_RIGHT_CENTER_BOTTOM:
-      case MIXED_RIGHT_FRONT_CENTER_BOTTOM:
-        volumes[c] *= -1.0;
+      volumes[c] = MIN(1.0, volume*volumes[c]);
+    }
+    // If we are not on a surround setup, we can simulate the sound appearing
+    // from behind by inverting the right channels, causing a phase shift.
+    if(!data->surround && calculate_phase(location, data->direction) < 0){
+      for(mixed_channel_t c=0; c<speaker_count; ++c){
+        switch(data->channels.positions[speakers[c]]){
+        case MIXED_RIGHT_FRONT_BOTTOM:
+        case MIXED_RIGHT_FRONT_TOP:
+        case MIXED_RIGHT_FRONT_WIDE:
+        case MIXED_RIGHT_FRONT_HIGH:
+        case MIXED_RIGHT_CENTER_BOTTOM:
+        case MIXED_RIGHT_FRONT_CENTER_BOTTOM:
+          volumes[c] *= -1.0;
+        }
       }
+    }
+  }else{
+    location[0] = 0.0;
+    location[1] = 0.0;
+    location[2] = 0.0;
+    mixed_compute_gains(location, volumes, speakers, &speaker_count, &data->vbap);
+    for(mixed_channel_t c=0; c<speaker_count; ++c){
+      volumes[c] = MIN(1.0, volume*volumes[c]);
     }
   }
   // Cache
@@ -265,6 +278,7 @@ int space_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
         source->location[1] = data->location[1];
         source->location[2] = data->location[2];
         source->dirty = 1;
+        source->spatial = 1;
       }
       source->buffer = (struct mixed_buffer *)buffer;
       if(location < data->count) data->sources[location] = source;
@@ -283,6 +297,7 @@ int space_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
   case MIXED_SPACE_ROLLOFF:
   case MIXED_SPACE_LOCATION:
   case MIXED_SPACE_VELOCITY:
+  case MIXED_SPACE_SPATIAL:
     if(data->count <= location){
       mixed_err(MIXED_INVALID_LOCATION);
       return 0;
@@ -308,6 +323,9 @@ int space_mixer_set_in(uint32_t field, uint32_t location, void *buffer, struct m
       source->velocity[0] = value[0];
       source->velocity[1] = value[1];
       source->velocity[2] = value[2];
+      break;
+    case MIXED_SPACE_SPATIAL:
+      source->spatial = *(bool *)buffer;
       break;
     }
     source->dirty = 1;
@@ -360,6 +378,9 @@ int space_mixer_get_in(uint32_t field, uint32_t location, void *buffer, struct m
       value[2] = source->velocity[2];
       break;
     }}
+    return 1;
+  case MIXED_SPACE_SPATIAL:
+    *(bool *)buffer = source->spatial;
     return 1;
   default:
     mixed_err(MIXED_INVALID_FIELD);
@@ -627,20 +648,24 @@ int space_mixer_info(struct mixed_segment_info *info, struct mixed_segment *segm
                  "The doppler factor. You can use this to exaggerate or dampen the effect.");
 
   set_info_field(field++, MIXED_SPACE_MIN_DISTANCE,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_IN | MIXED_SET | MIXED_GET,
                  "Any distance lower than this will make the sound appear at its maximal volume.");
 
   set_info_field(field++, MIXED_SPACE_MAX_DISTANCE,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_IN | MIXED_SET | MIXED_GET,
                  "Any distance greater than this will make the sound appear at its minimal volume.");
 
   set_info_field(field++, MIXED_SPACE_ROLLOFF,
-                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
+                 MIXED_FLOAT, 1, MIXED_SEGMENT | MIXED_IN | MIXED_SET | MIXED_GET,
                  "This factor influences the curve of the attenuation function.");
 
   set_info_field(field++, MIXED_SPACE_ATTENUATION,
                  MIXED_FUNCTION, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The function that calculates the attenuation curve that defines the volume of a source by its distance.");
+
+  set_info_field(field++, MIXED_SPACE_VELOCITY,
+                 MIXED_BOOL, 1, MIXED_IN | MIXED_SET | MIXED_GET,
+                 "Whether the source should receive spatial location attenuation.");
 
   set_info_field(field++, MIXED_OUT_COUNT,
                  MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,

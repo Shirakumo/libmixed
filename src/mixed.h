@@ -410,6 +410,10 @@ extern "C" {
     /// The frequency adjustment values of the 8 bands for the equalizer.
     /// Should be an array of 8 floats.
     MIXED_EQUALIZER_BAND,
+    /// Access whether the input should receive panning/spatial location as a boolean.
+    /// Note that this is separate from receiving distance attenuation.
+    /// The default is 1
+    MIXED_SPACE_SPATIAL,
   };
 
   /// This enum descripbes the possible resampling quality options.
