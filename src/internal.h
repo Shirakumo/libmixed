@@ -238,6 +238,14 @@ static inline float *vec_mul(float o[3], const float m[9], const float a[3]){
   return o;
 }
 
+static inline float *vec_lerp(float o[3], const float a[3], const float b[3], float x){
+  float xx = 1-x;
+  o[0] = a[0]*xx + b[0]*x;
+  o[1] = a[1]*xx + b[1]*x;
+  o[2] = a[2]*xx + b[2]*x;
+  return o;
+}
+
 #define MAX_VBAP_SETS (MIXED_MAX_SPEAKER_COUNT*(MIXED_MAX_SPEAKER_COUNT-1)/2)
 struct vbap_set{
   mixed_channel_t speakers[3];

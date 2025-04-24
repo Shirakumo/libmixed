@@ -82,15 +82,16 @@ float attenuation_exponential(float min, float max, float dist, float roll){
   return 1.0/pow(dist / min, roll);
 }
 
-static inline float calculate_phase(float L[3], float D[3]){
-  float t2[3];
-  return vec_dot(vec_normalized(D), vec_normalize(t2, L));
+static inline float calculate_phase(float L[3]){
+  float t2[3], D[3] = {0.0, 0.0, 1.0};
+  return vec_dot(D, vec_normalize(t2, L));
 }
 
 VECTORIZE static void calculate_volumes(struct space_source *source, struct space_mixer_data *data){
   float volumes[MIXED_MAX_SPEAKER_COUNT];
   mixed_channel_t speakers[MIXED_MAX_SPEAKER_COUNT];
   mixed_channel_t speaker_count;
+  float forward[3] = {0.0, 0.0, 1.0};
   float min = source->min_distance;
   float max = source->max_distance;
   float roll = source->rolloff;
@@ -100,15 +101,16 @@ VECTORIZE static void calculate_volumes(struct space_source *source, struct spac
                        source->location[2]-data->location[2]};
   float distance = MIN(vec_length(location), max);
   float volume = 1.0;
-  if(max < min){
-  }else if(distance <= min){
-    volume = (1.0 - (distance / min));
-  }else{
+  if(min < distance && min < max){
     volume *= data->attenuation(min, max, distance, roll);
   }
   if(source->spatial){
     // Bring the location into our reference frame
     vec_mul(location, data->look_at, location);
+    // If we are below min distance, bend towards forward
+    if(distance < min){
+      vec_lerp(location, location, forward, MIN(1.0, (1-distance/min)*2));
+    }
     // Compute the actual gain factors using VBAP
     mixed_compute_gains(location, volumes, speakers, &speaker_count, &data->vbap);
     for(mixed_channel_t c=0; c<speaker_count; ++c){
@@ -116,7 +118,9 @@ VECTORIZE static void calculate_volumes(struct space_source *source, struct spac
     }
     // If we are not on a surround setup, we can simulate the sound appearing
     // from behind by inverting the right channels, causing a phase shift.
-    if(!data->surround && calculate_phase(location, data->direction) < 0){
+    // Only do this when the sound is far enough away though as otherwise it
+    // can lead to frequent fluctuations, which sound very... bad.
+    if(!data->surround && min < distance && calculate_phase(location) < 0){
       for(mixed_channel_t c=0; c<speaker_count; ++c){
         switch(data->channels.positions[speakers[c]]){
         case MIXED_RIGHT_FRONT_BOTTOM:
