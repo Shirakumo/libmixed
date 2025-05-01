@@ -224,7 +224,15 @@ if(BUILD_EXAMPLES)
   set(CURSES_NEED_WIDE TRUE)
   find_package(Curses)
   if(OUT123_FOUND AND MPG123_FOUND AND CURSES_FOUND)
-    file(GLOB example_src "examples/*.c")
+    set(example_src
+      "examples/convolve.c"
+      "examples/effect.c"
+      "examples/fft.c"
+      "examples/ladspa.c"
+      "examples/meta.c"
+      "examples/mix.c"
+      "examples/space.c"
+      "examples/tone.c")
     foreach(example_file ${example_src})
       get_filename_component(example_name ${example_file} NAME_WE)
       set(example_name "example_${example_name}")
@@ -237,6 +245,11 @@ if(BUILD_EXAMPLES)
   else()
     message(STATUS "Cannot build examples")
   endif()
+
+  add_library(example_plugin SHARED "examples/plugin.c")
+  add_dependencies(example_plugin mixed_shared)
+  set_property(TARGET example_plugin PROPERTY C_STANDARD 99)
+  target_link_libraries(example_plugin mixed_shared)
 endif()
 
 ## Doxygen
