@@ -1781,6 +1781,12 @@ extern "C" {
   /// at the same time.
   MIXED_EXPORT int mixed_error(void);
 
+  /// Set the current error code.
+  /// 
+  /// The error code is thread-local in order to allow multiple operations
+  /// at the same time.
+  MIXED_EXPORT void mixed_set_error(int code);
+
   /// Return the ASCII error string for the given error code.
   ///
   /// If the error code is less than zero, the error string for the

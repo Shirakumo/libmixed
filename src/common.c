@@ -76,6 +76,10 @@ void mixed_err(int code){
   errorcode = code;
 }
 
+MIXED_EXPORT void mixed_set_error(int code){
+  errorcode = code;
+}
+
 MIXED_EXPORT int mixed_error(void){
   return errorcode;
 }
