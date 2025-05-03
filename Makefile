@@ -58,9 +58,9 @@ install:
 	$(MAKE) -C $(PREFIX) install
 
 release:
-	ifeq($VERSION,"")
-		$(error "VERSION is unset")
-	endif
+ifndef VERSION
+	$(error "VERSION is unset")
+endif
 	echo "$(VERSION)" > VERSION
 	@git add VERSION
 	@git commit -m "Version bump to $(VERSION)"
