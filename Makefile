@@ -64,5 +64,6 @@ endif
 	echo "$(VERSION)" > VERSION
 	@git add VERSION
 	@git commit -m "Version bump to $(VERSION)"
+	@git push origin main
 	@git tag "$(VERSION)"
 	@git push origin "$(VERSION)"
