@@ -171,4 +171,4 @@ By default it will compile for SSE4.2 on x86 systems, with dispatchers for highe
 ## Included Sources
 * [ladspa.h](https://web.archive.org/web/20150627144551/http://www.ladspa.org:80/ladspa_sdk/ladspa.h.txt)
 * [libsamplerate](http://www.mega-nerd.com/SRC/index.html) Please note that the BSD 2-Clause license restrictions also apply to libmixed, as it includes libsamplerate internally.
-* [spiralfft](http://spiral.net/codegenerator.html) Please note that the BSD-style [Spiral License](http://www.spiral.net/doc/LICENSE) also applies to libmixed, as it includes spiralfft internally.
+* [pffft](https://github.com/marton78/pffft) Please note that the BSD-style also applies to libmixed, as it includes pffft internally.
