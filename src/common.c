@@ -37,13 +37,13 @@ int mix_noop(struct mixed_segment *segment){
 PFFFT_Setup *ffts[16] = {0};
 #define LOG2(X) ((unsigned) (8*sizeof (unsigned long long) - __builtin_clzll((X)) - 1))
 
-PFFFT_Setup *ensure_ffts(uint16_t framesize){
-  uint16_t pow = LOG2(framesize);
-  if(pow < 4 || 16 <= (pow-4) || !pffft_is_valid_size(framesize, PFFFT_REAL)){
+PFFFT_Setup *ensure_ffts(uint32_t framesize){
+  uint32_t pow = LOG2(framesize);
+  if(pow < 3 || 16 <= (pow-3) || !pffft_is_valid_size(framesize, PFFFT_REAL)){
     mixed_err(MIXED_INVALID_VALUE);
     return 0;
   }
-  pow -= 4;
+  pow -= 3;
 
   if(ffts[pow] == 0){
     ffts[pow] = pffft_new_setup(framesize, PFFFT_COMPLEX);
@@ -55,14 +55,14 @@ PFFFT_Setup *ensure_ffts(uint16_t framesize){
   return ffts[pow];
 }
 
-MIXED_EXPORT int mixed_fwd_fft(uint16_t framesize, float *in, float *out){
+MIXED_EXPORT int mixed_fwd_fft(uint32_t framesize, float *in, float *out){
   PFFFT_Setup *f = ensure_ffts(framesize);
   if(!f) return 0;
   pffft_transform_ordered(f, in, out, 0, PFFFT_FORWARD);
   return 1;
 }
 
-MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out){
+MIXED_EXPORT int mixed_inv_fft(uint32_t framesize, float *in, float *out){
   PFFFT_Setup *f = ensure_ffts(framesize);
   if(!f) return 0;
   pffft_transform_ordered(f, in, out, 0, PFFFT_BACKWARD);

@@ -288,7 +288,7 @@ uint32_t next_power2(uint32_t v){
   return v;
 }
 
-MIXED_EXPORT int mixed_make_segment_convolution(uint16_t block_size, float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment){
+MIXED_EXPORT int mixed_make_segment_convolution(uint32_t block_size, float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment){
   block_size = next_power2(block_size);
   if(8192 < block_size){
     mixed_err(MIXED_INVALID_VALUE);

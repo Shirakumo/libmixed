@@ -1590,11 +1590,11 @@ extern "C" {
   /// process, with fir_size being the number of elements in the FIR.
   /// The fir array may be freed after the call to this function.
   ///
-  /// framesize must be a power of two between [2^1, 2^13] and designates
+  /// framesize must be an acceptable input for mixed_fwd_fft and designates
   /// the size of the FFT frames that are processed. Larger frames lead to
   /// better quality at the cost of greater latency. 2048 should be a good
   /// default.
-  MIXED_EXPORT int mixed_make_segment_convolution(uint16_t framesize, float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment);
+  MIXED_EXPORT int mixed_make_segment_convolution(uint32_t framesize, float *fir, uint32_t fir_size, uint32_t samplerate, struct mixed_segment *segment);
 
   /// An 8-band equalizer used for frequency adaptation.
   ///
@@ -1751,25 +1751,25 @@ extern "C" {
 
   /// Perform a fast fourier forward transform on a buffer of samples.
   ///
-  /// framesize must be a power of two between [2^1, 2^13]
+  /// framesize must be a power of two between [2^3, 2^18]
   /// in and out may be the same buffers, both with framesize number of
   /// elements. The output buffer will contain framesize/2 frequency bins
   /// as interleaved real and imaginary parts: [real, imag, real, imag, ...]
   /// The input and output buffers both must be *at least* aligned to 16-byte
   /// boundaries, ideally to 64 bytes. mixed_buffer sample arrays are already
   /// guaratneed to have this alignment and are thus safe to use.
-  MIXED_EXPORT int mixed_fwd_fft(uint16_t framesize, float *in, float *out);
+  MIXED_EXPORT int mixed_fwd_fft(uint32_t framesize, float *in, float *out);
 
   /// Performa a fast fourier inverse transform on a buffer of samples.
   ///
-  /// framesize must be a power of two between [2^1, 2^13]
+  /// framesize must be a power of two between [2^3, 2^18]
   /// in and out may be the same buffers, both with framesize number of
   /// elements. The input buffer must contain framesize/2 frequency bins
   /// as interleaved real and imaginary parts: [real, imag, real, imag, ...]
   /// The input and output buffers both must be *at least* aligned to 16-byte
   /// boundaries, ideally to 64 bytes. mixed_buffer sample arrays are already
   /// guaratneed to have this alignment and are thus safe to use.
-  MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out);
+  MIXED_EXPORT int mixed_inv_fft(uint32_t framesize, float *in, float *out);
 
   /// Converts decibel to a linear volume multiplier.
   __attribute__((always_inline)) MIXED_EXPORT inline float mixed_from_db(mixed_decibel_t volume){
