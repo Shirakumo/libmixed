@@ -1755,6 +1755,9 @@ extern "C" {
   /// in and out may be the same buffers, both with framesize number of
   /// elements. The output buffer will contain framesize/2 frequency bins
   /// as interleaved real and imaginary parts: [real, imag, real, imag, ...]
+  /// The input and output buffers both must be *at least* aligned to 16-byte
+  /// boundaries, ideally to 64 bytes. mixed_buffer sample arrays are already
+  /// guaratneed to have this alignment and are thus safe to use.
   MIXED_EXPORT int mixed_fwd_fft(uint16_t framesize, float *in, float *out);
 
   /// Performa a fast fourier inverse transform on a buffer of samples.
@@ -1763,6 +1766,9 @@ extern "C" {
   /// in and out may be the same buffers, both with framesize number of
   /// elements. The input buffer must contain framesize/2 frequency bins
   /// as interleaved real and imaginary parts: [real, imag, real, imag, ...]
+  /// The input and output buffers both must be *at least* aligned to 16-byte
+  /// boundaries, ideally to 64 bytes. mixed_buffer sample arrays are already
+  /// guaratneed to have this alignment and are thus safe to use.
   MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out);
 
   /// Converts decibel to a linear volume multiplier.
