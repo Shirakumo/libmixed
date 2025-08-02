@@ -91,20 +91,20 @@ if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
   target_compile_options(samplerate PRIVATE -fpic -flto)
 endif()
 
-## Spiralfft
-if(ARCH MATCHES "x86_64")
-  add_library(spiralfft OBJECT
-    "spiralfft/sse/spiral_fft_float.c"
-    "spiralfft/sse/spiral_private.c")
-else()
-  add_library(spiralfft OBJECT
-    "spiralfft/scalar/spiral_fft_float.c"
-    "spiralfft/scalar/spiral_private.c")
-endif()
-target_include_directories(spiralfft PRIVATE "spiralfft/")
-target_compile_options(spiralfft PRIVATE -O3 ${COMPILATION_FLAGS})
+## pffft
+add_library(pffft OBJECT
+  "pffft/pffft.c"
+  "pffft/simd/pf_float.h"
+  "pffft/simd/pf_sse1_float.h"
+  "pffft/simd/pf_altivec_float.h"
+  "pffft/simd/pf_neon_float.h"
+  "pffft/simd/pf_scalar_float.h"
+  "pffft/pffft_common.c"
+  "pffft/pffft_priv_impl.h")
+target_include_directories(pffft PRIVATE "pffft/")
+target_compile_options(pffft PRIVATE -O3 ${COMPILATION_FLAGS} -fPIC -DPFFFT_SCALVEC_ENABLED=1 -D_USE_MATH_DEFINES -DNDEBUG)
 if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-  target_compile_options(spiralfft PRIVATE -fpic -flto)
+  target_compile_options(pffft PRIVATE -fpic -flto)
 endif()
 
 ## Libmixed
@@ -150,7 +150,7 @@ add_library(mixed OBJECT
   "src/segments/space_mixer.c"
   "src/segments/speed_change.c"
   "src/segments/volume_control.c")
-target_include_directories(mixed PRIVATE "src/" "libsamplerate/" "spiralfft/")
+target_include_directories(mixed PRIVATE "src/" "libsamplerate/" "pffft/")
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(mixed PRIVATE MIXED_BUILD=1 MIXED_VERSION="${MIXED_VERSION_STRING}")
@@ -170,12 +170,12 @@ endif()
 install(FILES "src/mixed.h" "src/mixed_encoding.h" DESTINATION include/)
 
 if(BUILD_STATIC)
-  add_library(mixed_static STATIC $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:spiralfft> $<TARGET_OBJECTS:mixed>)
+  add_library(mixed_static STATIC $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:pffft> $<TARGET_OBJECTS:mixed>)
   set_target_properties(mixed_static PROPERTIES OUTPUT_NAME mixed)
   install(TARGETS mixed_static DESTINATION lib/)
 endif()
 if(BUILD_SHARED)
-  add_library(mixed_shared SHARED $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:spiralfft> $<TARGET_OBJECTS:mixed>)
+  add_library(mixed_shared SHARED $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:pffft> $<TARGET_OBJECTS:mixed>)
   set_target_properties(mixed_shared PROPERTIES OUTPUT_NAME mixed)
   set_property(TARGET mixed_shared PROPERTY VERSION ${MIXED_VERSION_STRING})
   set_property(TARGET mixed_shared PROPERTY SOVERSION ${MIXED_VERSION_MAJOR})

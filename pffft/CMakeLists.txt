@@ -3,7 +3,7 @@ project(PRETTY_FAST_FFT)
 
 # smaller library size?
 option(PFFFT_USE_TYPE_FLOAT  "activate single precision 'float'?" ON)
-option(PFFFT_USE_TYPE_DOUBLE "activate 'double' precision float?" ON)
+option(PFFFT_USE_TYPE_DOUBLE "activate 'double' precision float?" OFF)
 
 # architecture/optimization options
 option(PFFFT_USE_SIMD        "use SIMD (SSE/AVX/NEON/ALTIVEC) CPU features? - " ON)
@@ -16,11 +16,11 @@ option(INSTALL_PFFASTCONV "install pffastconv to CMAKE_INSTALL_PREFIX?" OFF)
 
 # test options
 option(PFFFT_USE_BENCH_FFTW   "use (system-installed) FFTW3 in fft benchmark?" OFF)
-option(PFFFT_USE_BENCH_GREEN  "use Green FFT in fft benchmark? - if exists in subdir" ON)
-option(PFFFT_USE_BENCH_KISS   "use KissFFT in fft benchmark? - if exists in subdir" ON)
-option(PFFFT_USE_BENCH_POCKET "use PocketFFT in fft benchmark? - if exists in subdir" ON)
+option(PFFFT_USE_BENCH_GREEN  "use Green FFT in fft benchmark? - if exists in subdir" OFF)
+option(PFFFT_USE_BENCH_KISS   "use KissFFT in fft benchmark? - if exists in subdir" OFF)
+option(PFFFT_USE_BENCH_POCKET "use PocketFFT in fft benchmark? - if exists in subdir" OFF)
 option(PFFFT_USE_BENCH_MKL    "use Intel MKL in fft benchmark? needs to be installed" OFF)
-option(PFFFT_USE_FFTPACK      "compile and use FFTPACK in fft benchmark & validation?" ON)
+option(PFFFT_USE_FFTPACK      "compile and use FFTPACK in fft benchmark & validation?" OFF)
 
 option(PFFFT_USE_DEBUG_ASAN  "use GCC's address sanitizer?" OFF)
 

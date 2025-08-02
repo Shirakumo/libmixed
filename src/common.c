@@ -7,7 +7,7 @@
 #  define MIXED_VERSION "unknown"
 #endif
 #include "internal.h"
-#include "spiral_fft.h"
+#include "pffft.h"
 
 MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
   switch(encoding){
@@ -34,37 +34,47 @@ int mix_noop(struct mixed_segment *segment){
   return 1;
 }
 
+PFFFT_Setup *ffts[16] = {0};
+#define LOG2(X) ((unsigned) (8*sizeof (unsigned long long) - __builtin_clzll((X)) - 1))
 
 MIXED_EXPORT int mixed_fwd_fft(uint16_t framesize, float *in, float *out){
-  switch(spiral_fft_float(framesize, -1, in, out)){
-  case SPIRAL_OK:
-    return 1;
-  case SPIRAL_SIZE_NOT_SUPPORTED:
-  case SPIRAL_INVALID_PARAM:
+  uint16_t pow = LOG2(framesize);
+  if(pow < 4 || 16 <= (pow-4)){
     mixed_err(MIXED_INVALID_VALUE);
     return 0;
-  case SPIRAL_OUT_OF_MEMORY:
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    return 0;
-  default:
-    return 0;
   }
+  pow -= 4;
+
+  if(ffts[pow] == 0){
+    ffts[pow] = pffft_new_setup(framesize, PFFFT_REAL);
+    if(ffts[pow] == 0){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+  }
+
+  pffft_transform(ffts[pow], in, out, 0, PFFFT_FORWARD);
+  return 1;
 }
 
 MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out){
-  switch(spiral_fft_float(framesize, +1, in, out)){
-  case SPIRAL_OK:
-    return 1;
-  case SPIRAL_SIZE_NOT_SUPPORTED:
-  case SPIRAL_INVALID_PARAM:
+  uint16_t pow = LOG2(framesize);
+  if(pow < 4 || 16 <= (pow-4)){
     mixed_err(MIXED_INVALID_VALUE);
     return 0;
-  case SPIRAL_OUT_OF_MEMORY:
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    return 0;
-  default:
-    return 0;
   }
+  pow -= 4;
+
+  if(ffts[pow] == 0){
+    ffts[pow] = pffft_new_setup(framesize, PFFFT_REAL);
+    if(ffts[pow] == 0){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+  }
+
+  pffft_transform(ffts[pow], in, out, 0, PFFFT_BACKWARD);
+  return 1;
 }
 
 MIXED_EXPORT extern inline float mixed_from_db(mixed_decibel_t volume);

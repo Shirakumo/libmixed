@@ -3,7 +3,6 @@
 //
 
 #include "internal.h"
-#include "spiral_fft.h"
 
 void free_fft_window_data(struct fft_window_data *data){
   if(data->in_fifo)
@@ -70,9 +69,9 @@ VECTORIZE void fft_window(float *restrict in, float *restrict out, uint32_t samp
         fft_workspace[2*k+1] = 0.;
       }
 
-      spiral_fft_float(framesize, -1, fft_workspace, fft_workspace);
+      mixed_fwd_fft(framesize, fft_workspace, fft_workspace);
       process(data, user);
-      spiral_fft_float(framesize, +1, fft_workspace, fft_workspace);
+      mixed_inv_fft(framesize, fft_workspace, fft_workspace);
 
       /* do windowing and add to output accumulator */
       for(uint32_t k = 0; k < framesize; k++) {

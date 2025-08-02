@@ -1,5 +1,4 @@
 #include "../internal.h"
-#include "spiral_fft.h"
 
 struct fft_segment_data{
   struct mixed_buffer *in;
@@ -87,7 +86,7 @@ VECTORIZE int fft_segment_fwd(struct mixed_segment *segment){
         fft_workspace[2*k+1] = 0.;
       }
 
-      spiral_fft_float(framesize, -1, fft_workspace, fft_workspace);
+      mixed_fwd_fft(framesize, fft_workspace, fft_workspace);
 
       for(k=0; k<=framesize2; k++){
         real = fft_workspace[2*k];
@@ -170,7 +169,7 @@ VECTORIZE int fft_segment_inv(struct mixed_segment *segment){
 
       for(k=framesize+2; k<2*framesize; k++) fft_workspace[k] = 0.;
 
-      spiral_fft_float(framesize, +1, fft_workspace, fft_workspace);
+      mixed_inv_fft(framesize, fft_workspace, fft_workspace);
 
       for(k=0; k<framesize; k++){
         window = -.5*cos(2.*M_PI*(double)k/(double)framesize)+.5;
