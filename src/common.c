@@ -471,6 +471,10 @@ void *ALIGNED_ALLOC(size_t alignment, size_t size){
     return addr;
   return 0;
 }
+#elif _WIN32
+void *ALIGNED_ALLOC(size_t alignment, size_t size){
+  return _aligned_malloc(size, alignment);
+}
 #else
 #include <malloc.h>
 #define ALIGNED_ALLOC memalign
