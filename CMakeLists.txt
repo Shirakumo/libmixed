@@ -13,6 +13,9 @@ option(BUILD_DEBUG_LOG "Build with debug logging output" OFF)
 set(BUILD_C_VERSION 99 CACHE STRING "The C target version to build with. Versions below 99 are not officially supported.")
 set(BUILD_SIMD_VERSION "SSE" CACHE STRING "Which SIMD version to require")
 
+find_library(DL_LIB dl)
+find_library(M_LIB m)
+
 ## Generate version
 find_program(GIT_SCM git DOC "Git version control")
 mark_as_advanced(GIT_SCM)
@@ -87,6 +90,7 @@ add_library(samplerate OBJECT
   "libsamplerate/src_linear.c"
   "libsamplerate/src_sinc.c"
   "libsamplerate/src_zoh.c")
+set_property(TARGET samplerate PROPERTY C_STANDARD ${BUILD_C_VERSION})
 target_compile_options(samplerate PRIVATE -O3 ${COMPILATION_FLAGS})
 if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
   target_compile_options(samplerate PRIVATE -fpic -flto)
@@ -103,9 +107,14 @@ add_library(pffft OBJECT
   "pffft/pffft_common.c"
   "pffft/pffft_priv_impl.h")
 target_include_directories(pffft PRIVATE "pffft/")
-target_compile_options(pffft PRIVATE -O3 ${COMPILATION_FLAGS} -fPIC -DPFFFT_SCALVEC_ENABLED=1 -D_USE_MATH_DEFINES -DNDEBUG)
+set_property(TARGET pffft PROPERTY C_STANDARD ${BUILD_C_VERSION})
+set_property(TARGET pffft PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_compile_options(pffft PRIVATE -O3 ${COMPILATION_FLAGS} -DPFFFT_SCALVEC_ENABLED=1 -DNDEBUG)
+if(M_LIB)
+  target_compile_options(pffft PRIVATE -D_USE_MATH_DEFINES)
+endif()
 if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-  target_compile_options(pffft PRIVATE -fpic -flto)
+  target_compile_options(pffft PRIVATE -flto)
 endif()
 
 ## Libmixed
@@ -160,14 +169,10 @@ if(BUILD_DEBUG_LOG)
   target_compile_definitions(mixed PRIVATE MIXED_DEBUG=1)
 endif()
 target_compile_options(mixed PRIVATE ${COMPILATION_FLAGS} -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes -Wno-enum-conversion)
-
-find_library(DL_LIB dl)
-find_library(M_LIB m)
 if(DL_LIB)
   message(STATUS "Enabling dynamically linked plugins")
   target_compile_definitions(mixed PRIVATE MIXED_DL=1)
 endif()
-
 install(FILES "src/mixed.h" "src/mixed_encoding.h" DESTINATION include/)
 
 if(BUILD_STATIC)
