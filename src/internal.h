@@ -156,7 +156,9 @@ int mix_noop(struct mixed_segment *segment);
 
 void mixed_err(int errorcode);
 
+void *aligned_calloc(size_t alignment, size_t num, size_t size);
 void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size);
+void *aligned_crealloc(void *ptr, size_t alignment, size_t oldcount, size_t newcount, size_t size);
 
 void *open_library(const char *file);
 void close_library(void *handle);

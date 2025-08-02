@@ -7,7 +7,7 @@ MIXED_EXPORT int mixed_make_buffer(uint32_t size, struct mixed_buffer *buffer){
     mixed_err(MIXED_BUFFER_ALLOCATED);
     return 0;
   }
-  buffer->_data = mixed_calloc(size, sizeof(float));
+  buffer->_data = aligned_calloc(64, size, sizeof(float));
   if(!buffer->_data){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;
@@ -96,7 +96,7 @@ MIXED_EXPORT int mixed_buffer_copy(struct mixed_buffer *from, struct mixed_buffe
 
 MIXED_EXPORT int mixed_buffer_resize(uint32_t size, struct mixed_buffer *buffer){
   mixed_err(MIXED_NO_ERROR);
-  float *new = mixed_realloc(buffer->_data, size*sizeof(float));
+  float *new = aligned_crealloc(buffer->_data, 64, buffer->size, size, sizeof(float));
   if(!new){
     mixed_err(MIXED_OUT_OF_MEMORY);
     return 0;

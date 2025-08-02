@@ -470,16 +470,62 @@ MIXED_EXPORT const char *mixed_version(void){
 }
 
 #ifndef MIXED_NO_CUSTOM_ALLOCATOR
+#if defined(_ISOC11_SOURCE)
+#define ALIGNED_ALLOC aligned_alloc
+#elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600)
+void *ALIGNED_ALLOC(size_t alignment, size_t size){
+  void *addr;
+  if(posix_memalign(&addr, alignment, size) == 0)
+    return addr;
+  return 0;
+}
+#else
+#include <malloc.h>
+#define ALIGNED_ALLOC memalign
+#endif
+
 void *(*mixed_calloc)(size_t num, size_t size) = calloc;
 void (*mixed_free)(void *ptr) = free;
 void *(*mixed_realloc)(void *ptr, size_t size) = realloc;
+void *(*mixed_aligned_alloc)(size_t alignment, size_t size) = ALIGNED_ALLOC;
 #endif
+
+void *aligned_calloc(size_t alignment, size_t num, size_t size){
+  void *addr = mixed_aligned_alloc(alignment, num*size);
+  if(!addr) return 0;
+  memset(addr, 0, num*size);
+  return addr;
+}
 
 void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   size_t newsize = newcount*size;
   size_t oldsize = oldcount*size;
   ptr = mixed_realloc(ptr, newsize);
   if(ptr && oldsize < newsize){
+    memset(((char*)ptr)+oldsize, 0, newsize-oldsize);
+  }
+  return ptr;
+}
+
+static inline int is_aligned(size_t alignment, const void *restrict pointer){
+  return (uintptr_t)pointer % alignment == 0;
+}
+
+void *aligned_crealloc(void *ptr, size_t alignment, size_t oldcount, size_t newcount, size_t size){
+  size_t newsize = newcount*size;
+  size_t oldsize = oldcount*size;
+  ptr = mixed_realloc(ptr, newsize);
+  if(!ptr) return ptr;
+  
+  if(!is_aligned(alignment, ptr)){
+    // Have to get a new, guaranteed aligned block and copy over ourselves.
+    void *new = mixed_aligned_alloc(alignment, newsize);
+    if(!new) return 0;
+    memcpy(new, ptr, oldsize);
+    free(ptr);
+    ptr = new;
+  }
+  if(oldsize < newsize){
     memset(((char*)ptr)+oldsize, 0, newsize-oldsize);
   }
   return ptr;

@@ -1818,6 +1818,7 @@ extern "C" {
 #define mixed_calloc calloc
 #define mixed_free free
 #define mixed_realloc realloc
+#define mixed_aligned_alloc aligned_alloc
 #else
   /// Allocates a new block of memory.
   /// 
@@ -1851,6 +1852,13 @@ extern "C" {
   /// If the realloc operation fails and zero is returned, the original
   /// pointer must still be allocated and its memory intact.
   MIXED_EXPORT extern void *(*mixed_realloc)(void *ptr, size_t size);
+
+  /// Allocates a new block of memory aligned to the given byte boundary.
+  /// 
+  /// Unlike mixed_calloc the returned memory region might not be zeroed out.
+  /// However, if a pointer is returned, its address is cleanly divisible by
+  /// the given alignment.
+  MIXED_EXPORT extern void *(*mixed_aligned_alloc)(size_t alignment, size_t size);
 #endif
 
 #ifdef __cplusplus

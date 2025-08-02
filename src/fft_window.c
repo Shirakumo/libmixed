@@ -16,12 +16,14 @@ void free_fft_window_data(struct fft_window_data *data){
 }
 
 int make_fft_window_data(uint32_t framesize, uint32_t oversampling, uint32_t samplerate, struct fft_window_data *data){
-  float *mem = mixed_calloc(framesize+
-                            framesize+
-                            framesize*2+
-                            framesize*2+
-                            framesize/2+1+
-                            framesize/2+1, sizeof(float));
+  size_t size =
+    framesize+
+    framesize+
+    framesize*2+
+    framesize*2+
+    framesize/2+1+
+    framesize/2+1;
+  float *mem = aligned_calloc(64, size, sizeof(float));
 
   if(!mem){
     mixed_err(MIXED_OUT_OF_MEMORY);
