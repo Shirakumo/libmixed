@@ -5,7 +5,7 @@ jobs:
   build-posix:
     strategy:
       matrix:
-        platform: [ubuntu-latest, macOS-12]
+        platform: [ubuntu-latest, macOS-latest]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
