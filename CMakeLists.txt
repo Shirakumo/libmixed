@@ -91,21 +91,12 @@ if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
   target_compile_options(samplerate PRIVATE -fpic -flto)
 endif()
 
-## Spiralfft
-if(ARCH MATCHES "x86_64")
-  add_library(spiralfft OBJECT
-    "spiralfft/sse/spiral_fft_float.c"
-    "spiralfft/sse/spiral_private.c")
-else()
-  add_library(spiralfft OBJECT
-    "spiralfft/scalar/spiral_fft_float.c"
-    "spiralfft/scalar/spiral_private.c")
+## FFTS
+option(DISABLE_DYNAMIC_CODE "" ON)
+if(ARCH MATCHES "armv7")
+  option(ENABLE_NEON "" ON)
 endif()
-target_include_directories(spiralfft PRIVATE "spiralfft/")
-target_compile_options(spiralfft PRIVATE -O3 ${COMPILATION_FLAGS})
-if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-  target_compile_options(spiralfft PRIVATE -fpic -flto)
-endif()
+add_subdirectory("ffts/")
 
 ## Libmixed
 add_library(mixed OBJECT
@@ -150,7 +141,7 @@ add_library(mixed OBJECT
   "src/segments/space_mixer.c"
   "src/segments/speed_change.c"
   "src/segments/volume_control.c")
-target_include_directories(mixed PRIVATE "src/" "libsamplerate/" "spiralfft/")
+target_include_directories(mixed PRIVATE "src/" "libsamplerate/" "ffts/include/")
 set_property(TARGET mixed PROPERTY C_STANDARD 99)
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(mixed PRIVATE MIXED_BUILD=1 MIXED_VERSION="${MIXED_VERSION_STRING}")
@@ -170,12 +161,12 @@ endif()
 install(FILES "src/mixed.h" "src/mixed_encoding.h" DESTINATION include/)
 
 if(BUILD_STATIC)
-  add_library(mixed_static STATIC $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:spiralfft> $<TARGET_OBJECTS:mixed>)
+  add_library(mixed_static STATIC $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:ffts_static> $<TARGET_OBJECTS:mixed>)
   set_target_properties(mixed_static PROPERTIES OUTPUT_NAME mixed)
   install(TARGETS mixed_static DESTINATION lib/)
 endif()
 if(BUILD_SHARED)
-  add_library(mixed_shared SHARED $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:spiralfft> $<TARGET_OBJECTS:mixed>)
+  add_library(mixed_shared SHARED $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:ffts_static> $<TARGET_OBJECTS:mixed>)
   set_target_properties(mixed_shared PROPERTIES OUTPUT_NAME mixed)
   set_property(TARGET mixed_shared PROPERTY VERSION ${MIXED_VERSION_STRING})
   set_property(TARGET mixed_shared PROPERTY SOVERSION ${MIXED_VERSION_MAJOR})

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10...3.30)
 
 project(ffts C ASM)
 
@@ -529,67 +529,6 @@ if(ENABLE_STATIC)
 
   install( TARGETS ffts_static DESTINATION ${LIB_INSTALL_DIR} )
 endif(ENABLE_STATIC)
-
-if(ENABLE_STATIC OR ENABLE_SHARED)
-  find_path(MPFR_INCLUDES
-    NAMES mpfr.h
-    PATHS ${INCLUDE_INSTALL_DIR}
-  )
-  find_library(MPFR_LIBRARIES mpfr PATHS ${LIB_INSTALL_DIR})
-  find_package(OpenMP)
-
-  if(MPFR_INCLUDES)
-    add_definitions(-DHAVE_MPFR_H)
-    include_directories(${MPFR_INCLUDES})
-  endif(MPFR_INCLUDES)
-
-  add_executable(ffts_trig_test
-    tests/trig_test.c
-  )
-
-  target_link_libraries(ffts_trig_test ffts)
-  if(MPFR_LIBRARIES)
-    target_link_libraries(ffts_trig_test ${MPFR_LIBRARIES})
-  endif(MPFR_LIBRARIES)
-
-  if(OPENMP_FOUND)
-    if(MSVC)
-      set_target_properties(ffts_trig_test PROPERTIES
-        COMPILE_FLAGS "${OpenMP_C_FLAGS}"
-        LINK_FLAGS "${OpenMP_EXE_LINKER_FLAGS}"
-      )
-    else()
-      set_target_properties(ffts_trig_test PROPERTIES
-        COMPILE_FLAGS "${OpenMP_C_FLAGS}"
-        LINK_FLAGS "${OpenMP_C_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}"
-      )
-    endif(MSVC)
-  endif(OPENMP_FOUND)
-
-  add_executable(ffts_test
-    tests/test.c
-  )
-
-  # link with static library by default
-  if(ENABLE_STATIC)
-    add_library(ffts ALIAS ffts_static)
-  else()
-    add_library(ffts ALIAS ffts_shared)
-  endif(ENABLE_STATIC)
-
-  target_link_libraries(ffts_test
-    ffts
-    ${FFTS_EXTRA_LIBRARIES}
-  )
-
-  add_executable(ffts_cpu_test
-    src/ffts_cpu.c
-    src/ffts_cpu.h
-    tests/cpu_test.c
-  )
-
-  set_target_properties(ffts_cpu_test PROPERTIES COMPILE_DEFINITIONS FFTS_BUILDING_CPU_TEST)
-endif(ENABLE_STATIC OR ENABLE_SHARED)
 
 # generate packageconfig file
 if(UNIX)
