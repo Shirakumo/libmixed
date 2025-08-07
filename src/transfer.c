@@ -3,6 +3,7 @@
 //// Single sample transfer functions
 // We assume little endian for all formats.
 #define DEF_MIXED_TRANSFER_SAMPLE_FROM(name, datatype)                  \
+  __attribute__((always_inline))                                        \
   static inline void mixed_transfer_sample_from_##name(void *in, uint32_t is, float *out, uint32_t os, float volume) { \
     out[os] = mixed_from_##name(((datatype *)in)[is]) * volume;         \
   }
@@ -16,6 +17,7 @@ DEF_MIXED_TRANSFER_SAMPLE_FROM(uint32, uint32_t)
 DEF_MIXED_TRANSFER_SAMPLE_FROM(float, float)
 DEF_MIXED_TRANSFER_SAMPLE_FROM(double, double)
 
+__attribute__((always_inline))
 extern inline void mixed_transfer_sample_from_int24(void *in, uint32_t is, float *out, uint32_t os, float volume) {
   // Read MSB as int8, others as uint8
   int32_t sample = (((int8_t *)in)[3*is+2] << 16) + \
@@ -24,6 +26,7 @@ extern inline void mixed_transfer_sample_from_int24(void *in, uint32_t is, float
   out[os] = mixed_from_int24(sample) * volume;
 }
 
+__attribute__((always_inline))
 extern inline void mixed_transfer_sample_from_uint24(void *in, uint32_t is, float *out, uint32_t os, float volume) {
   uint8_t *data = (uint8_t *)in;
   uint24_t sample = (data[3*is+2] << 16) + (data[3*is+1] << 8) + (data[3*is]);
@@ -31,6 +34,7 @@ extern inline void mixed_transfer_sample_from_uint24(void *in, uint32_t is, floa
 }
 
 #define DEF_MIXED_TRANSFER_SAMPLE_TO(name, datatype)                    \
+  __attribute__((always_inline))                                        \
   static inline void mixed_transfer_sample_to_##name(float *in, uint32_t is, void *out, uint32_t os, float volume){ \
     ((datatype *)out)[os] = mixed_to_##name(in[is]) * volume;           \
   }
@@ -44,6 +48,7 @@ DEF_MIXED_TRANSFER_SAMPLE_TO(uint32, uint32_t)
 DEF_MIXED_TRANSFER_SAMPLE_TO(float, float)
 DEF_MIXED_TRANSFER_SAMPLE_TO(double, double)
 
+__attribute__((always_inline))
 extern inline void mixed_transfer_sample_to_int24(float *in, uint32_t is, void *out, uint32_t os, float volume){
   int24_t sample = mixed_to_int24(in[is] * volume);
   ((uint8_t *)out)[3*os+2] = (sample >> 16) & 0xFF;
@@ -51,6 +56,7 @@ extern inline void mixed_transfer_sample_to_int24(float *in, uint32_t is, void *
   ((uint8_t *)out)[3*os+0] = (sample >>  0) & 0xFF;
 }
 
+__attribute__((always_inline))
 extern inline void mixed_transfer_sample_to_uint24(float *in, uint32_t is, void *out, uint32_t os, float volume){
   uint24_t sample = mixed_to_uint24(in[is] * volume);
   ((uint8_t *)out)[3*os+2] = (sample >> 16) & 0xFF;
