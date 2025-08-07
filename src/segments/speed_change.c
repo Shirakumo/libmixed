@@ -66,6 +66,12 @@ int speed_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
+int speed_segment_mix_bypass(struct mixed_segment *segment){
+  struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
+  
+  return mixed_buffer_transfer(data->in, data->out);
+}
+
 int speed_segment_mix(struct mixed_segment *segment){
   struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
   if(data->speed == 1.0) return speed_segment_mix_bypass(segment);
@@ -90,12 +96,6 @@ int speed_segment_mix(struct mixed_segment *segment){
     mixed_buffer_finish_write(0, data->out);
   }
   return 1;
-}
-
-int speed_segment_mix_bypass(struct mixed_segment *segment){
-  struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
-  
-  return mixed_buffer_transfer(data->in, data->out);
 }
 
 int speed_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
