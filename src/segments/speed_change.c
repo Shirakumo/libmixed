@@ -68,6 +68,8 @@ int speed_segment_start(struct mixed_segment *segment){
 
 int speed_segment_mix(struct mixed_segment *segment){
   struct speed_segment_data *data = (struct speed_segment_data *)segment->data;
+  if(data->speed == 1.0) return speed_segment_mix_bypass(segment);
+  
   SRC_DATA src_data = {0};
   uint32_t in = UINT32_MAX, out = UINT32_MAX;
   mixed_buffer_request_read((float **)&src_data.data_in, &in, data->in);
