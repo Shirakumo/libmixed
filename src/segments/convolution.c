@@ -1,5 +1,9 @@
 #include "../internal.h"
 
+#ifdef __ARM_NEON
+#include <arm_neon.h>
+#endif
+
 struct convolution_segment_data{
   struct mixed_buffer *in;
   struct mixed_buffer *out;
@@ -70,7 +74,7 @@ int convolution_segment_set_out(uint32_t field, uint32_t location, void *buffer,
   }
 }
 
-VECTORIZE void complex_multiply_add(float *restrict dst, float *restrict l, float *restrict r, uint32_t size){
+VECTORIZE static void complex_multiply_add(float *restrict dst, float *restrict l, float *restrict r, uint32_t size){
   for(uint32_t k = 0; k < size; k+= 2){
     float reA = l[k+0];
     float imA = l[k+1];
@@ -84,6 +88,34 @@ VECTORIZE void complex_multiply_add(float *restrict dst, float *restrict l, floa
     dst[k+1] += im;
   }
 }
+
+#ifdef __ARM_NEON
+static void complex_multiply_add_neon(float *restrict dst, float *restrict l, float *restrict r, uint32_t size){
+  for(; size >= 8; size -= 8) {
+    float32x4x2_t A = vld2q_f32(l);
+    float32x4_t reA = A.val[0];
+    float32x4_t imA = A.val[1];
+    float32x4x2_t B = vld2q_f32(r);
+    float32x4_t reB = B.val[0];
+    float32x4_t imB = B.val[1];
+
+    float32x4_t re = vsubq_f32(vmulq_f32(reA, reB), vmulq_f32(imA, imB));
+    float32x4_t im = vaddq_f32(vmulq_f32(reA, imB), vmulq_f32(imA, reB));
+
+    float32x4x2_t dst2 = vld2q_f32(dst);
+
+    float32x4_t dst_re = vaddq_f32(dst2.val[0], re);
+    float32x4_t dst_im = vaddq_f32(dst2.val[1], im);
+
+    vst2q_f32(dst, (float32x4x2_t){{dst_re, dst_im}});
+
+    dst += 8;
+    l += 8;
+    r += 8;
+  }
+  complex_multiply_add(dst, l, r, size);
+}
+#endif
 
 VECTORIZE void fft_convolve(struct fft_window_data *data, void *user){
   struct convolution_segment_data *user_data = (struct convolution_segment_data *)user;
@@ -103,7 +135,11 @@ VECTORIZE void fft_convolve(struct fft_window_data *data, void *user){
   memset(fft_workspace, 0, sizeof(float)*framesize);
   for(uint32_t i = 0; i < block_count; ++i){
     uint32_t buf_idx = (block_idx+block_count-i) % block_count;
+#ifdef __ARM_NEON
+    complex_multiply_add_neon(fft_workspace, buf + (buf_idx * framesize), fir + (i * block_size), framesize);
+#else
     complex_multiply_add(fft_workspace, buf + (buf_idx * framesize), fir + (i * block_size), framesize);
+#endif
   }
 }
 
