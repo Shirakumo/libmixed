@@ -85,12 +85,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "NX")
 endif()
 
 ## Libsamplerate
-add_library(samplerate OBJECT
-  "libsamplerate/samplerate.c"
-  "libsamplerate/src_linear.c"
-  "libsamplerate/src_sinc.c"
-  "libsamplerate/src_zoh.c")
-set_property(TARGET samplerate PROPERTY C_STANDARD ${BUILD_C_VERSION})
+set(LIBSAMPLERATE_SSE2_LRINT ON)
+set(BUILD_TESTING OFF)
+add_subdirectory("libsamplerate")
 target_compile_options(samplerate PRIVATE -O3 ${COMPILATION_FLAGS})
 if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
   target_compile_options(samplerate PRIVATE -fpic -flto)
@@ -160,7 +157,7 @@ add_library(mixed OBJECT
   "src/segments/space_mixer.c"
   "src/segments/speed_change.c"
   "src/segments/volume_control.c")
-target_include_directories(mixed PRIVATE "src/" "libsamplerate/" "pffft/")
+target_include_directories(mixed PRIVATE "src/" "libsamplerate/include/" "pffft/")
 set_property(TARGET mixed PROPERTY C_STANDARD ${BUILD_C_VERSION})
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(mixed PRIVATE MIXED_BUILD=1 MIXED_VERSION="${MIXED_VERSION_STRING}")
